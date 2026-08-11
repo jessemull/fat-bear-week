@@ -27,7 +27,7 @@
 
 | Pin | Value | Notes |
 | --- | ----- | ----- |
-| Node (CI) | **22** | `.github/workflows/ci.yml` `setup-node` |
+| Node (CI + `.nvmrc`) | **22** | `.github/workflows/ci.yml` `setup-node` |
 | Package manager | npm + `legacy-peer-deps=true` (`web/.npmrc`) | |
 
 ---
@@ -37,6 +37,15 @@
 | Package | Notes |
 | ------- | ----- |
 | `eslint-plugin-perfectionist` | Use **v5** option shape (`internalPattern`, `newlinesBetween` as number, array `customGroups`). Do not copy nextdoor’s v2 config verbatim. |
+| `@lhci/cli` / `lighthouse` | Keep `@lhci/cli@^0.15` with direct `lighthouse@^12.8` (same major pin as crow/100-letters). Do **not** `npm audit fix --force` — it may downgrade LHCI. |
+
+---
+
+## Known audit residual
+
+`make security` runs `npm audit --omit=dev` so **runtime** dependencies stay clean and blocking.
+
+The full tree (`npm audit` without `--omit=dev`) may report transitive advisories under `@lhci/cli` (e.g. nested `tmp`, `uuid`). Those are **dev-only** (Lighthouse CI tooling) and match residual notes in crow-detector / 100-letters. Prefer upgrading LHCI when a compatible release lands; do not force-downgrade.
 
 Do **not** run `npm audit fix --force`.
 

@@ -55,14 +55,18 @@ Prefer **`make`** targets from the repo root (see `make help`).
 
 ### Quality
 
-| Command              | Description                |
-| -------------------- | -------------------------- |
-| `make format`        | ESLint `--fix`            |
-| `make lint`          | ESLint                     |
-| `make test`          | Vitest                     |
-| `make test-coverage` | Vitest with coverage       |
-| `make security`      | `npm audit`                |
-| `make build`         | Next.js production build   |
+| Command              | Description                              |
+| -------------------- | ---------------------------------------- |
+| `make format`        | ESLint `--fix`                          |
+| `make lint`          | ESLint                                   |
+| `make typecheck`     | `tsc --noEmit`                           |
+| `make knip`          | Unused files / dependencies              |
+| `make test`          | Vitest with ≥80% coverage thresholds     |
+| `make e2e`           | Cypress smoke (boots Next.js)            |
+| `make lighthouse`    | Build + LHCI against `next start`        |
+| `make security`      | `npm audit --omit=dev`                   |
+| `make build`         | Next.js production build                 |
+| `make preflight`     | format + lint + typecheck + knip + test + security + build |
 
 ### Local / deploy / database
 
@@ -133,8 +137,10 @@ Follow `docs/COMMENTS.md`. Prefer self-documenting names; comments explain **why
 
 ## Testing Rules
 
-- Unit/component: Vitest + Testing Library; setup in `web/tests/setup.ts`.
-- Coverage **goal ≥80%** on logic under `lib/` and tested modules as Phase 1 grows.
+- Unit/component: Vitest + Testing Library + jest-axe; setup in `web/tests/setup.ts`.
+- Coverage **≥80%** enforced on `lib/`, `components/`, and `app/page.tsx`.
+- E2E: Cypress (`make e2e`).
+- Lighthouse CI: `make lighthouse` (production `next start`; see `docs/PERFORMANCE.md`).
 - Prefer behavior and edge cases over implementation details.
 - Do not remove tests solely to raise coverage percentage.
 
@@ -202,5 +208,5 @@ See `docs/SECURITY.md`.
 
 1. Re-read `CONTEXT.md` precedence.
 2. Check domain docs (`SECURITY.md`, `SUPABASE_MIGRATIONS.md`, `ROADMAP.md`, etc.).
-3. Run `make lint && make test && make build` and fix failures before expanding scope.
+3. Run `make preflight` and fix failures before expanding scope.
 4. Flag product/architecture decisions for human review per `docs/GOVERNANCE.md`.

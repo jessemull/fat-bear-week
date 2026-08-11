@@ -7,7 +7,8 @@
 ## Requirements
 
 - `eslint-plugin-jsx-a11y` rules (enforced in `web/eslint.config.mjs`)
-- Prefer Testing Library queries by role/name for interactive UI tests
+- jest-axe: `expect(await axe(container)).toHaveNoViolations()` for UI under test
+- Prefer Testing Library queries by role/name
 
 ---
 
@@ -24,4 +25,4 @@
 
 ## Commands
 
-`make lint`, `make test`
+`make lint`, `make test`, `make e2e`, `make lighthouse`

@@ -15,4 +15,7 @@ Do NOT duplicate governance from AGENTS.md or docs/ here. This file exists only 
 - Test: `make test`
 - Security: `make security`
 - Build: `make build`
+- Preflight: `make preflight`
+- E2E: `make e2e`
+- Lighthouse: `make lighthouse`
 - Dev: `make dev`
