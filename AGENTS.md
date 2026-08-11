@@ -97,7 +97,10 @@ Always alphabetize when practical:
 - Union types (`null | number | string`)
 - `className` tokens when practical
 
-**Enforced by:** `eslint-plugin-perfectionist` in `web/eslint.config.mjs`.
+**Enforced by:** `eslint-plugin-perfectionist` in `web/eslint.config.mjs`
+(imports, named imports, objects, interfaces/object types, union types, JSX props).
+Unused locals/imports: `eslint-plugin-unused-imports`. Format via ESLint `--fix`
+(no Prettier — same as nextdoor).
 
 ### React / Next.js
 

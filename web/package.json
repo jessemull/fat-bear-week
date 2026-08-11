@@ -18,6 +18,11 @@
     "knip": "knip --include files,dependencies,unlisted,binaries,unresolved",
     "lighthouse": "env -u ELECTRON_RUN_AS_NODE lhci autorun"
   },
+  "lint-staged": {
+    "*.{js,jsx,mjs,cjs,ts,tsx}": [
+      "eslint --fix"
+    ]
+  },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.112.2",
@@ -47,10 +52,12 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.0",
     "eslint-plugin-perfectionist": "^5.10.1",
+    "eslint-plugin-unused-imports": "^4.4.1",
     "jest-axe": "^11.0.0",
     "jsdom": "^30.0.1",
     "knip": "^6.32.1",
     "lighthouse": "^12.8.2",
+    "lint-staged": "^17.3.0",
     "start-server-and-test": "^3.0.12",
     "tailwindcss": "^4",
     "typescript": "^5",
