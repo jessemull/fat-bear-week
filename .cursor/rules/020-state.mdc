@@ -1,0 +1,14 @@
+---
+description: "React state rules for Fat Bear Week."
+globs:
+  - "web/components/**/*.{ts,tsx}"
+  - "web/lib/**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# State
+
+- Local `useState` for UI-only state is fine
+- No Redux/Zustand/MobX without governance approval
+- Do not invent public signup or multi-bracket flows without product approval
+- See `docs/ARCHITECTURE.md`

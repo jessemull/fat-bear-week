@@ -1,0 +1,16 @@
+---
+description: "Architecture boundaries for the Next.js + Supabase Fat Bear Week app."
+globs:
+  - "web/app/**/*.{ts,tsx}"
+  - "web/components/**/*.{ts,tsx}"
+  - "web/lib/**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Architecture
+
+- Layers: `app` routes → components → `lib` helpers → Supabase
+- Prefer Server Components; `'use client'` only when needed
+- Generic tournament model (rounds/matchups); no hardcoded field sizes
+- Service role only on server; invite-only access
+- See `docs/ARCHITECTURE.md`

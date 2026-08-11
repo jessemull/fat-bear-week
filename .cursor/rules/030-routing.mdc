@@ -1,0 +1,14 @@
+---
+description: "Next.js App Router routing rules."
+globs:
+  - "web/app/**/*"
+alwaysApply: false
+---
+
+# Routing
+
+- Routes live in `web/app/**/page.tsx`
+- API routes in `web/app/api/**`
+- Use `next/link` for navigation
+- Keep pages thin; UI in `web/components`
+- See `docs/ARCHITECTURE.md`

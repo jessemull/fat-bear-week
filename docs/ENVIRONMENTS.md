@@ -129,4 +129,5 @@ Execute in order.
 ## Related documentation
 
 - [DEPLOYMENT.md](DEPLOYMENT.md) — Vercel deploy and domain.
+- [SUPABASE_MIGRATIONS.md](SUPABASE_MIGRATIONS.md) — Bootstrap and incremental migrations.
 - [ROADMAP.md](ROADMAP.md) — Feature backlog including auth and admin.

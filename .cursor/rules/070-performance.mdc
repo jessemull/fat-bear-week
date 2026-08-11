@@ -1,0 +1,14 @@
+---
+description: "Performance expectations for bracket and landing UIs."
+globs:
+  - "web/components/**/*.{ts,tsx}"
+  - "web/app/**/*"
+alwaysApply: false
+---
+
+# Performance
+
+- Prefer Server Components; watch client bundle size
+- Efficient DB queries for brackets/leaderboards
+- Do not rehost Explore.org video
+- See `docs/PERFORMANCE.md`

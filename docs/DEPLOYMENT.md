@@ -63,7 +63,8 @@ Vercel is the only runtime.
 
 Use separate Supabase projects for Preview/local and Production. Apply schema
 with `database/bootstrap.sql` (new project) or incremental files in
-`database/migrations/`. See [ENVIRONMENTS.md](ENVIRONMENTS.md).
+`database/migrations/`. See [SUPABASE_MIGRATIONS.md](SUPABASE_MIGRATIONS.md)
+and [ENVIRONMENTS.md](ENVIRONMENTS.md).
 
 After adding a migration:
 
