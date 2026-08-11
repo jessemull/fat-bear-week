@@ -1,5 +1,8 @@
 import "@testing-library/jest-dom/vitest";
-import { vi } from "vitest";
+import { toHaveNoViolations } from "jest-axe";
+import { expect, vi } from "vitest";
+
+expect.extend(toHaveNoViolations);
 
 // Suppress expected error/warn output during tests
 

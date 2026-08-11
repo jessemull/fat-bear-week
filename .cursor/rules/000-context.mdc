@@ -35,5 +35,5 @@ CONTEXT.md > GOVERNANCE.md > ARCHITECTURE.md > domain docs > inline comments
 
 - Vercel App Router + Supabase (not static export)
 - TypeScript strict; invite-only; service key server-only
-- Quality gates: `make lint`, `make test`, `make security`, `make build`
+- Quality gate: `make preflight` (Husky pre-push)
 - Keep v1 scope small per `docs/ROADMAP.md`

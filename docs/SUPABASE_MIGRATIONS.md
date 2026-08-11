@@ -11,6 +11,16 @@ Two Supabase projects are used: one for development (Preview / local) and one fo
 
 **Do not run bootstrap on a project that already has these tables.** It uses plain `CREATE TABLE` (no `IF NOT EXISTS`) and will error with "relation … already exists".
 
+### Full schema reset (wipe and re-bootstrap)
+
+If you need to reset an existing project to a clean schema:
+
+1. In Supabase SQL Editor, run [`database/scripts/drop_all_tables.sql`](../database/scripts/drop_all_tables.sql).
+2. Run `database/bootstrap.sql` once.
+3. Optionally empty data later with [`database/scripts/truncate_all_data.sql`](../database/scripts/truncate_all_data.sql) (keeps schema).
+
+All data in the dropped tables is permanently removed.
+
 ## Existing project (schema already applied)
 
 Run only **new** migration files—those not yet applied—in numeric order from `database/migrations/`. Copy each file’s contents into the SQL Editor and execute. Repeat for the other project (dev and prod) so both stay in sync.

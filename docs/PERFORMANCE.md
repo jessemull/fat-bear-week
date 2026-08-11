@@ -1,6 +1,21 @@
 # Performance
 
-> **AI agents — read this file when:** changing bundles, images, bracket UIs, or perceived load.
+> **AI agents — read this file when:** changing bundles, images, bracket UIs, or investigating Lighthouse regressions.
+
+---
+
+## Targets
+
+Lighthouse CI (`web/.lighthouserc.js`) runs against a **production build** (`next build` + `next start`), mobile form factor, 3 runs:
+
+| Category       | Minimum score | Assert |
+| -------------- | ------------- | ------ |
+| Performance    | ≥ 0.5         | error (CI floor; aim higher locally) |
+| Accessibility  | ≥ 0.9         | error |
+| SEO            | ≥ 0.9         | error |
+| Best practices | ≥ 0.9         | error |
+
+`make lighthouse` builds then runs LHCI. CI runs LHCI after `make build` (no second build). Optional: `LHCI_URL=https://… LHCI_NO_SERVER=true` against a Preview/Production URL.
 
 ---
 
@@ -16,6 +31,7 @@
 
 ## Commands
 
-`make build` — watch for bundle / compile regressions.
-
-Mobile-first matters for join + bracket + leaderboard (see `docs/ROADMAP.md`).
+```bash
+make build
+make lighthouse
+```

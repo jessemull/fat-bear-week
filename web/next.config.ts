@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Prefer repo-root CONTEXT.md / AGENTS.md over Next-generated agent files
+  agentRules: false,
   images: {
     remotePatterns: [
       {
@@ -26,6 +28,9 @@ const nextConfig: NextConfig = {
     ],
   },
   reactStrictMode: true,
+  turbopack: {
+    root: __dirname,
+  },
 };
 
 export default nextConfig;

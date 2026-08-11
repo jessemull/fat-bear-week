@@ -85,11 +85,16 @@ Before considering work complete, agents MUST ensure:
 | --------------------- | ------------------------------- |
 | Format / lint fix     | `make format`                   |
 | Lint                  | `make lint`                     |
-| Unit tests            | `make test`                     |
+| Typecheck             | `make typecheck`                |
+| Unused code (knip)    | `make knip`                     |
+| Unit tests + coverage | `make test` (≥80% thresholds)   |
 | Security              | `make security`                 |
 | Production build      | `make build`                    |
+| Full preflight        | `make preflight`                |
+| E2E smoke             | `make e2e` (UI / journey work)  |
+| Lighthouse CI         | `make lighthouse` (UI / perf)   |
 
-CI runs format → lint → test (with coverage) → security → build on PRs and pushes to `main` / `release`. See `docs/CI_CD.md`.
+Husky runs `make preflight` on **every git push**. CI also runs e2e and lighthouse. See `docs/CI_CD.md`.
 
 ---
 

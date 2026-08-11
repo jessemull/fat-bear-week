@@ -1,4 +1,16 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": [".lighthouserc.js"],
+  "ignoreDependencies": [
+    "@lhci/cli",
+    "@supabase/ssr",
+    "@supabase/supabase-js",
+    "@testing-library/user-event",
+    "lighthouse",
+    "lucide-react",
+    "server-only",
+    "start-server-and-test",
+    "zod"
+  ],
   "next": true
 }

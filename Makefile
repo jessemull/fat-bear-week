@@ -1,4 +1,4 @@
-.PHONY: help build clean db-bootstrap db-migrate-prod deploy-web-prod dev format install lint lint-ci lint-fix security test test-coverage
+.PHONY: help build clean db-bootstrap db-migrate-prod deploy-web-prod dev e2e format install knip lighthouse lint lint-ci lint-fix preflight security test test-coverage typecheck
 
 # Default target
 help:
@@ -7,7 +7,7 @@ help:
 	@echo "Usage: make <target>"
 	@echo ""
 	@echo "Setup:"
-	@echo "  install          Install web dependencies"
+	@echo "  install          Install root (husky) + web dependencies"
 	@echo ""
 	@echo "Database:"
 	@echo "  db-bootstrap     Generate database/bootstrap.sql (all migrations in one file)"
@@ -22,13 +22,18 @@ help:
 	@echo "  lint             Run ESLint"
 	@echo "  lint-ci          Same as lint-fix (used in CI after format)"
 	@echo "  lint-fix        Run ESLint with --fix"
+	@echo "  typecheck        TypeScript --noEmit"
+	@echo "  knip             Unused files / dependencies"
+	@echo "  preflight        format + lint + typecheck + knip + test + security + build"
 	@echo ""
 	@echo "Security:"
-	@echo "  security         Run npm audit"
+	@echo "  security         npm audit on production dependencies"
 	@echo ""
 	@echo "Testing:"
-	@echo "  test             Run Vitest"
-	@echo "  test-coverage    Run Vitest with coverage"
+	@echo "  test             Run Vitest with coverage thresholds"
+	@echo "  test-coverage    Alias for test"
+	@echo "  e2e              Cypress smoke (starts Next.js, then runs cypress)"
+	@echo "  lighthouse       Build + LHCI against next start (mobile)"
 	@echo ""
 	@echo "Deploy:"
 	@echo "  deploy-web-prod  Merge main into release and push (promotes web to production)"
@@ -52,6 +57,7 @@ db-migrate-prod:
 	@echo ""
 	@echo "New project (no schema yet): Run database/bootstrap.sql once in SQL Editor."
 	@echo "Existing project: Run only migration files not yet applied, in numeric order."
+	@echo "Full wipe: database/scripts/drop_all_tables.sql then bootstrap."
 	@echo ""
 	@echo "See docs/SUPABASE_MIGRATIONS.md for details."
 	@echo ""
@@ -59,6 +65,7 @@ db-migrate-prod:
 
 # Install dependencies
 install:
+	npm install
 	cd web && npm install --legacy-peer-deps
 
 # Development
@@ -68,7 +75,7 @@ build:
 dev:
 	cd web && npm run dev
 
-# Linting
+# Linting / types
 lint:
 	cd web && npm run lint
 
@@ -79,17 +86,32 @@ lint-ci: lint-fix
 
 format: lint-fix
 
+typecheck:
+	cd web && npm run typecheck
+
+knip:
+	cd web && npm run knip
+
+preflight:
+	./scripts/preflight.sh
+
 # Security
 security:
-	@echo "Running npm audit (dependency vulnerabilities)..."
-	cd web && npm audit
+	@echo "Running npm audit on production dependencies..."
+	cd web && npm audit --omit=dev
 
 # Testing
 test:
 	cd web && npm test
 
-test-coverage:
-	cd web && npm run test:coverage
+test-coverage: test
+
+e2e:
+	cd web && npm run e2e
+
+# Requires Chrome/Chromium. Builds first, then LHCI starts `next start`.
+lighthouse: build
+	cd web && npm run lighthouse
 
 # Deploy
 deploy-web-prod:

@@ -204,14 +204,16 @@ Then paste `database/bootstrap.sql` into the Supabase SQL Editor.
 
 - **Lint** — `make lint` (ESLint + perfectionist). `make format` applies
   `--fix`.
-- **Test** — `make test` runs Vitest. `make test-coverage` for coverage.
-- **CI** — On PR/push to `main` or `release`: format, lint, test+coverage,
-  security, build.
+- **Test** — `make test` runs Vitest with ≥80% coverage thresholds.
+- **E2E** — `make e2e` (Cypress). **Lighthouse** — `make lighthouse`.
+- **Preflight** — `make preflight` (Husky pre-push). CI also runs e2e + LHCI.
+- **CI** — On PR/push to `main` or `release`: format, lint, typecheck, knip,
+  test, security, build, e2e, lighthouse.
 
 ## Security
 
 - Secrets only via environment variables / Vercel env — never committed.
-- `make security` runs `npm audit`.
+- `make security` runs `npm audit --omit=dev` (runtime deps).
 - Invite-only access; no public registration in the product design.
 - Supabase service role key is server-only.
 
@@ -219,7 +221,7 @@ Then paste `database/bootstrap.sql` into the Supabase SQL Editor.
 
 | Workflow | Trigger | What it does |
 | :------- | :------ | :----------- |
-| **CI** | PR and push to `main` / `release` | `make format`, `make lint-ci`, `make test-coverage`, `make security`, `make build` |
+| **CI** | PR and push to `main` / `release` | format → lint → typecheck → knip → test → security → build → e2e → lighthouse |
 
 **Preview:** push to `main` → Vercel Preview.  
 **Production:** `make deploy-web-prod` (merge `main` into `release` and push).

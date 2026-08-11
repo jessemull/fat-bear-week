@@ -51,11 +51,14 @@ export default defineConfig([
     },
   },
   globalIgnores([
+    ".cypress-cache/**",
     ".next/**",
-    "out/**",
     "build/**",
     "coverage/**",
+    "cypress/screenshots/**",
+    "cypress/videos/**",
     "next-env.d.ts",
     "node_modules/**",
+    "out/**",
   ]),
 ]);
