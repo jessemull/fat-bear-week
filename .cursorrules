@@ -1,0 +1,266 @@
+# Fat Bear Week Fantasy Bracket — Cursor Rules
+
+## Project Overview
+
+This is a Next.js / TypeScript monorepo for a private Fat Bear Week fantasy
+bracket pool (fatbearweek.net):
+
+- `/web` — Next.js App Router frontend and API (deploys to Vercel)
+- `/database` — PostgreSQL migrations for Supabase
+
+Domain concepts: tournaments, bears, matchups, pools, invitations, entries,
+and picks. The app is a private prediction league around the official Fat Bear
+Week tournament — it does not replace official voting.
+
+---
+
+## General Principles
+
+- Prefer simple solutions over clever ones
+- Don't over-engineer; this is a small project for ~50–100 friends
+- Respect the cost-optimized architecture (Vercel + Supabase free tiers)
+- All secrets come from environment variables, never hardcode them
+- Invite-only access; no public registration
+
+---
+
+## Alphabetization Rules
+
+Always alphabetize the following when possible:
+
+### TypeScript/React
+
+- **Imports:** Sort by package name (external first, then @/ internal, then relative)
+- **Named imports:** Sort members alphabetically: `import { A, B, C } from 'x'`
+- **Object keys:** Sort object literal keys alphabetically
+- **Interface/Type properties:** Sort alphabetically
+- **JSX props:** Sort alphabetically, with `key` first and callbacks (`on*`) last
+- **Union types:** Sort alphabetically: `null | number | string`
+- **CSS classes in className:** Sort alphabetically when practical
+
+**Enforced by:** `eslint-plugin-perfectionist` for TypeScript (configured in
+`web/eslint.config.mjs`)
+
+---
+
+## Comment Spacing Rules
+
+### General Comments in Code
+
+- **Empty line above and below:** Standalone comments should have an empty line
+  above and below them for readability
+- **Block start exception:** If a comment is at the start of a code block
+  (e.g., first line of a function body), it should only have an empty line
+  below it, not above
+- **Block end exception:** If a comment is at the end of a code block, it
+  should only have an empty line above it, not below
+
+### JSX Comments
+
+- **No empty lines:** Comments inside JSX should NOT have empty lines above or
+  below them (keeps JSX compact)
+
+### Function/Class Documentation
+
+- **JSDoc (TypeScript):** Block comments directly above the function/component,
+  no blank line between comment and declaration
+
+### Examples
+
+**Good (TypeScript):**
+
+```typescript
+function Component() {
+  return (
+    <div>
+      {/* Header section */}
+      <header>...</header>
+      {/* Content section */}
+      <main>...</main>
+    </div>
+  );
+}
+```
+
+---
+
+## Testing Philosophy
+
+Tests should serve three purposes: **documentation**, **confidence**, and
+**safety**.
+
+### Core Principles
+
+1. **Tests document the code** — Test names and structure should explain what
+   the code does. Someone reading tests should understand the expected behavior.
+
+2. **Cover happy and sad paths** — Every function with logic should have tests
+   for:
+   - Success cases (happy path)
+   - Failure cases (sad path)
+   - Edge cases (null, empty, boundary values)
+
+3. **Tests enable safe refactoring** — If tests pass after a refactor, the
+   behavior is preserved. Tests should catch regressions.
+
+4. **Don't overtest** — Focus on behavior, not implementation details. Don't
+   test:
+   - Every line of code
+   - Private/internal functions
+   - Third-party library behavior
+   - Simple getters/setters
+
+### What to Test
+
+| Test | Don't Test |
+|------|------------|
+| Public APIs and functions | Internal implementation details |
+| Business logic | Framework/library code |
+| Edge cases and error handling | Simple pass-through functions |
+| Integration points (APIs, DB) | Trivial code (getters, setters) |
+
+### Test Structure
+
+```typescript
+it("should [expected behavior] when [condition]", () => {
+  // Arrange
+  // Act
+  // Assert
+});
+```
+
+### Guidelines
+
+- **One concept per test** — Each test verifies one logical behavior
+- **Descriptive names** — Test name should describe the scenario and expectation
+- **Fast tests** — Tests should run quickly to encourage frequent runs
+- **Isolated tests** — Tests should not depend on each other or external state
+- **Test behavior, not implementation** — Verify *what* code does, not *how*
+
+---
+
+## TypeScript/Next.js Guidelines (`/web`)
+
+### Structure
+
+- Use Next.js App Router (`app/` directory)
+- API routes in `app/api/`
+- Components in `components/`
+- Server-only utilities in `lib/*.server.ts`
+- Client utilities in `lib/*.client.ts`
+
+### Style
+
+- Use TypeScript strict mode
+- Use `camelCase` for functions and variables
+- Use `PascalCase` for components and types
+- Prefer `interface` over `type` for object shapes
+- Use named exports, not default exports (except Next.js `page.tsx` /
+  `layout.tsx` / `route.ts` conventions)
+
+### Components
+
+- Use functional components with hooks
+- Colocate component-specific types in the same file
+- Use Tailwind CSS for styling
+- Prefer Server Components by default; mark Client Components explicitly
+
+### API Routes
+
+- Validate request data with Zod before processing
+- Return consistent JSON responses: `{ data }` or `{ error }`
+- Check session / invite auth in route handlers before mutations
+
+### Database
+
+- Use Supabase client helpers from `lib/` (anon on client, service role on
+  server only)
+- Never expose service keys to the client
+
+### Auth
+
+- Invite-only pool access (personal invite tokens)
+- Join flow: valid invite + display name + password
+- Session via HTTP-only cookie (or equivalent); no public signup
+- Protect admin routes and mutation APIs server-side
+
+---
+
+## Database Conventions
+
+- UUIDs for all primary keys
+- `created_at` and `updated_at` timestamps on mutable tables
+- Use `TIMESTAMPTZ` not `TIMESTAMP`
+- JSONB for flexible data when needed
+- Index columns used in WHERE clauses
+- Triggers maintain `updated_at` automatically
+
+---
+
+## Git Conventions
+
+- Branch naming: `feature/description`, `fix/description`
+- Commit messages: imperative mood ("Add feature", not "Added feature")
+- Keep PRs focused on one change
+- `main` → Vercel Preview; `release` → Vercel Production
+
+---
+
+## When Writing Code
+
+1. Check if similar code exists before creating new files
+2. Follow existing patterns in the codebase
+3. Add types (TypeScript)
+4. Handle errors gracefully with informative messages
+5. Don't add dependencies unless necessary
+6. Keep functions small and focused
+7. Write code that's easy to test
+8. **Alphabetize** imports, object keys, props, and list items
+9. **Space comments** appropriately (see Comment Spacing Rules)
+
+---
+
+## Project-Specific Notes
+
+### Fat Bear Week Domain
+
+- The official Fat Bear Week tournament is the source of truth for winners
+- This app stores pool predictions; scoring derives from matchup `winner_id`
+- Vote totals (`official_votes_a` / `official_votes_b`) are optional display
+  metadata, not required for scoring
+- Tournament format can vary year to year — prefer generic rounds/matchups
+  over hardcoding team counts
+- One bracket per participant per pool (v1)
+- Individual invite tokens preferred over a single shared invite URL
+
+### Supabase
+
+- Free tier PostgreSQL; keep the schema small
+- Environment variable: `SUPABASE_SERVICE_KEY` (server-only)
+- Apply migrations via SQL Editor; regenerate `database/bootstrap.sql` with
+  `make db-bootstrap` after schema changes
+
+### Scope Guardrails (v1)
+
+- No payments, ads, public tournaments, or native apps
+- No multiple brackets per person
+- Scraping / automation of official results is optional later; admin result
+  entry is the primary path
+
+---
+
+## Quality Commands
+
+```bash
+# Run linter
+make lint
+
+# Run tests
+make test
+
+# Run security scans
+make security
+
+# Format / autofix (ESLint --fix)
+make format
+```
