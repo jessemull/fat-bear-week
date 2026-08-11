@@ -13,7 +13,7 @@ Two Supabase projects are used: one for development (Preview / local) and one fo
 
 ### Full schema reset (wipe and re-bootstrap)
 
-If you need to reset an existing project to a clean schema:
+If you need to reset an existing project to a clean schema (including after amending `001` during early scaffold):
 
 1. In Supabase SQL Editor, run [`database/scripts/drop_all_tables.sql`](../database/scripts/drop_all_tables.sql).
 2. Run `database/bootstrap.sql` once.
@@ -37,12 +37,31 @@ Then retry the request.
 
 ## Adding a new migration
 
-1. Add a new file to `database/migrations/` with the next number and a descriptive name (e.g. `002_add_sessions.sql`).
+1. Add a new file to `database/migrations/` with the next number and a descriptive name (e.g. `002_sessions.sql`).
 2. Run the new migration against existing dev and prod projects (SQL Editor).
 3. Run `make db-bootstrap` and commit the updated `database/bootstrap.sql`.
+
+## Planned Phase 1 migrations
+
+Ship these as numbered SQL files before (or with) the invite/join and admin work — do not bury them in app code:
+
+| Planned file | Purpose |
+| ------------ | ------- |
+| `002_sessions.sql` | HTTP-only session store (token hash, user_id, expires_at, created_at); indexes for lookup and expiry cleanup |
+| `003_commissioner_gate.sql` | Commissioner / admin role on `users` or a small `pool_admins` table so pool management and result publishing are server-gated |
+
+Until those land, RLS remains enabled with **no policies** on app tables (anon/authenticated denied; service role bypasses RLS on the server).
+
+## Schema notes (001)
+
+- Each `pools` row requires `tournament_id` (pool ↔ tournament link).
+- `matchups.winner_id` must be null, `bear_a_id`, or `bear_b_id` (bye-safe).
+- Invite consumption is `invitations.used_at IS NOT NULL` (not merely `used_by`).
 
 ## Related
 
 - [ENVIRONMENTS.md](ENVIRONMENTS.md)
 - [DEPLOYMENT.md](DEPLOYMENT.md)
 - [ARCHITECTURE.md](ARCHITECTURE.md)
+- [SECURITY.md](SECURITY.md)
+- [ROADMAP.md](ROADMAP.md)

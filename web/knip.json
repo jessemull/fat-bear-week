@@ -8,10 +8,8 @@
     "@testing-library/user-event",
     "lighthouse",
     "lint-staged",
-    "lucide-react",
     "server-only",
-    "start-server-and-test",
-    "zod"
+    "start-server-and-test"
   ],
   "next": true
 }

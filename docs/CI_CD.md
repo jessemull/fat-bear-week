@@ -27,7 +27,7 @@ Do **not** rewrite CI lightly. Document changes in the PR; treat as human-review
 | Format (ESLint `--fix`) | Yes | Applied in the runner |
 | Lint | Yes | `make lint-ci` |
 | Typecheck | Yes | `tsc --noEmit` |
-| Knip | Yes | Unused files / deps (`web/knip.json` ignores intentional scaffold packages) |
+| Knip | Yes | Unused files / deps. Temporary `ignoreDependencies` only for not-yet-wired packages (`@supabase/*`, `server-only`, tooling); **remove each ignore when that package is first imported** so knip stays a real gate. |
 | Unit tests + coverage | Yes | Vitest ≥80% thresholds |
 | Security | Yes | `npm audit --omit=dev` (runtime deps; see `docs/DEPENDENCIES.md` for LHCI transitive notes) |
 | Build | Yes | Next.js production build |

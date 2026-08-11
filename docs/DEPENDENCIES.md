@@ -65,3 +65,4 @@ Do **not** run `npm audit fix --force`.
 - Target stack: Next **16** + Tailwind **4** + React **19** + TypeScript **5+** + Vitest + ESLint **9** (flat config).
 - ESLint: `eslint-config-next/core-web-vitals` + perfectionist (v5) + unused-imports in `web/eslint.config.mjs`.
 - **No Prettier** — format with `make format` (ESLint `--fix`), matching nextdoor. Crow/100-letters use Prettier; do not dual-stack here.
+- **Knip ignores:** `web/knip.json` `ignoreDependencies` may list packages reserved for Phase 1 or CLI-only wiring. When you first import a package in app/lib code (or drop the unused package), **delete it from `ignoreDependencies`** in the same PR.

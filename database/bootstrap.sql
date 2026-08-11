@@ -3,6 +3,9 @@
 -- 001_initial_schema.sql
 -- Fat Bear Week Fantasy Bracket — initial schema
 -- Conventions: UUID PKs, TIMESTAMPTZ, created_at/updated_at on mutable tables
+--
+-- RLS is enabled on all app tables with no policies yet: the anon/authenticated
+-- roles cannot read or write. The service role bypasses RLS (server-only).
 
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
@@ -32,29 +35,10 @@ CREATE TABLE users (
 
 CREATE UNIQUE INDEX users_email_unique ON users (email) WHERE email IS NOT NULL;
 
--- ---------------------------------------------------------------------------
--- pools
--- ---------------------------------------------------------------------------
-
-CREATE TABLE pools (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL,
-  invite_prefix TEXT,
-  max_players INTEGER NOT NULL DEFAULT 100 CHECK (max_players > 0),
-  bracket_deadline TIMESTAMPTZ,
-  scoring_system TEXT NOT NULL DEFAULT 'standard_1_2_4_8',
-  show_brackets_before_lock BOOLEAN NOT NULL DEFAULT FALSE,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TRIGGER pools_updated_at
-  BEFORE UPDATE ON pools
-  FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 
 -- ---------------------------------------------------------------------------
--- tournaments
+-- tournaments (before pools — pools reference a tournament)
 -- ---------------------------------------------------------------------------
 
 CREATE TABLE tournaments (
@@ -72,6 +56,34 @@ CREATE TRIGGER tournaments_updated_at
   BEFORE UPDATE ON tournaments
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
+
+ALTER TABLE tournaments ENABLE ROW LEVEL SECURITY;
+
+-- ---------------------------------------------------------------------------
+-- pools (each pool is tied to exactly one tournament)
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE pools (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tournament_id UUID NOT NULL REFERENCES tournaments (id) ON DELETE RESTRICT,
+  name TEXT NOT NULL,
+  invite_prefix TEXT,
+  max_players INTEGER NOT NULL DEFAULT 100 CHECK (max_players > 0),
+  bracket_deadline TIMESTAMPTZ,
+  scoring_system TEXT NOT NULL DEFAULT 'standard_1_2_4_8',
+  show_brackets_before_lock BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX pools_tournament_id_idx ON pools (tournament_id);
+
+CREATE TRIGGER pools_updated_at
+  BEFORE UPDATE ON pools
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+ALTER TABLE pools ENABLE ROW LEVEL SECURITY;
 
 -- ---------------------------------------------------------------------------
 -- bears
@@ -101,8 +113,11 @@ CREATE TRIGGER bears_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
+ALTER TABLE bears ENABLE ROW LEVEL SECURITY;
+
 -- ---------------------------------------------------------------------------
 -- matchups
+-- winner_id must be bear_a, bear_b, or null (covers byes when one side is null)
 -- ---------------------------------------------------------------------------
 
 CREATE TABLE matchups (
@@ -121,7 +136,12 @@ CREATE TABLE matchups (
   ends_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE (tournament_id, round, position)
+  UNIQUE (tournament_id, round, position),
+  CONSTRAINT matchups_winner_is_participant CHECK (
+    winner_id IS NULL
+    OR winner_id = bear_a_id
+    OR winner_id = bear_b_id
+  )
 );
 
 CREATE INDEX matchups_tournament_id_idx ON matchups (tournament_id);
@@ -132,8 +152,11 @@ CREATE TRIGGER matchups_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
+ALTER TABLE matchups ENABLE ROW LEVEL SECURITY;
+
 -- ---------------------------------------------------------------------------
 -- invitations (individual, curated invite tokens)
+-- used_at is the non-reuse signal; used_by is optional audit (may be nullified)
 -- ---------------------------------------------------------------------------
 
 CREATE TABLE invitations (
@@ -141,13 +164,20 @@ CREATE TABLE invitations (
   pool_id UUID NOT NULL REFERENCES pools (id) ON DELETE CASCADE,
   token TEXT NOT NULL UNIQUE,
   name_hint TEXT,
+  used_at TIMESTAMPTZ,
   used_by UUID REFERENCES users (id) ON DELETE SET NULL,
   expires_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- used_at IS NOT NULL means the invite is permanently consumed, even if
+-- used_by is later nullified by user deletion (ON DELETE SET NULL).
+
 CREATE INDEX invitations_pool_id_idx ON invitations (pool_id);
+CREATE INDEX invitations_used_at_idx ON invitations (used_at);
 CREATE INDEX invitations_used_by_idx ON invitations (used_by);
+
+ALTER TABLE invitations ENABLE ROW LEVEL SECURITY;
 
 -- ---------------------------------------------------------------------------
 -- entries (one bracket per user per pool)
@@ -165,6 +195,8 @@ CREATE TABLE entries (
 
 CREATE INDEX entries_pool_id_idx ON entries (pool_id);
 
+ALTER TABLE entries ENABLE ROW LEVEL SECURITY;
+
 -- ---------------------------------------------------------------------------
 -- picks
 -- ---------------------------------------------------------------------------
@@ -180,3 +212,5 @@ CREATE TABLE picks (
 
 CREATE INDEX picks_entry_id_idx ON picks (entry_id);
 CREATE INDEX picks_matchup_id_idx ON picks (matchup_id);
+
+ALTER TABLE picks ENABLE ROW LEVEL SECURITY;

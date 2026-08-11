@@ -32,10 +32,13 @@ to Preview, Production, or both.
 
 | Variable | Preview | Production |
 |----------|---------|------------|
+| `NEXT_PUBLIC_SITE_URL` | Preview URL or `https://www.fatbearweek.net` | `https://www.fatbearweek.net` |
 | `NEXT_PUBLIC_SUPABASE_URL` | Dev project URL | Prod project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Dev anon key | Prod anon key |
 | `SUPABASE_URL` | Dev project URL | Prod project URL |
 | `SUPABASE_SERVICE_KEY` | Dev service key | Prod service key |
+
+`NEXT_PUBLIC_SITE_URL` is the canonical origin for `robots.ts` / `sitemap.ts` (and future absolute links). When unset or invalid, the app falls back to `https://www.fatbearweek.net`. Locally you may use `http://localhost:3000`.
 
 ### Local development
 

@@ -1,9 +1,10 @@
 import type { MetadataRoute } from "next";
 
+import { getSiteUrl } from "@/lib/site-url";
+
 /** Public marketing surfaces only — private pool routes stay out of the sitemap. */
 export default function sitemap(): MetadataRoute.Sitemap {
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://fatbearweek.net";
+  const siteUrl = getSiteUrl();
 
   return [
     {

@@ -8,7 +8,7 @@ TRUNCATE TABLE
   invitations,
   matchups,
   bears,
-  tournaments,
   pools,
+  tournaments,
   users
-RESTART IDENTITY CASCADE;
+CASCADE;

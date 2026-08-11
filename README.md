@@ -155,6 +155,7 @@ Copy [`web/.env.example`](web/.env.example) to `web/.env.local`:
 
 | Variable | Purpose |
 | :------- | :------ |
+| `NEXT_PUBLIC_SITE_URL` | Canonical site origin (`robots` / `sitemap`; default `https://www.fatbearweek.net`) |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL (client) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key (client) |
 | `SUPABASE_URL` | Supabase project URL (server) |
