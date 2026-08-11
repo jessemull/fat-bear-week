@@ -63,4 +63,5 @@ Do **not** run `npm audit fix --force`.
 ## Notes
 
 - Target stack: Next **16** + Tailwind **4** + React **19** + TypeScript **5+** + Vitest + ESLint **9** (flat config).
-- ESLint: `eslint-config-next/core-web-vitals` + perfectionist in `web/eslint.config.mjs`.
+- ESLint: `eslint-config-next/core-web-vitals` + perfectionist (v5) + unused-imports in `web/eslint.config.mjs`.
+- **No Prettier** — format with `make format` (ESLint `--fix`), matching nextdoor. Crow/100-letters use Prettier; do not dual-stack here.

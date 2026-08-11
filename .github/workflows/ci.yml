@@ -1,14 +1,23 @@
-# CI: format, lint, typecheck, knip, test, security, build, e2e, lighthouse.
-name: CI
+# Quality gates: format, lint, typecheck, knip, test, security, build, e2e, lighthouse.
+#
+# Triggers (avoids double runs on main → release promote PRs):
+# - pull_request → main: feature-branch PRs
+# - push → main / release: direct pushes and merges (including promote merge to release)
+name: Quality
 
 on:
   pull_request:
-    branches: [main, release]
+    branches: [main]
   push:
     branches: [main, release]
 
+concurrency:
+  cancel-in-progress: true
+  group: quality-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+
 jobs:
-  lint-test-security-build:
+  quality-gates:
+    name: quality-gates
     runs-on: ubuntu-latest
 
     steps:
@@ -44,6 +53,14 @@ jobs:
 
       - name: Test (with coverage thresholds)
         run: make test
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: ignore
+          name: coverage-report
+          path: web/coverage/
 
       - name: Security
         run: make security

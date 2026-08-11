@@ -8,7 +8,10 @@
 
 | Workflow | Trigger | Role |
 | -------- | ------- | ---- |
-| `.github/workflows/ci.yml` | PR and push to `main` / `release` | format → lint → typecheck → knip → test → security → build → e2e → lighthouse |
+| `.github/workflows/ci.yml` (`Quality` / `quality-gates`) | **PR → `main`**; **push → `main` / `release`** | format → lint → typecheck → knip → test (+ coverage artifact) → security → build → e2e → lighthouse |
+| `.github/dependabot.yml` | Weekly/monthly | npm (root + `web/`) and GitHub Actions PRs |
+
+Promote PRs (`main` → `release`) do **not** re-run Actions: they reuse the `push` checks already on `main`. Merging into `release` runs `quality-gates` once via `push`.
 
 **Deploy** is not done in Actions. Vercel deploys from Git:
 
@@ -37,7 +40,14 @@ Node **22** via `actions/setup-node` and `.nvmrc`, with npm cache on root + `web
 
 ## Local parity
 
-Husky **pre-push** runs `./scripts/preflight.sh` (same gates as CI minus e2e and lighthouse for push speed). Run those before large UI merges:
+Husky hooks:
+
+| Hook | Command |
+| ---- | ------- |
+| **pre-commit** | `lint-staged` in `web/` (ESLint `--fix` on staged JS/TS) |
+| **pre-push** | `./scripts/preflight.sh` (full gate minus e2e/lighthouse) |
+
+Run e2e and lighthouse before large UI merges:
 
 ```bash
 make preflight

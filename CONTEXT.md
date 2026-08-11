@@ -94,7 +94,7 @@ Before considering work complete, agents MUST ensure:
 | E2E smoke             | `make e2e` (UI / journey work)  |
 | Lighthouse CI         | `make lighthouse` (UI / perf)   |
 
-Husky runs `make preflight` on **every git push**. CI also runs e2e and lighthouse. See `docs/CI_CD.md`.
+Husky runs **pre-commit** (`lint-staged`) and **pre-push** (`make preflight`). CI also runs e2e and lighthouse. See `docs/CI_CD.md`.
 
 ---
 
