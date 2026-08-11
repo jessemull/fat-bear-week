@@ -1,0 +1,14 @@
+---
+description: "Path aliases and import boundaries."
+globs:
+  - "web/**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Imports & boundaries
+
+- Use `@/` path alias from `web/tsconfig.json`
+- Avoid deep relative imports across feature folders
+- Alphabetize imports (perfectionist)
+- Do not import `*.server.ts` from Client Components
+- See `AGENTS.md`

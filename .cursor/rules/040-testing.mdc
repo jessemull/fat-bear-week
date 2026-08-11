@@ -1,0 +1,15 @@
+---
+description: "Vitest and Testing Library expectations."
+globs:
+  - "**/*.{test,spec}.{ts,tsx}"
+  - "web/tests/**/*"
+  - "web/vitest.config.mts"
+alwaysApply: false
+---
+
+# Testing
+
+- Prefer behavior tests (roles, names, keyboard)
+- Coverage goal ≥80% on `lib/` / tested modules as Phase 1 grows
+- Do not delete tests only to pass coverage
+- See `docs/TESTING.md`

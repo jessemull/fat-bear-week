@@ -21,7 +21,7 @@ features in phases below; check items off as they ship.
 
 - [x] Next.js + TypeScript app under `web/`
 - [x] Makefile, CI, ESLint (perfectionist), Vitest
-- [x] `.cursorrules` and review checklist
+- [x] Agent governance stack (`CONTEXT.md`, `AGENTS.md`, `docs/*`, `.cursor/`)
 - [x] Deployment / environments docs (`main` Preview, `release` Production)
 - [x] Initial SQL schema (`users`, `pools`, `tournaments`, `bears`,
       `matchups`, `invitations`, `entries`, `picks`)

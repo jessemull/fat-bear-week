@@ -1,0 +1,15 @@
+---
+description: "Secrets, invites, sessions, and client bundle safety."
+globs:
+  - "web/**/*.{ts,tsx}"
+  - "database/**/*"
+alwaysApply: false
+---
+
+# Security
+
+- No secrets in source or client bundle
+- `SUPABASE_SERVICE_KEY` server-only — never `NEXT_PUBLIC_*`
+- Invite tokens unguessable; validate sessions server-side
+- Do not log passwords, tokens, or PII
+- See `docs/SECURITY.md`

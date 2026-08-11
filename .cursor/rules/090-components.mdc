@@ -1,0 +1,14 @@
+---
+description: "React component composition rules."
+globs:
+  - "web/components/**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Components
+
+- Prefer shared components over copy-pasted shells
+- `'use client'` only when required
+- Buttons need `type="button"` unless submitting forms; prefer `next/link` for nav
+- Alphabetize JSX props (`key` first, `on*` last)
+- See `docs/ARCHITECTURE.md`, `docs/ACCESSIBILITY.md`

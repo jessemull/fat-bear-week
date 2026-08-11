@@ -14,6 +14,7 @@ pool).
 - [Features](#features)
 - [Technologies](#technologies-used)
 - [Architecture](#architecture)
+- [Agent / contributor governance](#agent--contributor-governance)
 - [Pull requests](#pull-requests)
 - [Repository structure](#repository-structure)
 - [Makefile](#makefile)
@@ -56,8 +57,9 @@ Scaffold **v0** ships infrastructure only. Planned product features:
 
 ## Technologies used
 
-Conventions live in [`.cursorrules`](.cursorrules): alphabetized imports and
-object keys; `eslint-plugin-perfectionist`; comment spacing; no secrets in code.
+Conventions live in [`CONTEXT.md`](CONTEXT.md) and [`AGENTS.md`](AGENTS.md):
+alphabetized imports and object keys; `eslint-plugin-perfectionist`; comment
+spacing; no secrets in code.
 
 **Web:** Next.js 16+ (App Router), React 19, TypeScript (strict), Tailwind CSS,
 Zod, Vitest + Testing Library, Lucide icons.
@@ -85,25 +87,42 @@ Zod, Vitest + Testing Library, Lucide icons.
 **Branch strategy:** `main` → Vercel Preview; `release` → Vercel Production
 (`fatbearweek.net`).
 
+## Agent / contributor governance
+
+AI agents and contributors should start with [`CONTEXT.md`](CONTEXT.md)
+(mandatory reading order, constraints, quality gates), then
+[`AGENTS.md`](AGENTS.md) and `docs/`. Review severity tiers live in
+[`docs/REVIEW.md`](docs/REVIEW.md); human onboarding in
+[`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md).
+
+Cursor rules and skills: [`.cursor/rules/`](.cursor/rules/),
+[`.cursor/skills/`](.cursor/skills/).
+
+Quality locally:
+
+```bash
+make help
+make lint && make test && make security && make build
+```
+
 ## Pull requests
 
-Use the pre-merge checklist in
-[docs/CODE_REVIEW_CHECKLIST.md](docs/CODE_REVIEW_CHECKLIST.md).
+Use severity tiers and checklist in [`docs/REVIEW.md`](docs/REVIEW.md).
 
 ## Repository structure
 
 ```
 fat-bear-week/
-├── .cursorrules              # Conventions (alphabetization, comments, style)
+├── CONTEXT.md                # PRIMARY agent entry
+├── AGENTS.md                 # Coding standards
+├── CLAUDE.md / GEMINI.md     # Vendor redirects → CONTEXT
+├── .cursor/rules/            # alwaysApply context + scoped rules
+├── .cursor/skills/           # commit, pr-review, testing, …
 ├── .github/workflows/ci.yml  # Lint, test, security, build
 ├── database/
 │   ├── bootstrap.sql         # Generated: make db-bootstrap
 │   └── migrations/           # Numbered SQL migrations
-├── docs/
-│   ├── CODE_REVIEW_CHECKLIST.md
-│   ├── DEPLOYMENT.md
-│   ├── ENVIRONMENTS.md
-│   └── ROADMAP.md
+├── docs/                     # Governance + product docs
 ├── web/                      # Next.js app (Vercel root directory)
 │   ├── app/
 │   ├── components/
@@ -113,7 +132,6 @@ fat-bear-week/
 ├── Makefile
 └── README.md
 ```
-
 ## Makefile
 
 Run **`make help`** for the short list.
@@ -156,7 +174,7 @@ Dev vs prod matrix: [docs/ENVIRONMENTS.md](docs/ENVIRONMENTS.md).
 
 3. **Database** — For a new Supabase project, run `database/bootstrap.sql`
    once in the SQL Editor (`make db-bootstrap` regenerates it). See
-   [docs/ENVIRONMENTS.md](docs/ENVIRONMENTS.md).
+   [docs/SUPABASE_MIGRATIONS.md](docs/SUPABASE_MIGRATIONS.md).
 
 4. **Dev server**
    ```bash
@@ -235,9 +253,12 @@ Target **~$0/month** on free tiers for a small private pool:
 
 | Doc | Purpose |
 | :-- | :------ |
-| **[.cursorrules](.cursorrules)** | Project conventions |
+| **[CONTEXT.md](CONTEXT.md)** | Primary agent entry: reading order, constraints, quality gates |
+| **[AGENTS.md](AGENTS.md)** | Coding standards and forbidden patterns |
+| **[docs/GOVERNANCE.md](docs/GOVERNANCE.md)** | Autonomy matrix and PR process |
+| **[docs/REVIEW.md](docs/REVIEW.md)** | Review severity tiers and checklist |
 | **[docs/ROADMAP.md](docs/ROADMAP.md)** | Feature backlog and phases |
 | **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** | Vercel deploy and branch promotion |
 | **[docs/ENVIRONMENTS.md](docs/ENVIRONMENTS.md)** | Dev vs prod configuration |
-| **[docs/CODE_REVIEW_CHECKLIST.md](docs/CODE_REVIEW_CHECKLIST.md)** | Pre-merge review checklist |
+| **[docs/SUPABASE_MIGRATIONS.md](docs/SUPABASE_MIGRATIONS.md)** | Bootstrap and incremental migrations |
 | **[database/migrations/](database/migrations/)** | Schema source of truth |

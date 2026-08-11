@@ -53,7 +53,7 @@ db-migrate-prod:
 	@echo "New project (no schema yet): Run database/bootstrap.sql once in SQL Editor."
 	@echo "Existing project: Run only migration files not yet applied, in numeric order."
 	@echo ""
-	@echo "See docs/ENVIRONMENTS.md for details."
+	@echo "See docs/SUPABASE_MIGRATIONS.md for details."
 	@echo ""
 	@echo "=============================================="
 
