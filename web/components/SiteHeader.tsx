@@ -103,7 +103,7 @@ export function SiteHeader({
 
   return (
     <header className="border-b border-amber-600/80 bg-zinc-50 dark:bg-zinc-950">
-      <div className="flex w-full items-center gap-5 px-5 py-4 sm:px-8">
+      <div className="flex w-full items-center gap-5 px-4 py-4 sm:px-6">
         <button
           aria-controls={menuId}
           aria-expanded={menuOpen}
@@ -162,7 +162,7 @@ export function SiteHeader({
       {menuOpen ? (
         <nav
           aria-label="Mobile"
-          className="flex flex-col gap-3 border-t border-zinc-200 px-5 py-4 sm:px-8 md:hidden dark:border-zinc-800"
+          className="flex flex-col gap-3 border-t border-zinc-200 px-4 py-4 sm:px-6 md:hidden dark:border-zinc-800"
           id={menuId}
         >
           <NavItems isCommissioner={isCommissioner} onNavigate={closeMenu} />
