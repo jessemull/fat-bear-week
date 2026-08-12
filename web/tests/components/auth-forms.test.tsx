@@ -55,7 +55,11 @@ describe("auth forms", () => {
     );
 
     render(
-      <JoinForm email="otis@example.com" token={"t".repeat(32)} />,
+      <JoinForm
+        email="otis@example.com"
+        token={"t".repeat(32)}
+        turnstileToken="test-turnstile-token"
+      />,
     );
     await user.type(screen.getByLabelText("Display name"), "Otis");
     await user.type(screen.getByLabelText("Password"), "password1");
@@ -71,6 +75,7 @@ describe("auth forms", () => {
         email="jess@example.com"
         nameHint="Jess"
         token={"t".repeat(32)}
+        turnstileToken="test-turnstile-token"
       />,
     );
 
@@ -82,7 +87,13 @@ describe("auth forms", () => {
   it("should submit JoinForm", async () => {
     const user = userEvent.setup();
 
-    render(<JoinForm email="otis@example.com" token={"t".repeat(32)} />);
+    render(
+      <JoinForm
+        email="otis@example.com"
+        token={"t".repeat(32)}
+        turnstileToken="test-turnstile-token"
+      />,
+    );
 
     await user.type(screen.getByLabelText("Display name"), "Otis");
     await user.type(screen.getByLabelText("Password"), "password1");
@@ -99,7 +110,13 @@ describe("auth forms", () => {
   it("should reject mismatched passwords on join", async () => {
     const user = userEvent.setup();
 
-    render(<JoinForm email="otis@example.com" token={"t".repeat(32)} />);
+    render(
+      <JoinForm
+        email="otis@example.com"
+        token={"t".repeat(32)}
+        turnstileToken="test-turnstile-token"
+      />,
+    );
 
     await user.type(screen.getByLabelText("Display name"), "Otis");
     await user.type(screen.getByLabelText("Password"), "password1");
@@ -115,11 +132,13 @@ describe("auth forms", () => {
   it("should submit SignInForm and SignOutButton", async () => {
     const user = userEvent.setup();
 
-    const { rerender } = render(<SignInForm />);
+    const { rerender } = render(
+      <SignInForm turnstileToken="test-turnstile-token" />,
+    );
 
-    await user.type(screen.getByLabelText("Display name"), "Otis");
+    await user.type(screen.getByLabelText("Display Name"), "Otis");
     await user.type(screen.getByLabelText("Password"), "password1");
-    await user.click(screen.getByRole("button", { name: "Sign in" }));
+    await user.click(screen.getByRole("button", { name: "Sign In" }));
 
     expect(fetch).toHaveBeenCalledWith(
       "/api/auth/sign-in",
@@ -135,8 +154,28 @@ describe("auth forms", () => {
     );
   });
 
+  it("should toggle password visibility on SignInForm", async () => {
+    const user = userEvent.setup();
+
+    render(<SignInForm turnstileToken="test-turnstile-token" />);
+
+    const password = screen.getByLabelText("Password");
+
+    expect(password).toHaveAttribute("type", "password");
+
+    await user.click(screen.getByRole("button", { name: "Show password" }));
+
+    expect(password).toHaveAttribute("type", "text");
+
+    await user.click(screen.getByRole("button", { name: "Hide password" }));
+
+    expect(password).toHaveAttribute("type", "password");
+  });
+
   it("should render SignInForm without a11y violations", async () => {
-    const { container } = render(<SignInForm />);
+    const { container } = render(
+      <SignInForm turnstileToken="test-turnstile-token" />,
+    );
 
     expect(await axe(container)).toHaveNoViolations();
   });
@@ -161,10 +200,10 @@ describe("auth forms", () => {
       }),
     );
 
-    render(<SignInForm />);
-    await user.type(screen.getByLabelText("Display name"), "Otis");
+    render(<SignInForm turnstileToken="test-turnstile-token" />);
+    await user.type(screen.getByLabelText("Display Name"), "Otis");
     await user.type(screen.getByLabelText("Password"), "password1");
-    await user.click(screen.getByRole("button", { name: "Sign in" }));
+    await user.click(screen.getByRole("button", { name: "Sign In" }));
 
     expect(screen.getByRole("alert")).toHaveTextContent(
       "Invalid name or password.",

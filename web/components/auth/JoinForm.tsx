@@ -3,7 +3,6 @@
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
-import { TurnstileWidget } from "@/components/auth/TurnstileWidget";
 import {
   formButtonPrimaryClassName,
   formErrorClassName,
@@ -16,16 +15,21 @@ interface JoinFormProps {
   email: null | string;
   nameHint?: null | string;
   token: string;
+  turnstileToken: null | string;
 }
 
-export function JoinForm({ email, nameHint = null, token }: JoinFormProps) {
+export function JoinForm({
+  email,
+  nameHint = null,
+  token,
+  turnstileToken,
+}: JoinFormProps) {
   const router = useRouter();
   const [error, setError] = useState<null | string>(null);
   const [name, setName] = useState(nameHint ?? "");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [pending, setPending] = useState(false);
-  const [turnstileToken, setTurnstileToken] = useState<null | string>(null);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -138,14 +142,13 @@ export function JoinForm({ email, nameHint = null, token }: JoinFormProps) {
           onChange={(event) => setPasswordConfirm(event.target.value)}
         />
       </div>
-      <TurnstileWidget onToken={setTurnstileToken} />
       {error ? (
         <p className={formErrorClassName} role="alert">
           {error}
         </p>
       ) : null}
       <button
-        className={formButtonPrimaryClassName}
+        className={`${formButtonPrimaryClassName} mt-2`}
         disabled={pending}
         type="submit"
       >

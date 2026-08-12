@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { JoinForm } from "@/components/auth/JoinForm";
+import { JoinPanel } from "@/components/auth/JoinPanel";
 import {
   formHeadingClassName,
   formLinkClassName,
@@ -70,16 +70,12 @@ export default async function InvitePage({ params }: InvitePageProps) {
 
   return (
     <main className={`${formPageClassName} max-w-lg justify-center`}>
-      <div className="flex flex-col gap-2 text-center">
-        <h1 className={`text-3xl ${formHeadingClassName}`}>
-          Join {invite.poolName}
-        </h1>
-        <p className={formMutedClassName}>
-          Invite-only pool. Confirm your email, choose a display name, and set a
-          password to create your entry.
-        </p>
-      </div>
-      <JoinForm email={invite.email} nameHint={invite.nameHint} token={token} />
+      <JoinPanel
+        email={invite.email}
+        nameHint={invite.nameHint}
+        poolName={invite.poolName}
+        token={token}
+      />
     </main>
   );
 }

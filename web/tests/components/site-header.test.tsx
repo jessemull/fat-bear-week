@@ -49,7 +49,7 @@ describe("SiteHeader", () => {
       "aria-disabled",
       "true",
     );
-    expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Sign In" })).toHaveAttribute(
       "href",
       "/login",
     );
@@ -90,7 +90,7 @@ describe("SiteHeader", () => {
       "true",
     );
     expect(
-      within(mobileNav).getByRole("link", { name: "Sign in" }),
+      within(mobileNav).getByRole("link", { name: "Sign In" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Close menu" })).toHaveAttribute(
       "aria-expanded",

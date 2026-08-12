@@ -12,7 +12,7 @@ describe("HomePage", () => {
       screen.getByRole("heading", { name: "Fat Bear Week" }),
     ).toBeInTheDocument();
     expect(screen.getByText("Fantasy Bracket")).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Sign in" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Sign In" })).toBeNull();
   });
 
   it("should have no accessibility violations", async () => {

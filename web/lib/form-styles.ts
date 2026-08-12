@@ -1,7 +1,7 @@
 /** Shared form chrome that stays readable in light and dark mode. */
 
 export const formLabelClassName =
-  "text-sm font-medium text-zinc-900 dark:text-zinc-100";
+  "text-base font-medium text-zinc-900 dark:text-zinc-100";
 
 export const formInputClassName =
   "rounded border border-zinc-300 bg-white px-3 py-2 text-zinc-900 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50";

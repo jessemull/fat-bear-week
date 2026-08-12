@@ -1,9 +1,9 @@
 "use client";
 
+import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
-import { TurnstileWidget } from "@/components/auth/TurnstileWidget";
 import {
   formButtonPrimaryClassName,
   formErrorClassName,
@@ -11,13 +11,17 @@ import {
   formLabelClassName,
 } from "@/lib/form-styles";
 
-export function SignInForm() {
+interface SignInFormProps {
+  turnstileToken: null | string;
+}
+
+export function SignInForm({ turnstileToken }: SignInFormProps) {
   const router = useRouter();
   const [error, setError] = useState<null | string>(null);
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [pending, setPending] = useState(false);
-  const [turnstileToken, setTurnstileToken] = useState<null | string>(null);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -56,13 +60,14 @@ export function SignInForm() {
     <form className="mx-auto flex w-full max-w-md flex-col gap-4" onSubmit={onSubmit}>
       <div className="flex flex-col gap-2">
         <label className={formLabelClassName} htmlFor="sign-in-name">
-          Display name
+          Display Name
         </label>
         <input
           autoComplete="username"
           className={formInputClassName}
           id="sign-in-name"
           name="name"
+          placeholder="Enter a name..."
           required
           value={name}
           onChange={(event) => setName(event.target.value)}
@@ -72,30 +77,44 @@ export function SignInForm() {
         <label className={formLabelClassName} htmlFor="sign-in-password">
           Password
         </label>
-        <input
-          autoComplete="current-password"
-          className={formInputClassName}
-          id="sign-in-password"
-          minLength={8}
-          name="password"
-          required
-          type="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-        />
+        <div className="relative">
+          <input
+            autoComplete="current-password"
+            className={`${formInputClassName} w-full pr-11`}
+            id="sign-in-password"
+            minLength={8}
+            name="password"
+            placeholder="Enter a password..."
+            required
+            type={passwordVisible ? "text" : "password"}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+          <button
+            aria-label={passwordVisible ? "Hide password" : "Show password"}
+            className="absolute top-1/2 right-2 -translate-y-1/2 rounded p-1.5 text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-100"
+            type="button"
+            onClick={() => setPasswordVisible((visible) => !visible)}
+          >
+            {passwordVisible ? (
+              <EyeOff aria-hidden="true" className="size-4" strokeWidth={2} />
+            ) : (
+              <Eye aria-hidden="true" className="size-4" strokeWidth={2} />
+            )}
+          </button>
+        </div>
       </div>
-      <TurnstileWidget onToken={setTurnstileToken} />
       {error ? (
         <p className={formErrorClassName} role="alert">
           {error}
         </p>
       ) : null}
       <button
-        className={formButtonPrimaryClassName}
+        className={`${formButtonPrimaryClassName} mt-2`}
         disabled={pending}
         type="submit"
       >
-        {pending ? "Signing in…" : "Sign in"}
+        {pending ? "Signing in…" : "Sign In"}
       </button>
     </form>
   );

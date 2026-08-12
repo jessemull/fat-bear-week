@@ -143,7 +143,7 @@ export function SiteHeader({ isSignedIn }: SiteHeaderProps) {
             </button>
           ) : (
             <Link className={authLinkClassName} href="/login">
-              Sign in
+              Sign In
             </Link>
           )}
         </div>
@@ -171,7 +171,7 @@ export function SiteHeader({ isSignedIn }: SiteHeaderProps) {
               href="/login"
               onClick={closeMenu}
             >
-              Sign in
+              Sign In
             </Link>
           )}
         </nav>
