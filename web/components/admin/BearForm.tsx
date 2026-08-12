@@ -117,6 +117,7 @@ export function BearForm({ bear, mode, tournamentId }: BearFormProps) {
           className={formInputClassName}
           id="bear-name"
           name="name"
+          placeholder="e.g. 99 or 480 Otis"
           required
           value={name}
           onChange={(event) => setName(event.target.value)}
@@ -130,6 +131,7 @@ export function BearForm({ bear, mode, tournamentId }: BearFormProps) {
           className={formInputClassName}
           id="bear-nickname"
           name="nickname"
+          placeholder="e.g. The Boss"
           value={nickname}
           onChange={(event) => setNickname(event.target.value)}
         />
@@ -142,6 +144,7 @@ export function BearForm({ bear, mode, tournamentId }: BearFormProps) {
           className={formTextareaClassName}
           id="bear-identification"
           name="identification"
+          placeholder="Physical traits used to recognize this bear..."
           value={identification}
           onChange={(event) => setIdentification(event.target.value)}
         />
@@ -154,6 +157,7 @@ export function BearForm({ bear, mode, tournamentId }: BearFormProps) {
           className={formTextareaClassName}
           id="bear-biography"
           name="biography"
+          placeholder="Life history, family, and Brooks River notes..."
           value={biography}
           onChange={(event) => setBiography(event.target.value)}
         />
