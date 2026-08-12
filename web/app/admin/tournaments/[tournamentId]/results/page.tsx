@@ -34,12 +34,7 @@ export default async function TournamentResultsPage({
     listMatchupsForTournament(tournamentId),
   ]);
 
-  const bearNameById = new Map(
-    bears.map((bear) => [
-      bear.id,
-      bear.number !== null ? `#${bear.number} ${bear.name}` : bear.name,
-    ]),
-  );
+  const bearNameById = new Map(bears.map((bear) => [bear.id, bear.name]));
 
   const incomplete = matchups.filter(
     (matchup) =>

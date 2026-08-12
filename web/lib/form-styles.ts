@@ -6,6 +6,9 @@ export const formLabelClassName =
 export const formInputClassName =
   "rounded border border-zinc-300 bg-white px-3 py-2 text-zinc-900 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50";
 
+export const formTextareaClassName =
+  "min-h-28 rounded border border-zinc-300 bg-white px-3 py-2 text-zinc-900 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50";
+
 export const formSelectClassName =
   "h-10 w-full appearance-none rounded border border-zinc-300 bg-white py-0 pr-10 pl-3 text-zinc-900 leading-10 disabled:cursor-not-allowed dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50 cursor-pointer";
 

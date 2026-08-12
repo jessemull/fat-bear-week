@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { BearForm } from "@/components/admin/BearForm";
 import { BearList } from "@/components/admin/BearList";
 import { listBearsForTournament } from "@/lib/bears.server";
 import {
@@ -34,27 +33,26 @@ export default async function TournamentBearsPage({
   return (
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-2">
-        <Link
-          className={formLinkClassName}
-          href={`/admin/tournaments/${tournament.id}`}
-        >
-          Back to tournament
-        </Link>
         <h1 className={`text-3xl ${formHeadingClassName}`}>
           Bears · {tournament.year}
         </h1>
         <p className={formMutedClassName}>
-          Bears are a shared catalog used when seeding the bracket.
+          Shared catalog used when seeding the bracket.
         </p>
+        <Link
+          className={`text-sm ${formLinkClassName}`}
+          href={`/admin/tournaments/${tournament.id}`}
+        >
+          Back to Tournament
+        </Link>
+        <Link
+          className={`text-sm ${formLinkClassName}`}
+          href={`/admin/tournaments/${tournament.id}/bears/new`}
+        >
+          Create Bear
+        </Link>
       </header>
-      <section className="flex flex-col gap-4">
-        <h2 className={`text-xl ${formHeadingClassName}`}>Add bear</h2>
-        <BearForm tournamentId={tournament.id} />
-      </section>
-      <section className="flex flex-col gap-4 border-t border-zinc-200 pt-8 dark:border-zinc-700">
-        <h2 className={`text-xl ${formHeadingClassName}`}>Catalog</h2>
-        <BearList bears={bears} />
-      </section>
+      <BearList bears={bears} tournamentId={tournament.id} />
     </div>
   );
 }

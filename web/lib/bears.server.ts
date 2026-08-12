@@ -5,14 +5,17 @@ import type { BearSex } from "@/lib/tournament-types";
 import { getServiceSupabase } from "@/lib/supabase.server";
 import { getTournament } from "@/lib/tournament.server";
 
+const BEAR_SELECT =
+  "age, biography, id, identification, image_url, name, nickname, official_id, profile_url, sex";
+
 export interface BearRecord {
   age: null | number;
-  description: null | string;
+  biography: null | string;
   id: string;
+  identification: null | string;
   imageUrl: null | string;
   name: string;
   nickname: null | string;
-  number: null | number;
   officialId: null | string;
   profileUrl: null | string;
   sex: BearSex | null;
@@ -20,11 +23,11 @@ export interface BearRecord {
 
 export interface CreateBearInput {
   age?: null | number;
-  description?: null | string;
+  biography?: null | string;
+  identification?: null | string;
   imageUrl?: null | string;
   name: string;
   nickname?: null | string;
-  number?: null | number;
   officialId?: null | string;
   profileUrl?: null | string;
   sex?: BearSex | null;
@@ -32,11 +35,11 @@ export interface CreateBearInput {
 
 export interface UpdateBearInput {
   age?: null | number;
-  description?: null | string;
+  biography?: null | string;
+  identification?: null | string;
   imageUrl?: null | string;
   name?: string;
   nickname?: null | string;
-  number?: null | number;
   officialId?: null | string;
   profileUrl?: null | string;
   sex?: BearSex | null;
@@ -44,12 +47,12 @@ export interface UpdateBearInput {
 
 interface BearRow {
   age: null | number;
-  description: null | string;
+  biography: null | string;
   id: string;
+  identification: null | string;
   image_url: null | string;
   name: string;
   nickname: null | string;
-  number: null | number;
   official_id: null | string;
   profile_url: null | string;
   sex: BearSex | null;
@@ -58,12 +61,12 @@ interface BearRow {
 function mapBear(row: BearRow): BearRecord {
   return {
     age: row.age,
-    description: row.description,
+    biography: row.biography,
     id: row.id,
+    identification: row.identification,
     imageUrl: row.image_url,
     name: row.name,
     nickname: row.nickname,
-    number: row.number,
     officialId: row.official_id,
     profileUrl: row.profile_url,
     sex: row.sex,
@@ -89,10 +92,7 @@ export async function listBearsForTournament(
 
   const { data, error } = await supabase
     .from("bears")
-    .select(
-      "age, description, id, image_url, name, nickname, number, official_id, profile_url, sex",
-    )
-    .order("number", { ascending: true, nullsFirst: false })
+    .select(BEAR_SELECT)
     .order("name", { ascending: true });
 
   if (error) {
@@ -100,6 +100,29 @@ export async function listBearsForTournament(
   }
 
   return (data as BearRow[] | null)?.map(mapBear) ?? [];
+}
+
+/**
+ * Fetch one bear by id, or null if missing.
+ */
+export async function getBear(bearId: string): Promise<BearRecord | null> {
+  const supabase = getServiceSupabase();
+
+  const { data, error } = await supabase
+    .from("bears")
+    .select(BEAR_SELECT)
+    .eq("id", bearId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to get bear: ${error.message}`);
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  return mapBear(data as BearRow);
 }
 
 /**
@@ -112,18 +135,16 @@ export async function createBear(input: CreateBearInput): Promise<BearRecord> {
     .from("bears")
     .insert({
       age: input.age ?? null,
-      description: input.description ?? null,
+      biography: input.biography ?? null,
+      identification: input.identification ?? null,
       image_url: input.imageUrl ?? null,
       name: input.name,
       nickname: input.nickname ?? null,
-      number: input.number ?? null,
       official_id: input.officialId ?? null,
       profile_url: input.profileUrl ?? null,
       sex: input.sex ?? null,
     })
-    .select(
-      "age, description, id, image_url, name, nickname, number, official_id, profile_url, sex",
-    )
+    .select(BEAR_SELECT)
     .single();
 
   if (error || !data) {
@@ -153,8 +174,12 @@ export async function updateBear(
     patch.age = input.age;
   }
 
-  if (input.description !== undefined) {
-    patch.description = input.description;
+  if (input.biography !== undefined) {
+    patch.biography = input.biography;
+  }
+
+  if (input.identification !== undefined) {
+    patch.identification = input.identification;
   }
 
   if (input.imageUrl !== undefined) {
@@ -167,10 +192,6 @@ export async function updateBear(
 
   if (input.nickname !== undefined) {
     patch.nickname = input.nickname;
-  }
-
-  if (input.number !== undefined) {
-    patch.number = input.number;
   }
 
   if (input.officialId !== undefined) {
@@ -186,32 +207,20 @@ export async function updateBear(
   }
 
   if (Object.keys(patch).length === 0) {
-    const { data, error } = await supabase
-      .from("bears")
-      .select(
-        "age, description, id, image_url, name, nickname, number, official_id, profile_url, sex",
-      )
-      .eq("id", bearId)
-      .maybeSingle();
+    const existing = await getBear(bearId);
 
-    if (error) {
-      throw new Error(`Failed to get bear: ${error.message}`);
-    }
-
-    if (!data) {
+    if (!existing) {
       throw new Error("not_found");
     }
 
-    return mapBear(data as BearRow);
+    return existing;
   }
 
   const { data, error } = await supabase
     .from("bears")
     .update(patch)
     .eq("id", bearId)
-    .select(
-      "age, description, id, image_url, name, nickname, number, official_id, profile_url, sex",
-    )
+    .select(BEAR_SELECT)
     .maybeSingle();
 
   if (error) {

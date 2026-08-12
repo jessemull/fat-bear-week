@@ -4,8 +4,9 @@ import { ExternalLink } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { type KeyboardEvent } from "react";
 
-import { formMutedClassName } from "@/lib/form-styles";
 import type { TournamentRecord } from "@/lib/tournament.server";
+
+import { formMutedClassName } from "@/lib/form-styles";
 
 interface TournamentListProps {
   tournaments: TournamentRecord[];

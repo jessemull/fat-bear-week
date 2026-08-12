@@ -1,29 +1,24 @@
 "use client";
 
+import { ExternalLink } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { type KeyboardEvent } from "react";
 
-import {
-  formButtonSecondaryClassName,
-  formErrorClassName,
-  formMutedClassName,
-} from "@/lib/form-styles";
+import { formMutedClassName } from "@/lib/form-styles";
 
 export interface BearListItem {
   id: string;
   name: string;
   nickname: null | string;
-  number: null | number;
 }
 
 interface BearListProps {
   bears: BearListItem[];
+  tournamentId: string;
 }
 
-export function BearList({ bears }: BearListProps) {
+export function BearList({ bears, tournamentId }: BearListProps) {
   const router = useRouter();
-  const [error, setError] = useState<null | string>(null);
-  const [pendingId, setPendingId] = useState<null | string>(null);
 
   if (bears.length === 0) {
     return (
@@ -33,64 +28,66 @@ export function BearList({ bears }: BearListProps) {
     );
   }
 
-  async function onDelete(bearId: string) {
-    setError(null);
-    setPendingId(bearId);
+  function openBear(bearId: string) {
+    router.push(`/admin/tournaments/${tournamentId}/bears/${bearId}`);
+  }
 
-    try {
-      const response = await fetch(`/api/admin/bears/${bearId}`, {
-        method: "DELETE",
-      });
-      const json = (await response.json()) as { error?: string };
-
-      if (!response.ok) {
-        setError(json.error ?? "Unable to delete bear.");
-        return;
-      }
-
-      router.refresh();
-    } catch {
-      setError("Unable to delete bear right now.");
-    } finally {
-      setPendingId(null);
+  function onRowKeyDown(
+    event: KeyboardEvent<HTMLTableRowElement>,
+    bearId: string,
+  ) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openBear(bearId);
     }
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      {error ? (
-        <p className={formErrorClassName} role="alert">
-          {error}
-        </p>
-      ) : null}
-      <ul className="flex flex-col gap-3">
-        {bears.map((bear) => (
-          <li
-            key={bear.id}
-            className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-200 pb-3 dark:border-zinc-700"
-          >
-            <div>
-              <p className="font-medium text-zinc-900 dark:text-zinc-50">
-                {bear.number !== null ? `#${bear.number} ` : ""}
-                {bear.name}
-              </p>
-              {bear.nickname ? (
-                <p className={`text-sm ${formMutedClassName}`}>
-                  {bear.nickname}
-                </p>
-              ) : null}
-            </div>
-            <button
-              className={formButtonSecondaryClassName}
-              disabled={pendingId === bear.id}
-              type="button"
-              onClick={() => void onDelete(bear.id)}
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[20rem] border-collapse text-left text-sm">
+        <thead>
+          <tr className="border-b border-zinc-300 dark:border-zinc-600">
+            <th className={`py-2 pl-3 pr-4 font-medium ${formMutedClassName}`}>
+              Name
+            </th>
+            <th className={`py-2 pr-4 font-medium ${formMutedClassName}`}>
+              Nickname
+            </th>
+            <th className="w-10 py-2 pr-3">
+              <span className="sr-only">Open</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {bears.map((bear) => (
+            <tr
+              key={bear.id}
+              aria-label={`Open bear ${bear.name}`}
+              className="group cursor-pointer border-b border-zinc-200 transition-colors hover:bg-amber-50/80 focus-visible:bg-amber-50/80 dark:border-zinc-700 dark:hover:bg-zinc-900 dark:focus-visible:bg-zinc-900"
+              role="link"
+              tabIndex={0}
+              onClick={() => openBear(bear.id)}
+              onKeyDown={(event) => onRowKeyDown(event, bear.id)}
             >
-              {pendingId === bear.id ? "Deleting…" : "Delete"}
-            </button>
-          </li>
-        ))}
-      </ul>
+              <td className="py-3 pl-3 pr-4 font-medium text-zinc-900 dark:text-zinc-50">
+                {bear.name}
+              </td>
+              <td className={`py-3 pr-4 ${formMutedClassName}`}>
+                {bear.nickname ?? "—"}
+              </td>
+              <td className="py-3 pr-3">
+                <span className="flex justify-end">
+                  <ExternalLink
+                    aria-hidden="true"
+                    className="size-4 text-amber-800 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 dark:text-amber-400"
+                    strokeWidth={1.75}
+                  />
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

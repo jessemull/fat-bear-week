@@ -34,11 +34,11 @@ export const transitionTournamentStatusBodySchema = z
 export const createBearBodySchema = z
   .object({
     age: z.number().int().min(0).max(100).nullable().optional(),
-    description: z.string().trim().max(4000).nullable().optional(),
+    biography: z.string().trim().max(16000).nullable().optional(),
+    identification: z.string().trim().max(8000).nullable().optional(),
     imageUrl: z.string().trim().url().max(2000).nullable().optional(),
     name: z.string().trim().min(1).max(120),
     nickname: z.string().trim().max(120).nullable().optional(),
-    number: z.number().int().min(0).max(9999).nullable().optional(),
     officialId: z.string().trim().max(120).nullable().optional(),
     profileUrl: z.string().trim().url().max(2000).nullable().optional(),
     sex: bearSexSchema.nullable().optional(),
@@ -48,11 +48,11 @@ export const createBearBodySchema = z
 export const updateBearBodySchema = z
   .object({
     age: z.number().int().min(0).max(100).nullable().optional(),
-    description: z.string().trim().max(4000).nullable().optional(),
+    biography: z.string().trim().max(16000).nullable().optional(),
+    identification: z.string().trim().max(8000).nullable().optional(),
     imageUrl: z.string().trim().url().max(2000).nullable().optional(),
     name: z.string().trim().min(1).max(120).optional(),
     nickname: z.string().trim().max(120).nullable().optional(),
-    number: z.number().int().min(0).max(9999).nullable().optional(),
     officialId: z.string().trim().max(120).nullable().optional(),
     profileUrl: z.string().trim().url().max(2000).nullable().optional(),
     sex: bearSexSchema.nullable().optional(),

@@ -50,6 +50,7 @@ Ship these as numbered SQL files before (or with) the invite/join and admin work
 | `002_sessions.sql` | HTTP-only session store (token hash, user_id, expires_at, created_at); `invitations.email`; unique display names; `join_pool_with_invite` RPC |
 | `003_commissioner_gate.sql` | `users.is_commissioner` boolean for pool management and result publishing |
 | `004_invite_email_unique.sql` | Unique unused invite email per pool; distinguish `email_taken` vs `name_taken` on join |
+| `005_bears_profile_fields.sql` | Rename `description` → `identification`; add `biography`; drop `number` |
 
 Until those land, RLS remains enabled with **no policies** on app tables (anon/authenticated denied; service role bypasses RLS on the server).
 

@@ -14,7 +14,6 @@ import {
 export interface BracketSeedBear {
   id: string;
   name: string;
-  number: null | number;
 }
 
 interface BracketSeedFormProps {
@@ -23,10 +22,6 @@ interface BracketSeedFormProps {
 }
 
 function bearLabel(bear: BracketSeedBear): string {
-  if (bear.number !== null) {
-    return `#${bear.number} ${bear.name}`;
-  }
-
   return bear.name;
 }
 

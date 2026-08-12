@@ -8,6 +8,19 @@ vi.mock("@/lib/supabase.server", () => ({
   }),
 }));
 
+const sampleRow = {
+  age: null,
+  biography: null,
+  id: "b1",
+  identification: null,
+  image_url: null,
+  name: "Otis",
+  nickname: null,
+  official_id: null,
+  profile_url: null,
+  sex: "male" as const,
+};
+
 describe("bears.server", () => {
   beforeEach(() => {
     fromMock.mockReset();
@@ -38,26 +51,11 @@ describe("bears.server", () => {
 
       return {
         select: () => ({
-          order: () => ({
-            order: () =>
-              Promise.resolve({
-                data: [
-                  {
-                    age: null,
-                    description: null,
-                    id: "b1",
-                    image_url: null,
-                    name: "Otis",
-                    nickname: null,
-                    number: 480,
-                    official_id: null,
-                    profile_url: null,
-                    sex: "male",
-                  },
-                ],
-                error: null,
-              }),
-          }),
+          order: () =>
+            Promise.resolve({
+              data: [sampleRow],
+              error: null,
+            }),
         }),
       };
     });
@@ -68,12 +66,12 @@ describe("bears.server", () => {
     expect(bears).toEqual([
       {
         age: null,
-        description: null,
+        biography: null,
         id: "b1",
+        identification: null,
         imageUrl: null,
         name: "Otis",
         nickname: null,
-        number: 480,
         officialId: null,
         profileUrl: null,
         sex: "male",
@@ -97,24 +95,32 @@ describe("bears.server", () => {
     );
   });
 
+  it("should get a bear by id", async () => {
+    fromMock.mockReturnValue({
+      select: () => ({
+        eq: () => ({
+          maybeSingle: () =>
+            Promise.resolve({
+              data: sampleRow,
+              error: null,
+            }),
+        }),
+      }),
+    });
+
+    const { getBear } = await import("@/lib/bears.server");
+    const bear = await getBear("b1");
+
+    expect(bear?.name).toBe("Otis");
+  });
+
   it("should create a bear", async () => {
     fromMock.mockReturnValue({
       insert: () => ({
         select: () => ({
           single: () =>
             Promise.resolve({
-              data: {
-                age: null,
-                description: null,
-                id: "b1",
-                image_url: null,
-                name: "Otis",
-                nickname: null,
-                number: 480,
-                official_id: null,
-                profile_url: null,
-                sex: "male",
-              },
+              data: sampleRow,
               error: null,
             }),
         }),
@@ -122,7 +128,7 @@ describe("bears.server", () => {
     });
 
     const { createBear } = await import("@/lib/bears.server");
-    const bear = await createBear({ name: "Otis", number: 480, sex: "male" });
+    const bear = await createBear({ name: "Otis", sex: "male" });
 
     expect(bear.name).toBe("Otis");
   });
@@ -191,16 +197,9 @@ describe("bears.server", () => {
             maybeSingle: () =>
               Promise.resolve({
                 data: {
+                  ...sampleRow,
                   age: 20,
-                  description: null,
-                  id: "b1",
-                  image_url: null,
-                  name: "Otis",
                   nickname: "King",
-                  number: 480,
-                  official_id: null,
-                  profile_url: null,
-                  sex: "male",
                 },
                 error: null,
               }),
@@ -242,18 +241,7 @@ describe("bears.server", () => {
         eq: () => ({
           maybeSingle: () =>
             Promise.resolve({
-              data: {
-                age: null,
-                description: null,
-                id: "b1",
-                image_url: null,
-                name: "Otis",
-                nickname: null,
-                number: 480,
-                official_id: null,
-                profile_url: null,
-                sex: "male",
-              },
+              data: sampleRow,
               error: null,
             }),
         }),
@@ -315,12 +303,12 @@ describe("bears.server", () => {
               Promise.resolve({
                 data: {
                   age: 12,
-                  description: "Big",
+                  biography: "History",
                   id: "b1",
+                  identification: "Big",
                   image_url: "https://example.com/b.png",
                   name: "Chunk",
                   nickname: "Chonk",
-                  number: 32,
                   official_id: "32",
                   profile_url: "https://example.com/p",
                   sex: "female",
@@ -335,17 +323,19 @@ describe("bears.server", () => {
     const { updateBear } = await import("@/lib/bears.server");
     const bear = await updateBear("b1", {
       age: 12,
-      description: "Big",
+      biography: "History",
+      identification: "Big",
       imageUrl: "https://example.com/b.png",
       name: "Chunk",
       nickname: "Chonk",
-      number: 32,
       officialId: "32",
       profileUrl: "https://example.com/p",
       sex: "female",
     });
 
     expect(bear).toMatchObject({
+      biography: "History",
+      identification: "Big",
       imageUrl: "https://example.com/b.png",
       name: "Chunk",
       sex: "female",
@@ -402,13 +392,11 @@ describe("bears.server", () => {
 
       return {
         select: () => ({
-          order: () => ({
-            order: () =>
-              Promise.resolve({
-                data: null,
-                error: { message: "db down" },
-              }),
-          }),
+          order: () =>
+            Promise.resolve({
+              data: null,
+              error: { message: "db down" },
+            }),
         }),
       };
     });

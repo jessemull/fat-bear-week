@@ -42,11 +42,16 @@ describe("admin-schemas", () => {
   it("should accept bear create and update bodies", () => {
     expect(
       createBearBodySchema.parse({
+        biography: "A Brooks River regular.",
+        identification: "Milk chocolate fur.",
         name: "480 Otis",
-        number: 480,
         sex: "male",
       }),
-    ).toMatchObject({ name: "480 Otis", number: 480 });
+    ).toMatchObject({
+      biography: "A Brooks River regular.",
+      identification: "Milk chocolate fur.",
+      name: "480 Otis",
+    });
 
     expect(
       updateBearBodySchema.parse({ nickname: "The King" }),

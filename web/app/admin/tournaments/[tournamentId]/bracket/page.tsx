@@ -34,12 +34,7 @@ export default async function TournamentBracketPage({
     listMatchupsForTournament(tournamentId),
   ]);
 
-  const bearNameById = new Map(
-    bears.map((bear) => [
-      bear.id,
-      bear.number !== null ? `#${bear.number} ${bear.name}` : bear.name,
-    ]),
-  );
+  const bearNameById = new Map(bears.map((bear) => [bear.id, bear.name]));
 
   const rounds = [...new Set(matchups.map((matchup) => matchup.round))].sort(
     (a, b) => a - b,

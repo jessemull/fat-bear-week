@@ -18,6 +18,7 @@ import { BearForm } from "@/components/admin/BearForm";
 import { BearList } from "@/components/admin/BearList";
 import { BracketSeedForm } from "@/components/admin/BracketSeedForm";
 import { CreateTournamentForm } from "@/components/admin/CreateTournamentForm";
+import { DeleteBearButton } from "@/components/admin/DeleteBearButton";
 import { DeleteTournamentButton } from "@/components/admin/DeleteTournamentButton";
 import { SetWinnerForm } from "@/components/admin/SetWinnerForm";
 import { TournamentList } from "@/components/admin/TournamentList";
@@ -67,6 +68,13 @@ describe("admin forms", () => {
             status: "live",
             year: 2026,
           },
+          {
+            endsAt: "not-a-date",
+            id: "55555555-5555-4555-8555-555555555555",
+            startsAt: "2025-10-01T00:00:00.000Z",
+            status: "draft",
+            year: 2025,
+          },
         ]}
       />,
     );
@@ -74,6 +82,8 @@ describe("admin forms", () => {
     expect(screen.getByRole("columnheader", { name: "Year" })).toBeInTheDocument();
     expect(screen.getByText("2026")).toBeInTheDocument();
     expect(screen.getByText("live")).toBeInTheDocument();
+    expect(screen.getByText("2025")).toBeInTheDocument();
+    expect(screen.getAllByText("—").length).toBeGreaterThan(0);
 
     const row = screen.getByRole("link", { name: "Open tournament 2026" });
 
@@ -81,6 +91,31 @@ describe("admin forms", () => {
 
     expect(push).toHaveBeenCalledWith(`/admin/tournaments/${tournamentId}`);
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it("should open TournamentList rows with the keyboard", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <TournamentList
+        tournaments={[
+          {
+            endsAt: null,
+            id: tournamentId,
+            startsAt: null,
+            status: "draft",
+            year: 2026,
+          },
+        ]}
+      />,
+    );
+
+    const row = screen.getByRole("link", { name: "Open tournament 2026" });
+
+    row.focus();
+    await user.keyboard("{Enter}");
+
+    expect(push).toHaveBeenCalledWith(`/admin/tournaments/${tournamentId}`);
   });
 
   it("should submit CreateTournamentForm and show API errors", async () => {
@@ -129,21 +164,39 @@ describe("admin forms", () => {
   });
 
   it("should render BearForm without a11y violations", async () => {
-    const { container } = render(<BearForm tournamentId={tournamentId} />);
+    const { container } = render(
+      <BearForm mode="create" tournamentId={tournamentId} />,
+    );
 
     expect(screen.getByLabelText("Name")).toBeInTheDocument();
+    expect(screen.getByLabelText("Identification (optional)")).toBeInTheDocument();
     expect(await axe(container)).toHaveNoViolations();
   });
 
-  it("should submit BearForm", async () => {
+  it("should submit BearForm create and redirect", async () => {
     const user = userEvent.setup();
 
-    render(<BearForm tournamentId={tournamentId} />);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        json: async () => ({ data: { bear: { id: bearAId } } }),
+        ok: true,
+      }),
+    );
+
+    render(<BearForm mode="create" tournamentId={tournamentId} />);
 
     await user.type(screen.getByLabelText("Name"), "Otis");
-    await user.type(screen.getByLabelText("Number (optional)"), "480");
     await user.type(screen.getByLabelText("Nickname (optional)"), "The Boss");
-    await user.click(screen.getByRole("button", { name: "Create bear" }));
+    await user.type(
+      screen.getByLabelText("Identification (optional)"),
+      "Dark fur.",
+    );
+    await user.type(
+      screen.getByLabelText("Biography (optional)"),
+      "Brooks River.",
+    );
+    await user.click(screen.getByRole("button", { name: "Create Bear" }));
 
     await waitFor(() => {
       expect(fetch).toHaveBeenCalledWith(
@@ -151,11 +204,53 @@ describe("admin forms", () => {
         expect.objectContaining({ method: "POST" }),
       );
     });
+    expect(push).toHaveBeenCalledWith(
+      `/admin/tournaments/${tournamentId}/bears/${bearAId}`,
+    );
     expect(refresh).toHaveBeenCalled();
   });
 
-  it("should delete bears from BearList", async () => {
+  it("should submit BearForm edit", async () => {
     const user = userEvent.setup();
+
+    render(
+      <BearForm
+        bear={{
+          biography: null,
+          id: bearAId,
+          identification: null,
+          name: "Otis",
+          nickname: null,
+        }}
+        mode="edit"
+        tournamentId={tournamentId}
+      />,
+    );
+
+    await user.clear(screen.getByLabelText("Name"));
+    await user.type(screen.getByLabelText("Name"), "480 Otis");
+    await user.click(screen.getByRole("button", { name: "Save Bear" }));
+
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith(
+        `/api/admin/bears/${bearAId}`,
+        expect.objectContaining({ method: "PATCH" }),
+      );
+    });
+    expect(refresh).toHaveBeenCalled();
+  });
+
+  it("should render BearList table and open on row click", async () => {
+    const user = userEvent.setup();
+    const empty = render(
+      <BearList bears={[]} tournamentId={tournamentId} />,
+    );
+
+    expect(screen.getByRole("status")).toHaveTextContent("No bears yet.");
+    expect(await axe(empty.container)).toHaveNoViolations();
+
+    empty.unmount();
+
     const { container } = render(
       <BearList
         bears={[
@@ -163,33 +258,107 @@ describe("admin forms", () => {
             id: bearAId,
             name: "Otis",
             nickname: "Boss",
-            number: 480,
           },
         ]}
+        tournamentId={tournamentId}
       />,
     );
 
-    expect(await axe(container)).toHaveNoViolations();
+    expect(screen.getByRole("columnheader", { name: "Name" })).toBeInTheDocument();
+    expect(screen.getByText("Otis")).toBeInTheDocument();
+    expect(screen.getByText("Boss")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Delete" }));
+    await user.click(screen.getByRole("link", { name: "Open bear Otis" }));
+
+    expect(push).toHaveBeenCalledWith(
+      `/admin/tournaments/${tournamentId}/bears/${bearAId}`,
+    );
+    expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it("should open BearList rows with the keyboard", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <BearList
+        bears={[
+          {
+            id: bearAId,
+            name: "Otis",
+            nickname: null,
+          },
+        ]}
+        tournamentId={tournamentId}
+      />,
+    );
+
+    const row = screen.getByRole("link", { name: "Open bear Otis" });
+
+    row.focus();
+    await user.keyboard("{Enter}");
+
+    expect(push).toHaveBeenCalledWith(
+      `/admin/tournaments/${tournamentId}/bears/${bearAId}`,
+    );
+
+    push.mockReset();
+    row.focus();
+    await user.keyboard(" ");
+
+    expect(push).toHaveBeenCalledWith(
+      `/admin/tournaments/${tournamentId}/bears/${bearAId}`,
+    );
+  });
+
+  it("should show BearForm create API errors", async () => {
+    const user = userEvent.setup();
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        json: async () => ({ error: "Unable to create bear." }),
+        ok: false,
+      }),
+    );
+
+    render(<BearForm mode="create" tournamentId={tournamentId} />);
+
+    await user.type(screen.getByLabelText("Name"), "Otis");
+    await user.click(screen.getByRole("button", { name: "Create Bear" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Unable to create bear.",
+    );
+  });
+
+  it("should delete a bear after confirm", async () => {
+    const user = userEvent.setup();
+
+    vi.stubGlobal("confirm", vi.fn().mockReturnValue(true));
+
+    render(
+      <DeleteBearButton
+        bearId={bearAId}
+        name="Otis"
+        tournamentId={tournamentId}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Delete Bear" }));
 
     expect(fetch).toHaveBeenCalledWith(
       `/api/admin/bears/${bearAId}`,
       expect.objectContaining({ method: "DELETE" }),
     );
-    expect(refresh).toHaveBeenCalled();
+    expect(push).toHaveBeenCalledWith(
+      `/admin/tournaments/${tournamentId}/bears`,
+    );
   });
 
-  it("should show empty BearList status", async () => {
-    const { container } = render(<BearList bears={[]} />);
-
-    expect(screen.getByRole("status")).toHaveTextContent("No bears yet.");
-    expect(await axe(container)).toHaveNoViolations();
-  });
-
-  it("should show BearList delete errors", async () => {
+  it("should show DeleteBearButton API errors", async () => {
     const user = userEvent.setup();
 
+    vi.stubGlobal("confirm", vi.fn().mockReturnValue(true));
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -199,19 +368,14 @@ describe("admin forms", () => {
     );
 
     render(
-      <BearList
-        bears={[
-          {
-            id: bearAId,
-            name: "Otis",
-            nickname: null,
-            number: null,
-          },
-        ]}
+      <DeleteBearButton
+        bearId={bearAId}
+        name="Otis"
+        tournamentId={tournamentId}
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "Delete" }));
+    await user.click(screen.getByRole("button", { name: "Delete Bear" }));
 
     expect(screen.getByRole("alert")).toHaveTextContent(
       "Bear is used in a matchup.",
@@ -223,8 +387,8 @@ describe("admin forms", () => {
     const { container } = render(
       <BracketSeedForm
         bears={[
-          { id: bearAId, name: "Otis", number: 480 },
-          { id: bearBId, name: "Chunk", number: 32 },
+          { id: bearAId, name: "Otis" },
+          { id: bearBId, name: "Chunk" },
         ]}
         tournamentId={tournamentId}
       />,
@@ -232,8 +396,8 @@ describe("admin forms", () => {
 
     expect(await axe(container)).toHaveNoViolations();
 
-    await user.click(screen.getByLabelText(/#480 Otis/));
-    await user.click(screen.getByLabelText(/#32 Chunk/));
+    await user.click(screen.getByLabelText("Otis"));
+    await user.click(screen.getByLabelText("Chunk"));
     await user.click(screen.getAllByRole("button", { name: "Down" })[0]);
     await user.click(screen.getAllByRole("button", { name: "Up" })[1]);
     await user.click(screen.getByRole("button", { name: "Seed bracket" }));
@@ -381,8 +545,8 @@ describe("admin forms", () => {
     render(
       <BracketSeedForm
         bears={[
-          { id: bearAId, name: "Otis", number: null },
-          { id: bearBId, name: "Chunk", number: null },
+          { id: bearAId, name: "Otis" },
+          { id: bearBId, name: "Chunk" },
         ]}
         tournamentId={tournamentId}
       />,

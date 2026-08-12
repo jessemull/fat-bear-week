@@ -8,18 +8,41 @@ import {
   formErrorClassName,
   formInputClassName,
   formLabelClassName,
+  formTextareaClassName,
 } from "@/lib/form-styles";
 
+export interface BearFormValues {
+  biography: null | string;
+  id: string;
+  identification: null | string;
+  name: string;
+  nickname: null | string;
+}
+
 interface BearFormProps {
+  bear?: BearFormValues;
+  mode: "create" | "edit";
   tournamentId: string;
 }
 
-export function BearForm({ tournamentId }: BearFormProps) {
+interface BearMutationResponse {
+  data?: {
+    bear?: {
+      id: string;
+    };
+  };
+  error?: string;
+}
+
+export function BearForm({ bear, mode, tournamentId }: BearFormProps) {
   const router = useRouter();
+  const [biography, setBiography] = useState(bear?.biography ?? "");
   const [error, setError] = useState<null | string>(null);
-  const [name, setName] = useState("");
-  const [nickname, setNickname] = useState("");
-  const [number, setNumber] = useState("");
+  const [identification, setIdentification] = useState(
+    bear?.identification ?? "",
+  );
+  const [name, setName] = useState(bear?.name ?? "");
+  const [nickname, setNickname] = useState(bear?.nickname ?? "");
   const [pending, setPending] = useState(false);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -27,42 +50,58 @@ export function BearForm({ tournamentId }: BearFormProps) {
     setError(null);
     setPending(true);
 
+    const body = {
+      biography: biography.trim() ? biography.trim() : null,
+      identification: identification.trim() ? identification.trim() : null,
+      name: name.trim(),
+      nickname: nickname.trim() ? nickname.trim() : null,
+    };
+
     try {
-      const body: {
-        name: string;
-        nickname?: null | string;
-        number?: null | number;
-      } = { name };
-
-      if (nickname.trim()) {
-        body.nickname = nickname.trim();
-      }
-
-      if (number.trim()) {
-        body.number = Number(number);
-      }
-
-      const response = await fetch(
-        `/api/admin/tournaments/${tournamentId}/bears`,
-        {
-          body: JSON.stringify(body),
-          headers: { "content-type": "application/json" },
-          method: "POST",
-        },
-      );
-      const json = (await response.json()) as { error?: string };
+      const response =
+        mode === "create"
+          ? await fetch(`/api/admin/tournaments/${tournamentId}/bears`, {
+              body: JSON.stringify(body),
+              headers: { "content-type": "application/json" },
+              method: "POST",
+            })
+          : await fetch(`/api/admin/bears/${bear?.id}`, {
+              body: JSON.stringify(body),
+              headers: { "content-type": "application/json" },
+              method: "PATCH",
+            });
+      const json = (await response.json()) as BearMutationResponse;
 
       if (!response.ok) {
-        setError(json.error ?? "Unable to create bear.");
+        setError(
+          json.error ??
+            (mode === "create"
+              ? "Unable to create bear."
+              : "Unable to save bear."),
+        );
         return;
       }
 
-      setName("");
-      setNickname("");
-      setNumber("");
+      if (mode === "create") {
+        const bearId = json.data?.bear?.id;
+
+        if (!bearId) {
+          setError("Unable to create bear.");
+          return;
+        }
+
+        router.push(`/admin/tournaments/${tournamentId}/bears/${bearId}`);
+        router.refresh();
+        return;
+      }
+
       router.refresh();
     } catch {
-      setError("Unable to create bear right now.");
+      setError(
+        mode === "create"
+          ? "Unable to create bear right now."
+          : "Unable to save bear right now.",
+      );
     } finally {
       setPending(false);
     }
@@ -84,20 +123,6 @@ export function BearForm({ tournamentId }: BearFormProps) {
         />
       </div>
       <div className="flex flex-col gap-2">
-        <label className={formLabelClassName} htmlFor="bear-number">
-          Number (optional)
-        </label>
-        <input
-          className={formInputClassName}
-          id="bear-number"
-          min={0}
-          name="number"
-          type="number"
-          value={number}
-          onChange={(event) => setNumber(event.target.value)}
-        />
-      </div>
-      <div className="flex flex-col gap-2">
         <label className={formLabelClassName} htmlFor="bear-nickname">
           Nickname (optional)
         </label>
@@ -107,6 +132,30 @@ export function BearForm({ tournamentId }: BearFormProps) {
           name="nickname"
           value={nickname}
           onChange={(event) => setNickname(event.target.value)}
+        />
+      </div>
+      <div className="flex flex-col gap-2">
+        <label className={formLabelClassName} htmlFor="bear-identification">
+          Identification (optional)
+        </label>
+        <textarea
+          className={formTextareaClassName}
+          id="bear-identification"
+          name="identification"
+          value={identification}
+          onChange={(event) => setIdentification(event.target.value)}
+        />
+      </div>
+      <div className="flex flex-col gap-2">
+        <label className={formLabelClassName} htmlFor="bear-biography">
+          Biography (optional)
+        </label>
+        <textarea
+          className={formTextareaClassName}
+          id="bear-biography"
+          name="biography"
+          value={biography}
+          onChange={(event) => setBiography(event.target.value)}
         />
       </div>
       {error ? (
@@ -119,7 +168,13 @@ export function BearForm({ tournamentId }: BearFormProps) {
         disabled={pending}
         type="submit"
       >
-        {pending ? "Creating…" : "Create bear"}
+        {pending
+          ? mode === "create"
+            ? "Creating…"
+            : "Saving…"
+          : mode === "create"
+            ? "Create Bear"
+            : "Save Bear"}
       </button>
     </form>
   );
