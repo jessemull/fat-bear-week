@@ -10,6 +10,15 @@ import {
   formLabelClassName,
 } from "@/lib/form-styles";
 
+interface CreateTournamentResponse {
+  data?: {
+    tournament?: {
+      id: string;
+    };
+  };
+  error?: string;
+}
+
 export function CreateTournamentForm() {
   const router = useRouter();
   const [error, setError] = useState<null | string>(null);
@@ -27,13 +36,21 @@ export function CreateTournamentForm() {
         headers: { "content-type": "application/json" },
         method: "POST",
       });
-      const json = (await response.json()) as { data?: unknown; error?: string };
+      const json = (await response.json()) as CreateTournamentResponse;
 
       if (!response.ok) {
         setError(json.error ?? "Unable to create tournament.");
         return;
       }
 
+      const tournamentId = json.data?.tournament?.id;
+
+      if (!tournamentId) {
+        setError("Unable to create tournament.");
+        return;
+      }
+
+      router.push(`/admin/tournaments/${tournamentId}`);
       router.refresh();
     } catch {
       setError("Unable to create tournament right now.");
@@ -70,7 +87,7 @@ export function CreateTournamentForm() {
         disabled={pending}
         type="submit"
       >
-        {pending ? "Creating…" : "Create tournament"}
+        {pending ? "Creating…" : "Create Tournament"}
       </button>
     </form>
   );

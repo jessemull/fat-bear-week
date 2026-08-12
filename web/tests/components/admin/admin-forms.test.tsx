@@ -20,6 +20,7 @@ import { BracketSeedForm } from "@/components/admin/BracketSeedForm";
 import { CreateTournamentForm } from "@/components/admin/CreateTournamentForm";
 import { DeleteTournamentButton } from "@/components/admin/DeleteTournamentButton";
 import { SetWinnerForm } from "@/components/admin/SetWinnerForm";
+import { TournamentList } from "@/components/admin/TournamentList";
 import { TournamentStatusControls } from "@/components/admin/TournamentStatusControls";
 
 const tournamentId = "11111111-1111-4111-8111-111111111111";
@@ -47,8 +48,53 @@ describe("admin forms", () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 
+  it("should render TournamentList table and open on row click", async () => {
+    const user = userEvent.setup();
+    const empty = render(<TournamentList tournaments={[]} />);
+
+    expect(screen.getByRole("status")).toHaveTextContent("No tournaments yet.");
+    expect(await axe(empty.container)).toHaveNoViolations();
+
+    empty.unmount();
+
+    const { container } = render(
+      <TournamentList
+        tournaments={[
+          {
+            endsAt: "2026-10-10T00:00:00.000Z",
+            id: tournamentId,
+            startsAt: null,
+            status: "live",
+            year: 2026,
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByRole("columnheader", { name: "Year" })).toBeInTheDocument();
+    expect(screen.getByText("2026")).toBeInTheDocument();
+    expect(screen.getByText("live")).toBeInTheDocument();
+
+    const row = screen.getByRole("link", { name: "Open tournament 2026" });
+
+    await user.click(row);
+
+    expect(push).toHaveBeenCalledWith(`/admin/tournaments/${tournamentId}`);
+    expect(await axe(container)).toHaveNoViolations();
+  });
+
   it("should submit CreateTournamentForm and show API errors", async () => {
     const user = userEvent.setup();
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        json: async () => ({
+          data: { tournament: { id: tournamentId } },
+        }),
+        ok: true,
+      }),
+    );
 
     render(<CreateTournamentForm />);
 
@@ -57,13 +103,14 @@ describe("admin forms", () => {
     await user.clear(yearInput);
     await user.type(yearInput, "2026");
     await user.click(
-      screen.getByRole("button", { name: "Create tournament" }),
+      screen.getByRole("button", { name: "Create Tournament" }),
     );
 
     expect(fetch).toHaveBeenCalledWith(
       "/api/admin/tournaments",
       expect.objectContaining({ method: "POST" }),
     );
+    expect(push).toHaveBeenCalledWith(`/admin/tournaments/${tournamentId}`);
     expect(refresh).toHaveBeenCalled();
 
     vi.stubGlobal(
@@ -75,7 +122,7 @@ describe("admin forms", () => {
     );
 
     await user.click(
-      screen.getByRole("button", { name: "Create tournament" }),
+      screen.getByRole("button", { name: "Create Tournament" }),
     );
 
     expect(screen.getByRole("alert")).toHaveTextContent("Year taken.");
@@ -210,33 +257,21 @@ describe("admin forms", () => {
     const user = userEvent.setup();
     const { container } = render(
       <TournamentStatusControls
-        nextStatuses={["live"]}
+        status="draft"
         tournamentId={tournamentId}
       />,
     );
 
     expect(await axe(container)).toHaveNoViolations();
+    expect(screen.getByLabelText("Status")).toHaveValue("draft");
 
-    await user.click(screen.getByRole("button", { name: "Mark live" }));
+    await user.selectOptions(screen.getByLabelText("Status"), "live");
 
     expect(fetch).toHaveBeenCalledWith(
       `/api/admin/tournaments/${tournamentId}/status`,
       expect.objectContaining({ method: "POST" }),
     );
     expect(refresh).toHaveBeenCalled();
-  });
-
-  it("should show no-transition status", () => {
-    render(
-      <TournamentStatusControls
-        nextStatuses={[]}
-        tournamentId={tournamentId}
-      />,
-    );
-
-    expect(screen.getByRole("status")).toHaveTextContent(
-      "No further status transitions.",
-    );
   });
 
   it("should set a matchup winner", async () => {
@@ -320,12 +355,12 @@ describe("admin forms", () => {
 
     render(
       <TournamentStatusControls
-        nextStatuses={["locked"]}
+        status="draft"
         tournamentId={tournamentId}
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "Mark locked" }));
+    await user.selectOptions(screen.getByLabelText("Status"), "locked");
 
     expect(screen.getByRole("alert")).toHaveTextContent(
       "That status transition is not allowed.",
@@ -377,7 +412,7 @@ describe("admin forms", () => {
     );
 
     await user.click(
-      screen.getByRole("button", { name: "Delete tournament" }),
+      screen.getByRole("button", { name: "Delete Tournament" }),
     );
 
     await waitFor(() => {
@@ -397,7 +432,7 @@ describe("admin forms", () => {
 
     render(<DeleteTournamentButton tournamentId={tournamentId} year={2026} />);
     await user.click(
-      screen.getByRole("button", { name: "Delete tournament" }),
+      screen.getByRole("button", { name: "Delete Tournament" }),
     );
 
     expect(fetch).not.toHaveBeenCalled();
@@ -412,7 +447,7 @@ describe("admin forms", () => {
     );
 
     await user.click(
-      screen.getByRole("button", { name: "Delete tournament" }),
+      screen.getByRole("button", { name: "Delete Tournament" }),
     );
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Still in use.");

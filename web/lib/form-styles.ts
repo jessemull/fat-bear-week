@@ -6,16 +6,19 @@ export const formLabelClassName =
 export const formInputClassName =
   "rounded border border-zinc-300 bg-white px-3 py-2 text-zinc-900 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50";
 
+export const formSelectClassName =
+  "h-10 w-full appearance-none rounded border border-zinc-300 bg-white py-0 pr-10 pl-3 text-zinc-900 leading-10 disabled:cursor-not-allowed dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50 cursor-pointer";
+
 export const formHeadingClassName =
   "font-semibold text-zinc-900 dark:text-zinc-50";
 
 export const formMutedClassName = "text-zinc-600 dark:text-zinc-400";
 
 export const formButtonPrimaryClassName =
-  "rounded bg-amber-700 px-4 py-2 font-medium text-white disabled:opacity-60 dark:bg-amber-600";
+  "cursor-pointer rounded bg-amber-700 px-4 py-2 font-medium text-white disabled:cursor-not-allowed disabled:opacity-60 dark:bg-amber-600";
 
 export const formButtonSecondaryClassName =
-  "rounded border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 disabled:opacity-60 dark:border-zinc-600 dark:text-zinc-100";
+  "cursor-pointer rounded border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-600 dark:text-zinc-100";
 
 export const formErrorClassName = "text-sm text-red-700 dark:text-red-400";
 

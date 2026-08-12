@@ -1,39 +1,49 @@
 "use client";
 
+import { ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import type { TournamentStatus } from "@/lib/tournament-types";
 
 import {
-  formButtonPrimaryClassName,
   formErrorClassName,
+  formSelectClassName,
 } from "@/lib/form-styles";
 
+const TOURNAMENT_STATUSES: TournamentStatus[] = [
+  "complete",
+  "draft",
+  "live",
+  "locked",
+];
+
 interface TournamentStatusControlsProps {
-  nextStatuses: TournamentStatus[];
+  status: TournamentStatus;
   tournamentId: string;
 }
 
 export function TournamentStatusControls({
-  nextStatuses,
+  status,
   tournamentId,
 }: TournamentStatusControlsProps) {
   const router = useRouter();
   const [error, setError] = useState<null | string>(null);
-  const [pendingStatus, setPendingStatus] = useState<null | TournamentStatus>(
-    null,
-  );
+  const [pending, setPending] = useState(false);
 
-  async function transition(status: TournamentStatus) {
+  async function onChange(nextStatus: TournamentStatus) {
+    if (nextStatus === status) {
+      return;
+    }
+
     setError(null);
-    setPendingStatus(status);
+    setPending(true);
 
     try {
       const response = await fetch(
         `/api/admin/tournaments/${tournamentId}/status`,
         {
-          body: JSON.stringify({ status }),
+          body: JSON.stringify({ status: nextStatus }),
           headers: { "content-type": "application/json" },
           method: "POST",
         },
@@ -49,34 +59,34 @@ export function TournamentStatusControls({
     } catch {
       setError("Unable to update status right now.");
     } finally {
-      setPendingStatus(null);
+      setPending(false);
     }
   }
 
-  if (nextStatuses.length === 0) {
-    return (
-      <p className="text-sm text-zinc-600 dark:text-zinc-400" role="status">
-        No further status transitions.
-      </p>
-    );
-  }
-
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap gap-2">
-        {nextStatuses.map((status) => (
-          <button
-            key={status}
-            className={formButtonPrimaryClassName}
-            disabled={pendingStatus !== null}
-            type="button"
-            onClick={() => void transition(status)}
-          >
-            {pendingStatus === status
-              ? `Moving to ${status}…`
-              : `Mark ${status}`}
-          </button>
-        ))}
+    <div className="flex max-w-xs flex-col gap-3">
+      <div className="relative">
+        <select
+          aria-label="Status"
+          className={`${formSelectClassName} capitalize`}
+          disabled={pending}
+          id="tournament-status"
+          value={status}
+          onChange={(event) =>
+            void onChange(event.target.value as TournamentStatus)
+          }
+        >
+          {TOURNAMENT_STATUSES.map((option) => (
+            <option key={option} className="capitalize" value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+        <ChevronDown
+          aria-hidden="true"
+          className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-zinc-700 dark:text-zinc-300"
+          strokeWidth={1.75}
+        />
       </div>
       {error ? (
         <p className={formErrorClassName} role="alert">

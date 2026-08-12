@@ -1,3 +1,4 @@
+import { TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -8,10 +9,7 @@ import {
   formLinkClassName,
   formMutedClassName,
 } from "@/lib/form-styles";
-import {
-  allowedTournamentStatuses,
-  getTournament,
-} from "@/lib/tournament.server";
+import { getTournament } from "@/lib/tournament.server";
 
 export const dynamic = "force-dynamic";
 
@@ -31,31 +29,29 @@ export default async function TournamentDetailPage({
     notFound();
   }
 
-  const nextStatuses = allowedTournamentStatuses(tournament.status);
-
   return (
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-2">
-        <Link className={formLinkClassName} href="/admin/tournaments">
-          Back to tournaments
-        </Link>
         <h1 className={`text-3xl ${formHeadingClassName}`}>
           Tournament {tournament.year}
         </h1>
         <p className={formMutedClassName}>
-          Status:{" "}
-          <span className="font-medium uppercase tracking-wide">
-            {tournament.status}
-          </span>
+          Manage status, bears, bracket, and results for this year.
         </p>
+        <Link
+          className={`text-sm ${formLinkClassName}`}
+          href="/admin/tournaments"
+        >
+          Back to Tournaments
+        </Link>
       </header>
       <section className="flex flex-col gap-3">
         <h2 className={`text-xl ${formHeadingClassName}`}>Status</h2>
         <p className={`text-sm ${formMutedClassName}`}>
-          You can move to any status, including reverting from complete.
+          Current lifecycle for this tournament year.
         </p>
         <TournamentStatusControls
-          nextStatuses={nextStatuses}
+          status={tournament.status}
           tournamentId={tournament.id}
         />
       </section>
@@ -89,7 +85,16 @@ export default async function TournamentDetailPage({
         </ul>
       </section>
       <section className="flex flex-col gap-3 border-t border-zinc-200 pt-8 dark:border-zinc-700">
-        <h2 className={`text-xl ${formHeadingClassName}`}>Danger zone</h2>
+        <h2
+          className={`flex items-center gap-2 text-xl ${formHeadingClassName}`}
+        >
+          <TriangleAlert
+            aria-hidden="true"
+            className="size-5 text-red-700 dark:text-red-400"
+            strokeWidth={1.75}
+          />
+          Danger Zone
+        </h2>
         <p className={`text-sm ${formMutedClassName}`}>
           Delete only when no pools reference this tournament. One tournament
           per year remains enforced.

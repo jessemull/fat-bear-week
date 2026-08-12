@@ -74,18 +74,18 @@ describe("SiteHeader", () => {
     expect(refresh).toHaveBeenCalled();
   });
 
-  it("should show Admin link only for commissioners", () => {
+  it("should show Tournaments link only for commissioners", () => {
     const { rerender } = render(
       <SiteHeader isCommissioner={false} isSignedIn={true} />,
     );
 
-    expect(screen.queryByRole("link", { name: "Admin" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Tournaments" })).toBeNull();
 
     rerender(<SiteHeader isCommissioner={true} isSignedIn={true} />);
 
-    expect(screen.getByRole("link", { name: "Admin" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Tournaments" })).toHaveAttribute(
       "href",
-      "/admin",
+      "/admin/tournaments",
     );
   });
 
@@ -100,10 +100,9 @@ describe("SiteHeader", () => {
 
     expect(within(mobileNav).getByRole("link", { name: "Home" })).toBeInTheDocument();
     expect(within(mobileNav).getByRole("link", { name: "Pools" })).toBeInTheDocument();
-    expect(within(mobileNav).getByRole("link", { name: "Admin" })).toHaveAttribute(
-      "href",
-      "/admin",
-    );
+    expect(
+      within(mobileNav).getByRole("link", { name: "Tournaments" }),
+    ).toHaveAttribute("href", "/admin/tournaments");
     expect(within(mobileNav).getByText("About")).toHaveAttribute(
       "aria-disabled",
       "true",

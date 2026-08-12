@@ -54,14 +54,14 @@ export function DeleteTournamentButton({
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex w-fit flex-col gap-2">
       <button
         className={`${formButtonSecondaryClassName} border-red-300 text-red-800 dark:border-red-800 dark:text-red-300`}
         disabled={pending}
         type="button"
         onClick={() => void onDelete()}
       >
-        {pending ? "Deleting…" : "Delete tournament"}
+        {pending ? "Deleting…" : "Delete Tournament"}
       </button>
       {error ? (
         <p className={formErrorClassName} role="alert">

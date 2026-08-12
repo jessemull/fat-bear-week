@@ -42,7 +42,7 @@ function NavItems({
   onNavigate?: () => void;
 }) {
   const items: NavItem[] = isCommissioner
-    ? [...PRIMARY_NAV, { href: "/admin", label: "Admin" }]
+    ? [...PRIMARY_NAV, { href: "/admin/tournaments", label: "Tournaments" }]
     : PRIMARY_NAV;
 
   return (
