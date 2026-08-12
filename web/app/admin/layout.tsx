@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 
 import { redirect } from "next/navigation";
 
-import { AdminNav } from "@/components/admin/AdminNav";
 import {
   formHeadingClassName,
   formMutedClassName,
@@ -34,10 +33,5 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
     );
   }
 
-  return (
-    <main className={formPageClassName}>
-      <AdminNav />
-      {children}
-    </main>
-  );
+  return <main className={formPageClassName}>{children}</main>;
 }

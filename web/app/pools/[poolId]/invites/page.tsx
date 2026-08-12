@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { SignOutButton } from "@/components/auth/SignOutButton";
 import { InviteList } from "@/components/pools/InviteList";
 import { MintInviteForm } from "@/components/pools/MintInviteForm";
 import {
@@ -53,14 +52,11 @@ export default async function PoolInvitesPage({
 
   return (
     <main className={formPageClassName}>
-      <header className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <Link className={`text-sm ${formLinkClassName}`} href="/pools">
-            Back to pools
-          </Link>
-          <h1 className={`text-3xl ${formHeadingClassName}`}>Invites</h1>
-        </div>
-        <SignOutButton />
+      <header className="flex flex-col gap-1">
+        <Link className={`text-sm ${formLinkClassName}`} href="/pools">
+          Back to pools
+        </Link>
+        <h1 className={`text-3xl ${formHeadingClassName}`}>Invites</h1>
       </header>
       <section className="flex flex-col gap-4">
         <h2 className={`text-xl ${formHeadingClassName}`}>Send an invite</h2>

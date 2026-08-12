@@ -14,7 +14,6 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
-import { AdminNav } from "@/components/admin/AdminNav";
 import { BearForm } from "@/components/admin/BearForm";
 import { BearList } from "@/components/admin/BearList";
 import { BracketSeedForm } from "@/components/admin/BracketSeedForm";
@@ -39,24 +38,6 @@ describe("admin forms", () => {
         ok: true,
       }),
     );
-  });
-
-  it("should render AdminNav links without a11y violations", async () => {
-    const { container } = render(<AdminNav />);
-
-    expect(screen.getByRole("link", { name: "Dashboard" })).toHaveAttribute(
-      "href",
-      "/admin",
-    );
-    expect(screen.getByRole("link", { name: "Tournaments" })).toHaveAttribute(
-      "href",
-      "/admin/tournaments",
-    );
-    expect(screen.getByRole("link", { name: "Pools" })).toHaveAttribute(
-      "href",
-      "/pools",
-    );
-    expect(await axe(container)).toHaveNoViolations();
   });
 
   it("should render CreateTournamentForm without a11y violations", async () => {

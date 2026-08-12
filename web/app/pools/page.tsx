@@ -1,12 +1,9 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { SignOutButton } from "@/components/auth/SignOutButton";
 import { CreatePoolForm } from "@/components/pools/CreatePoolForm";
 import { PoolList } from "@/components/pools/PoolList";
 import {
   formHeadingClassName,
-  formLinkClassName,
   formMutedClassName,
   formPageClassName,
 } from "@/lib/form-styles";
@@ -29,19 +26,9 @@ export default async function PoolsPage() {
 
   return (
     <main className={formPageClassName}>
-      <header className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className={`text-3xl ${formHeadingClassName}`}>Your pools</h1>
-          <p className={formMutedClassName}>Signed in as {session.name}</p>
-          {session.isCommissioner ? (
-            <p className="mt-2">
-              <Link className={formLinkClassName} href="/admin">
-                Admin
-              </Link>
-            </p>
-          ) : null}
-        </div>
-        <SignOutButton />
+      <header className="flex flex-col gap-2">
+        <h1 className={`text-3xl ${formHeadingClassName}`}>Your pools</h1>
+        <p className={formMutedClassName}>Signed in as {session.name}</p>
       </header>
       <PoolList pools={pools} />
       {session.isCommissioner ? (

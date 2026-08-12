@@ -37,7 +37,10 @@ export default async function RootLayout({ children }: RootLayoutProps) {
       lang="en"
     >
       <body className="flex min-h-full flex-col">
-        <SiteHeader isSignedIn={Boolean(session)} />
+        <SiteHeader
+          isCommissioner={Boolean(session?.isCommissioner)}
+          isSignedIn={Boolean(session)}
+        />
         {children}
       </body>
     </html>

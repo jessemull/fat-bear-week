@@ -74,10 +74,25 @@ describe("SiteHeader", () => {
     expect(refresh).toHaveBeenCalled();
   });
 
+  it("should show Admin link only for commissioners", () => {
+    const { rerender } = render(
+      <SiteHeader isCommissioner={false} isSignedIn={true} />,
+    );
+
+    expect(screen.queryByRole("link", { name: "Admin" })).toBeNull();
+
+    rerender(<SiteHeader isCommissioner={true} isSignedIn={true} />);
+
+    expect(screen.getByRole("link", { name: "Admin" })).toHaveAttribute(
+      "href",
+      "/admin",
+    );
+  });
+
   it("should open the mobile menu with the same links", async () => {
     const user = userEvent.setup();
 
-    render(<SiteHeader isSignedIn={false} />);
+    render(<SiteHeader isCommissioner={true} isSignedIn={false} />);
 
     await user.click(screen.getByRole("button", { name: "Open menu" }));
 
@@ -85,6 +100,10 @@ describe("SiteHeader", () => {
 
     expect(within(mobileNav).getByRole("link", { name: "Home" })).toBeInTheDocument();
     expect(within(mobileNav).getByRole("link", { name: "Pools" })).toBeInTheDocument();
+    expect(within(mobileNav).getByRole("link", { name: "Admin" })).toHaveAttribute(
+      "href",
+      "/admin",
+    );
     expect(within(mobileNav).getByText("About")).toHaveAttribute(
       "aria-disabled",
       "true",

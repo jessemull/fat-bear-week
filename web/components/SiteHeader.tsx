@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 
 interface SiteHeaderProps {
+  isCommissioner?: boolean;
   isSignedIn: boolean;
 }
 
@@ -34,13 +35,19 @@ const authLinkClassName =
   "text-base font-medium text-amber-800 underline dark:text-amber-400";
 
 function NavItems({
+  isCommissioner,
   onNavigate,
 }: {
+  isCommissioner: boolean;
   onNavigate?: () => void;
 }) {
+  const items: NavItem[] = isCommissioner
+    ? [...PRIMARY_NAV, { href: "/admin", label: "Admin" }]
+    : PRIMARY_NAV;
+
   return (
     <>
-      {PRIMARY_NAV.map((item) => {
+      {items.map((item) => {
         if (item.disabled || !item.href) {
           return (
             <span
@@ -68,7 +75,10 @@ function NavItems({
   );
 }
 
-export function SiteHeader({ isSignedIn }: SiteHeaderProps) {
+export function SiteHeader({
+  isCommissioner = false,
+  isSignedIn,
+}: SiteHeaderProps) {
   const router = useRouter();
   const menuId = useId();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -128,7 +138,7 @@ export function SiteHeader({ isSignedIn }: SiteHeaderProps) {
           aria-label="Primary"
           className="ml-3 hidden items-center gap-6 md:flex"
         >
-          <NavItems />
+          <NavItems isCommissioner={isCommissioner} />
         </nav>
 
         <div className="ml-auto hidden md:block">
@@ -155,7 +165,7 @@ export function SiteHeader({ isSignedIn }: SiteHeaderProps) {
           className="flex flex-col gap-3 border-t border-zinc-200 px-5 py-4 sm:px-8 md:hidden dark:border-zinc-800"
           id={menuId}
         >
-          <NavItems onNavigate={closeMenu} />
+          <NavItems isCommissioner={isCommissioner} onNavigate={closeMenu} />
           {isSignedIn ? (
             <button
               className={`${authLinkClassName} text-left`}
