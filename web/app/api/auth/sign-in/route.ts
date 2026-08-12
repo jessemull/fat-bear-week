@@ -5,7 +5,7 @@ import {
   parseJsonBody,
 } from "@/lib/api.server";
 import { signInBodySchema } from "@/lib/auth-schemas";
-import { findUserByName } from "@/lib/auth.server";
+import { findUserByLoginIdentifier } from "@/lib/auth.server";
 import { verifyPassword } from "@/lib/passwords.server";
 import { createSession } from "@/lib/sessions.server";
 import { getClientIp, verifyTurnstileToken } from "@/lib/turnstile.server";
@@ -30,16 +30,16 @@ export async function POST(request: Request) {
     return jsonError("Bot check failed. Please try again.", { status: 400 });
   }
 
-  const user = await findUserByName(parsed.data.name);
+  const user = await findUserByLoginIdentifier(parsed.data.identifier);
 
   if (!user) {
-    return jsonError("Invalid name or password.", { status: 401 });
+    return jsonError("Invalid name, email, or password.", { status: 401 });
   }
 
   const valid = await verifyPassword(parsed.data.password, user.passwordHash);
 
   if (!valid) {
-    return jsonError("Invalid name or password.", { status: 401 });
+    return jsonError("Invalid name, email, or password.", { status: 401 });
   }
 
   await createSession(user.id);

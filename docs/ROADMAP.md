@@ -45,6 +45,12 @@ features in phases below; check items off as they ship.
 - [x] Sign in / sign out for returning participants
 - [x] Enforce one bracket (entry) per person per pool
 - [x] Cap at `max_players`
+- [ ] Forgot password / reset via email (Resend + single-use token;
+      Turnstile on request + reset forms)
+- [ ] Account settings / profile page (`/settings` or `/profile`): display
+      name, email (read-only from invite), password change, optional avatar
+- [ ] Nav avatar / account menu (opens profile; scores & history later when
+      scoring ships)
 
 ### Tournament data (admin)
 

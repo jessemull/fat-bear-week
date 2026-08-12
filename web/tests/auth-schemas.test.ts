@@ -47,11 +47,19 @@ describe("auth-schemas", () => {
   it("should accept a valid sign-in body", () => {
     expect(
       signInBodySchema.parse({
-        name: "Otis",
+        identifier: "Otis",
         password: "password1",
         turnstileToken: "turnstile-ok",
       }),
-    ).toMatchObject({ name: "Otis" });
+    ).toMatchObject({ identifier: "Otis" });
+
+    expect(
+      signInBodySchema.parse({
+        identifier: "otis@example.com",
+        password: "password1",
+        turnstileToken: "turnstile-ok",
+      }),
+    ).toMatchObject({ identifier: "otis@example.com" });
   });
 
   it("should require email when minting invites", () => {

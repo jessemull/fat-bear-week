@@ -21,7 +21,7 @@ export const joinBodySchema = z
 
 export const signInBodySchema = z
   .object({
-    name: z.string().trim().min(1).max(80),
+    identifier: z.string().trim().min(1).max(254),
     password: z.string().min(8).max(128),
     turnstileToken: z.string().trim().min(1).max(2048),
   })

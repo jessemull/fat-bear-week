@@ -19,8 +19,9 @@ export function LoginPanel() {
       <div className="flex flex-col gap-2 text-center">
         <h1 className={`text-3xl ${formHeadingClassName}`}>Sign In</h1>
         <p className={formMutedClassName}>
-          Returning players only. There is no public registration — join with
-          your personal invite link.
+          Returning players only. Sign in with your display name or email.
+          There is no public registration — join with your personal invite
+          link.
         </p>
       </div>
       <SignInForm turnstileToken={turnstileToken} />

@@ -100,11 +100,12 @@ export async function findUserByName(name: string): Promise<{
   passwordHash: string;
 } | null> {
   const supabase = getServiceSupabase();
+  const trimmed = name.trim();
 
   const { data, error } = await supabase
     .from("users")
     .select("id, name, password_hash")
-    .ilike("name", name)
+    .ilike("name", trimmed)
     .maybeSingle();
 
   if (error || !data) {
@@ -112,7 +113,7 @@ export async function findUserByName(name: string): Promise<{
   }
 
   // ilike can match substrings depending on pattern; require exact ignore-case.
-  if (data.name.toLowerCase() !== name.trim().toLowerCase()) {
+  if (data.name.toLowerCase() !== trimmed.toLowerCase()) {
     return null;
   }
 
@@ -121,4 +122,45 @@ export async function findUserByName(name: string): Promise<{
     name: data.name as string,
     passwordHash: data.password_hash as string,
   };
+}
+
+/**
+ * Find a user by email (case-insensitive) or display name for sign-in.
+ */
+export async function findUserByLoginIdentifier(identifier: string): Promise<{
+  id: string;
+  name: string;
+  passwordHash: string;
+} | null> {
+  const trimmed = identifier.trim();
+
+  if (!trimmed) {
+    return null;
+  }
+
+  if (trimmed.includes("@")) {
+    const supabase = getServiceSupabase();
+
+    const { data, error } = await supabase
+      .from("users")
+      .select("id, name, password_hash, email")
+      .ilike("email", trimmed)
+      .maybeSingle();
+
+    if (error || !data?.email) {
+      return null;
+    }
+
+    if (data.email.toLowerCase() !== trimmed.toLowerCase()) {
+      return null;
+    }
+
+    return {
+      id: data.id as string,
+      name: data.name as string,
+      passwordHash: data.password_hash as string,
+    };
+  }
+
+  return findUserByName(trimmed);
 }

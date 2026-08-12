@@ -18,7 +18,7 @@ interface SignInFormProps {
 export function SignInForm({ turnstileToken }: SignInFormProps) {
   const router = useRouter();
   const [error, setError] = useState<null | string>(null);
-  const [name, setName] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [pending, setPending] = useState(false);
@@ -36,7 +36,7 @@ export function SignInForm({ turnstileToken }: SignInFormProps) {
 
     try {
       const response = await fetch("/api/auth/sign-in", {
-        body: JSON.stringify({ name, password, turnstileToken }),
+        body: JSON.stringify({ identifier, password, turnstileToken }),
         headers: { "content-type": "application/json" },
         method: "POST",
       });
@@ -59,18 +59,18 @@ export function SignInForm({ turnstileToken }: SignInFormProps) {
   return (
     <form className="mx-auto flex w-full max-w-md flex-col gap-4" onSubmit={onSubmit}>
       <div className="flex flex-col gap-2">
-        <label className={formLabelClassName} htmlFor="sign-in-name">
-          Display Name
+        <label className={formLabelClassName} htmlFor="sign-in-identifier">
+          Display Name / Email
         </label>
         <input
           autoComplete="username"
           className={formInputClassName}
-          id="sign-in-name"
-          name="name"
-          placeholder="Enter a name..."
+          id="sign-in-identifier"
+          name="identifier"
+          placeholder="Enter a name or email..."
           required
-          value={name}
-          onChange={(event) => setName(event.target.value)}
+          value={identifier}
+          onChange={(event) => setIdentifier(event.target.value)}
         />
       </div>
       <div className="flex flex-col gap-2">

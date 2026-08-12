@@ -77,17 +77,6 @@ describe("auth.server join/sign-in helpers", () => {
       error: null,
     });
 
-    fromMock.mockReturnValue({
-      ilike: () => ({
-        maybeSingle,
-      }),
-      select: () => ({
-        ilike: () => ({
-          maybeSingle,
-        }),
-      }),
-    });
-
     // Chain: from().select().ilike().maybeSingle()
     fromMock.mockImplementation(() => ({
       select: () => ({
@@ -99,6 +88,33 @@ describe("auth.server join/sign-in helpers", () => {
 
     const { findUserByName } = await import("@/lib/auth.server");
     const user = await findUserByName("otis");
+
+    expect(user).toEqual({
+      id: "u1",
+      name: "Otis",
+      passwordHash: "hash",
+    });
+  });
+
+  it("should find users by email via login identifier", async () => {
+    fromMock.mockImplementation(() => ({
+      select: () => ({
+        ilike: () => ({
+          maybeSingle: vi.fn().mockResolvedValue({
+            data: {
+              email: "otis@example.com",
+              id: "u1",
+              name: "Otis",
+              password_hash: "hash",
+            },
+            error: null,
+          }),
+        }),
+      }),
+    }));
+
+    const { findUserByLoginIdentifier } = await import("@/lib/auth.server");
+    const user = await findUserByLoginIdentifier("Otis@Example.com");
 
     expect(user).toEqual({
       id: "u1",

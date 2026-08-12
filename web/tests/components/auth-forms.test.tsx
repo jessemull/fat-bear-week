@@ -136,7 +136,7 @@ describe("auth forms", () => {
       <SignInForm turnstileToken="test-turnstile-token" />,
     );
 
-    await user.type(screen.getByLabelText("Display Name"), "Otis");
+    await user.type(screen.getByLabelText("Display Name / Email"), "Otis");
     await user.type(screen.getByLabelText("Password"), "password1");
     await user.click(screen.getByRole("button", { name: "Sign In" }));
 
@@ -195,18 +195,21 @@ describe("auth forms", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
-        json: async () => ({ error: "Invalid name or password." }),
+        json: async () => ({ error: "Invalid name, email, or password." }),
         ok: false,
       }),
     );
 
     render(<SignInForm turnstileToken="test-turnstile-token" />);
-    await user.type(screen.getByLabelText("Display Name"), "Otis");
+    await user.type(
+      screen.getByLabelText("Display Name / Email"),
+      "otis@example.com",
+    );
     await user.type(screen.getByLabelText("Password"), "password1");
     await user.click(screen.getByRole("button", { name: "Sign In" }));
 
     expect(screen.getByRole("alert")).toHaveTextContent(
-      "Invalid name or password.",
+      "Invalid name, email, or password.",
     );
   });
 });
