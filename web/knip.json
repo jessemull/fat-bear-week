@@ -4,11 +4,8 @@
   "ignoreDependencies": [
     "@lhci/cli",
     "@supabase/ssr",
-    "@supabase/supabase-js",
-    "@testing-library/user-event",
     "lighthouse",
     "lint-staged",
-    "server-only",
     "start-server-and-test"
   ],
   "next": true

@@ -1,0 +1,439 @@
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { axe } from "jest-axe";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const push = vi.fn();
+const refresh = vi.fn();
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push,
+    refresh,
+    replace: vi.fn(),
+  }),
+}));
+
+import { AdminNav } from "@/components/admin/AdminNav";
+import { BearForm } from "@/components/admin/BearForm";
+import { BearList } from "@/components/admin/BearList";
+import { BracketSeedForm } from "@/components/admin/BracketSeedForm";
+import { CreateTournamentForm } from "@/components/admin/CreateTournamentForm";
+import { DeleteTournamentButton } from "@/components/admin/DeleteTournamentButton";
+import { SetWinnerForm } from "@/components/admin/SetWinnerForm";
+import { TournamentStatusControls } from "@/components/admin/TournamentStatusControls";
+
+const tournamentId = "11111111-1111-4111-8111-111111111111";
+const bearAId = "22222222-2222-4222-8222-222222222222";
+const bearBId = "33333333-3333-4333-8333-333333333333";
+const matchupId = "44444444-4444-4444-8444-444444444444";
+
+describe("admin forms", () => {
+  beforeEach(() => {
+    push.mockReset();
+    refresh.mockReset();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        json: async () => ({ data: { ok: true } }),
+        ok: true,
+      }),
+    );
+  });
+
+  it("should render AdminNav links without a11y violations", async () => {
+    const { container } = render(<AdminNav />);
+
+    expect(screen.getByRole("link", { name: "Dashboard" })).toHaveAttribute(
+      "href",
+      "/admin",
+    );
+    expect(screen.getByRole("link", { name: "Tournaments" })).toHaveAttribute(
+      "href",
+      "/admin/tournaments",
+    );
+    expect(screen.getByRole("link", { name: "Pools" })).toHaveAttribute(
+      "href",
+      "/pools",
+    );
+    expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it("should render CreateTournamentForm without a11y violations", async () => {
+    const { container } = render(<CreateTournamentForm />);
+
+    expect(screen.getByLabelText("Year")).toBeInTheDocument();
+    expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it("should submit CreateTournamentForm and show API errors", async () => {
+    const user = userEvent.setup();
+
+    render(<CreateTournamentForm />);
+
+    const yearInput = screen.getByLabelText("Year");
+
+    await user.clear(yearInput);
+    await user.type(yearInput, "2026");
+    await user.click(
+      screen.getByRole("button", { name: "Create tournament" }),
+    );
+
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/admin/tournaments",
+      expect.objectContaining({ method: "POST" }),
+    );
+    expect(refresh).toHaveBeenCalled();
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        json: async () => ({ error: "Year taken." }),
+        ok: false,
+      }),
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: "Create tournament" }),
+    );
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Year taken.");
+  });
+
+  it("should render BearForm without a11y violations", async () => {
+    const { container } = render(<BearForm tournamentId={tournamentId} />);
+
+    expect(screen.getByLabelText("Name")).toBeInTheDocument();
+    expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it("should submit BearForm", async () => {
+    const user = userEvent.setup();
+
+    render(<BearForm tournamentId={tournamentId} />);
+
+    await user.type(screen.getByLabelText("Name"), "Otis");
+    await user.type(screen.getByLabelText("Number (optional)"), "480");
+    await user.type(screen.getByLabelText("Nickname (optional)"), "The Boss");
+    await user.click(screen.getByRole("button", { name: "Create bear" }));
+
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith(
+        `/api/admin/tournaments/${tournamentId}/bears`,
+        expect.objectContaining({ method: "POST" }),
+      );
+    });
+    expect(refresh).toHaveBeenCalled();
+  });
+
+  it("should delete bears from BearList", async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <BearList
+        bears={[
+          {
+            id: bearAId,
+            name: "Otis",
+            nickname: "Boss",
+            number: 480,
+          },
+        ]}
+      />,
+    );
+
+    expect(await axe(container)).toHaveNoViolations();
+
+    await user.click(screen.getByRole("button", { name: "Delete" }));
+
+    expect(fetch).toHaveBeenCalledWith(
+      `/api/admin/bears/${bearAId}`,
+      expect.objectContaining({ method: "DELETE" }),
+    );
+    expect(refresh).toHaveBeenCalled();
+  });
+
+  it("should show empty BearList status", async () => {
+    const { container } = render(<BearList bears={[]} />);
+
+    expect(screen.getByRole("status")).toHaveTextContent("No bears yet.");
+    expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it("should show BearList delete errors", async () => {
+    const user = userEvent.setup();
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        json: async () => ({ error: "Bear is used in a matchup." }),
+        ok: false,
+      }),
+    );
+
+    render(
+      <BearList
+        bears={[
+          {
+            id: bearAId,
+            name: "Otis",
+            nickname: null,
+            number: null,
+          },
+        ]}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Delete" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Bear is used in a matchup.",
+    );
+  });
+
+  it("should seed a bracket from selected bears", async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <BracketSeedForm
+        bears={[
+          { id: bearAId, name: "Otis", number: 480 },
+          { id: bearBId, name: "Chunk", number: 32 },
+        ]}
+        tournamentId={tournamentId}
+      />,
+    );
+
+    expect(await axe(container)).toHaveNoViolations();
+
+    await user.click(screen.getByLabelText(/#480 Otis/));
+    await user.click(screen.getByLabelText(/#32 Chunk/));
+    await user.click(screen.getAllByRole("button", { name: "Down" })[0]);
+    await user.click(screen.getAllByRole("button", { name: "Up" })[1]);
+    await user.click(screen.getByRole("button", { name: "Seed bracket" }));
+
+    expect(fetch).toHaveBeenCalledWith(
+      `/api/admin/tournaments/${tournamentId}/bracket`,
+      expect.objectContaining({ method: "PUT" }),
+    );
+    expect(refresh).toHaveBeenCalled();
+  });
+
+  it("should prompt when no bears exist for seeding", () => {
+    render(<BracketSeedForm bears={[]} tournamentId={tournamentId} />);
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Add bears before seeding the bracket.",
+    );
+  });
+
+  it("should transition tournament status", async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <TournamentStatusControls
+        nextStatuses={["live"]}
+        tournamentId={tournamentId}
+      />,
+    );
+
+    expect(await axe(container)).toHaveNoViolations();
+
+    await user.click(screen.getByRole("button", { name: "Mark live" }));
+
+    expect(fetch).toHaveBeenCalledWith(
+      `/api/admin/tournaments/${tournamentId}/status`,
+      expect.objectContaining({ method: "POST" }),
+    );
+    expect(refresh).toHaveBeenCalled();
+  });
+
+  it("should show no-transition status", () => {
+    render(
+      <TournamentStatusControls
+        nextStatuses={[]}
+        tournamentId={tournamentId}
+      />,
+    );
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "No further status transitions.",
+    );
+  });
+
+  it("should set a matchup winner", async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <SetWinnerForm
+        bearAId={bearAId}
+        bearALabel="#480 Otis"
+        bearBId={bearBId}
+        bearBLabel="#32 Chunk"
+        matchupId={matchupId}
+      />,
+    );
+
+    expect(await axe(container)).toHaveNoViolations();
+
+    await user.click(screen.getByLabelText("#32 Chunk"));
+    await user.type(screen.getByLabelText("Votes A (optional)"), "100");
+    await user.type(screen.getByLabelText("Votes B (optional)"), "200");
+    await user.click(screen.getByRole("button", { name: "Set winner" }));
+
+    expect(fetch).toHaveBeenCalledWith(
+      `/api/admin/matchups/${matchupId}/result`,
+      expect.objectContaining({ method: "POST" }),
+    );
+    expect(refresh).toHaveBeenCalled();
+  });
+
+  it("should show SetWinnerForm API errors", async () => {
+    const user = userEvent.setup();
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        json: async () => ({ error: "Invalid winner." }),
+        ok: false,
+      }),
+    );
+
+    render(
+      <SetWinnerForm
+        bearAId={bearAId}
+        bearALabel="#480 Otis"
+        bearBId={bearBId}
+        bearBLabel="#32 Chunk"
+        matchupId={matchupId}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Set winner" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Invalid winner.");
+  });
+
+  it("should wait when SetWinnerForm has no bears", () => {
+    render(
+      <SetWinnerForm
+        bearAId={null}
+        bearALabel="TBD"
+        bearBId={null}
+        bearBLabel="TBD"
+        matchupId={matchupId}
+      />,
+    );
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Waiting for both sides.",
+    );
+  });
+
+  it("should show status transition errors", async () => {
+    const user = userEvent.setup();
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        json: async () => ({ error: "That status transition is not allowed." }),
+        ok: false,
+      }),
+    );
+
+    render(
+      <TournamentStatusControls
+        nextStatuses={["locked"]}
+        tournamentId={tournamentId}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Mark locked" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "That status transition is not allowed.",
+    );
+  });
+
+  it("should show bracket seed errors", async () => {
+    const user = userEvent.setup();
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        json: async () => ({ error: "Invalid bear list for seeding." }),
+        ok: false,
+      }),
+    );
+
+    render(
+      <BracketSeedForm
+        bears={[
+          { id: bearAId, name: "Otis", number: null },
+          { id: bearBId, name: "Chunk", number: null },
+        ]}
+        tournamentId={tournamentId}
+      />,
+    );
+
+    const checkboxes = screen.getAllByRole("checkbox");
+
+    await user.click(checkboxes[0]);
+    await user.click(checkboxes[1]);
+    await user.click(screen.getByRole("button", { name: "Seed bracket" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Invalid bear list for seeding.",
+    );
+  });
+
+  it("should delete a tournament after confirm", async () => {
+    const user = userEvent.setup();
+
+    vi.stubGlobal(
+      "confirm",
+      vi.fn().mockReturnValue(true),
+    );
+
+    const { container } = render(
+      <DeleteTournamentButton tournamentId={tournamentId} year={2026} />,
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: "Delete tournament" }),
+    );
+
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith(
+        `/api/admin/tournaments/${tournamentId}`,
+        expect.objectContaining({ method: "DELETE" }),
+      );
+    });
+    expect(push).toHaveBeenCalledWith("/admin/tournaments");
+    expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it("should show delete errors and cancel without calling API", async () => {
+    const user = userEvent.setup();
+
+    vi.stubGlobal("confirm", vi.fn().mockReturnValue(false));
+
+    render(<DeleteTournamentButton tournamentId={tournamentId} year={2026} />);
+    await user.click(
+      screen.getByRole("button", { name: "Delete tournament" }),
+    );
+
+    expect(fetch).not.toHaveBeenCalled();
+
+    vi.stubGlobal("confirm", vi.fn().mockReturnValue(true));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        json: async () => ({ error: "Still in use." }),
+        ok: false,
+      }),
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: "Delete tournament" }),
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Still in use.");
+  });
+});

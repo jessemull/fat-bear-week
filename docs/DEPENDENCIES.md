@@ -39,6 +39,14 @@
 | `eslint-plugin-perfectionist` | Use **v5** option shape (`internalPattern`, `newlinesBetween` as number, array `customGroups`). Do not copy nextdoor’s v2 config verbatim. |
 | `@lhci/cli` / `lighthouse` | Keep `@lhci/cli@^0.15` with direct `lighthouse@^12.8` (same major pin as crow/100-letters). Do **not** `npm audit fix --force` — it may downgrade LHCI. |
 
+## Phase 1 additions
+
+| Package | Why |
+| ------- | --- |
+| `resend` | Server-side invite email delivery (no AWS in this repo). API key stays server-only. |
+
+Cloudflare Turnstile uses the public script + `fetch` siteverify — **no npm SDK**.
+
 ---
 
 ## Known audit residual

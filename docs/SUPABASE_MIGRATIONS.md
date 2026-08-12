@@ -47,8 +47,9 @@ Ship these as numbered SQL files before (or with) the invite/join and admin work
 
 | Planned file | Purpose |
 | ------------ | ------- |
-| `002_sessions.sql` | HTTP-only session store (token hash, user_id, expires_at, created_at); indexes for lookup and expiry cleanup |
-| `003_commissioner_gate.sql` | Commissioner / admin role on `users` or a small `pool_admins` table so pool management and result publishing are server-gated |
+| `002_sessions.sql` | HTTP-only session store (token hash, user_id, expires_at, created_at); `invitations.email`; unique display names; `join_pool_with_invite` RPC |
+| `003_commissioner_gate.sql` | `users.is_commissioner` boolean for pool management and result publishing |
+| `004_invite_email_unique.sql` | Unique unused invite email per pool; distinguish `email_taken` vs `name_taken` on join |
 
 Until those land, RLS remains enabled with **no policies** on app tables (anon/authenticated denied; service role bypasses RLS on the server).
 

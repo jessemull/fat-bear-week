@@ -1,4 +1,5 @@
 import { PawPrint } from "lucide-react";
+import Link from "next/link";
 
 export function HomeLanding() {
   return (
@@ -21,12 +22,13 @@ export function HomeLanding() {
           beautiful brackets, and live leaderboards around the official Fat Bear
           Week tournament.
         </p>
-        <p className="mt-8 text-sm text-zinc-500 dark:text-zinc-500">
-          Scaffold v0 — features coming soon. See{" "}
-          <code className="rounded bg-zinc-200 px-1.5 py-0.5 font-mono text-xs dark:bg-zinc-800">
-            docs/ROADMAP.md
-          </code>
-          .
+        <p className="mt-8">
+          <Link
+            className="text-sm font-medium text-amber-800 underline dark:text-amber-400"
+            href="/login"
+          >
+            Sign in
+          </Link>
         </p>
       </div>
     </main>
