@@ -1,10 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { BearForm } from "@/components/admin/BearForm";
 import {
   formHeadingClassName,
-  formLinkClassName,
   formMutedClassName,
 } from "@/lib/form-styles";
 import { getTournament } from "@/lib/tournament.server";
@@ -32,12 +30,6 @@ export default async function NewBearPage({ params }: NewBearPageProps) {
         <p className={formMutedClassName}>
           Add a bear to the shared catalog for {tournament.year}.
         </p>
-        <Link
-          className={`text-sm ${formLinkClassName}`}
-          href={`/admin/tournaments/${tournament.id}/bears`}
-        >
-          Back to Bears
-        </Link>
       </header>
       <BearForm mode="create" tournamentId={tournament.id} />
     </div>

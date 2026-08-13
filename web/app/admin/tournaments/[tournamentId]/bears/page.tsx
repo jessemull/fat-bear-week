@@ -41,12 +41,6 @@ export default async function TournamentBearsPage({
         </p>
         <Link
           className={`text-sm ${formLinkClassName}`}
-          href={`/admin/tournaments/${tournament.id}`}
-        >
-          Back to Tournament
-        </Link>
-        <Link
-          className={`text-sm ${formLinkClassName}`}
           href={`/admin/tournaments/${tournament.id}/bears/new`}
         >
           Create Bear

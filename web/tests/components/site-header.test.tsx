@@ -32,6 +32,8 @@ describe("SiteHeader", () => {
   it("should render enabled and disabled nav items when signed out", async () => {
     const { container } = render(<SiteHeader isSignedIn={false} />);
 
+    expect(container.querySelector("header")).toHaveClass("sticky", "top-0");
+
     const desktopNav = screen.getByRole("navigation", { name: "Primary" });
 
     expect(within(desktopNav).getByRole("link", { name: "Home" })).toHaveAttribute(

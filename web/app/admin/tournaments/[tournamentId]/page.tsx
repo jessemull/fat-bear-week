@@ -1,12 +1,10 @@
 import { TriangleAlert } from "lucide-react";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { DeleteTournamentButton } from "@/components/admin/DeleteTournamentButton";
 import { TournamentStatusControls } from "@/components/admin/TournamentStatusControls";
 import {
   formHeadingClassName,
-  formLinkClassName,
   formMutedClassName,
 } from "@/lib/form-styles";
 import { getTournament } from "@/lib/tournament.server";
@@ -38,12 +36,6 @@ export default async function TournamentDetailPage({
         <p className={formMutedClassName}>
           Manage status and bears for this year.
         </p>
-        <Link
-          className={`text-sm ${formLinkClassName}`}
-          href="/admin/tournaments"
-        >
-          Back to Tournaments
-        </Link>
       </header>
       <section className="flex flex-col gap-3">
         <h2 className={`text-xl ${formHeadingClassName}`}>Status</h2>
@@ -54,18 +46,6 @@ export default async function TournamentDetailPage({
           status={tournament.status}
           tournamentId={tournament.id}
         />
-      </section>
-      <section className="flex flex-col gap-3">
-        <h2 className={`text-xl ${formHeadingClassName}`}>Bears</h2>
-        <p className={`text-sm ${formMutedClassName}`}>
-          Add and edit the catalog for this tournament year.
-        </p>
-        <Link
-          className={`text-sm ${formLinkClassName}`}
-          href={`/admin/tournaments/${tournament.id}/bears`}
-        >
-          Manage Bears
-        </Link>
       </section>
       <section className="flex flex-col gap-3 border-t border-zinc-200 pt-8 dark:border-zinc-700">
         <h2

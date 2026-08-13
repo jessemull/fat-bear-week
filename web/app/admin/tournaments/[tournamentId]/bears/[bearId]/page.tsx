@@ -1,5 +1,4 @@
 import { TriangleAlert } from "lucide-react";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { BearForm } from "@/components/admin/BearForm";
@@ -7,7 +6,6 @@ import { DeleteBearButton } from "@/components/admin/DeleteBearButton";
 import { getBear } from "@/lib/bears.server";
 import {
   formHeadingClassName,
-  formLinkClassName,
   formMutedClassName,
 } from "@/lib/form-styles";
 import { getTournament } from "@/lib/tournament.server";
@@ -42,12 +40,6 @@ export default async function EditBearPage({ params }: EditBearPageProps) {
         <p className={formMutedClassName}>
           Edit identification and biography for this catalog bear.
         </p>
-        <Link
-          className={`text-sm ${formLinkClassName}`}
-          href={`/admin/tournaments/${tournament.id}/bears`}
-        >
-          Back to Bears
-        </Link>
       </header>
       <BearForm
         bear={{

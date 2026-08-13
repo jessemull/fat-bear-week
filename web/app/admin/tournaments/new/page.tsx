@@ -1,9 +1,6 @@
-import Link from "next/link";
-
 import { CreateTournamentForm } from "@/components/admin/CreateTournamentForm";
 import {
   formHeadingClassName,
-  formLinkClassName,
   formMutedClassName,
 } from "@/lib/form-styles";
 
@@ -19,12 +16,6 @@ export default function NewTournamentPage() {
         <p className={formMutedClassName}>
           Years must be unique. The tournament starts in draft status.
         </p>
-        <Link
-          className={`text-sm ${formLinkClassName}`}
-          href="/admin/tournaments"
-        >
-          Back to Tournaments
-        </Link>
       </header>
       <CreateTournamentForm />
     </div>

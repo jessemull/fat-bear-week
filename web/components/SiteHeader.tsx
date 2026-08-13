@@ -102,7 +102,7 @@ export function SiteHeader({
   }
 
   return (
-    <header className="border-b border-amber-600/80 bg-zinc-50 dark:bg-zinc-950">
+    <header className="sticky top-0 z-50 border-b border-amber-600/80 bg-zinc-50 dark:bg-zinc-950">
       <div className="flex w-full items-center gap-5 px-4 py-4 sm:px-6">
         <button
           aria-controls={menuId}
