@@ -172,7 +172,7 @@ export function CreatePoolForm() {
       </div>
       <div className="flex flex-col gap-2">
         <label className={formLabelClassName} htmlFor="pool-deadline">
-          Bracket deadline (optional)
+          Bracket deadline
         </label>
         <input
           className={formInputClassName}

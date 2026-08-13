@@ -88,7 +88,7 @@ export function MintInviteForm({ poolId }: MintInviteFormProps) {
         </div>
         <div className="flex flex-col gap-2">
           <label className={formLabelClassName} htmlFor="invite-name-hint">
-            Name hint (optional)
+            Name hint
           </label>
           <input
             className={formInputClassName}

@@ -290,7 +290,7 @@ describe("pool components", () => {
 
     await user.type(screen.getByLabelText("Pool name"), "Friends");
     await user.type(
-      screen.getByLabelText("Bracket deadline (optional)"),
+      screen.getByLabelText("Bracket deadline"),
       "2026-10-01T12:00",
     );
     await user.click(screen.getByRole("button", { name: "Create pool" }));

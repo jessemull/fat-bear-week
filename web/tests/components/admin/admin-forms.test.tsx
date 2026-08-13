@@ -169,7 +169,7 @@ describe("admin forms", () => {
     );
 
     expect(screen.getByLabelText("Name")).toBeInTheDocument();
-    expect(screen.getByLabelText("Identification (optional)")).toBeInTheDocument();
+    expect(screen.getByLabelText("Identification")).toBeInTheDocument();
     expect(await axe(container)).toHaveNoViolations();
   });
 
@@ -187,13 +187,13 @@ describe("admin forms", () => {
     render(<BearForm mode="create" tournamentId={tournamentId} />);
 
     await user.type(screen.getByLabelText("Name"), "Otis");
-    await user.type(screen.getByLabelText("Nickname (optional)"), "The Boss");
+    await user.type(screen.getByLabelText("Nickname"), "The Boss");
     await user.type(
-      screen.getByLabelText("Identification (optional)"),
+      screen.getByLabelText("Identification"),
       "Dark fur.",
     );
     await user.type(
-      screen.getByLabelText("Biography (optional)"),
+      screen.getByLabelText("Biography"),
       "Brooks River.",
     );
     await user.click(screen.getByRole("button", { name: "Create Bear" }));
@@ -453,8 +453,8 @@ describe("admin forms", () => {
     expect(await axe(container)).toHaveNoViolations();
 
     await user.click(screen.getByLabelText("#32 Chunk"));
-    await user.type(screen.getByLabelText("Votes A (optional)"), "100");
-    await user.type(screen.getByLabelText("Votes B (optional)"), "200");
+    await user.type(screen.getByLabelText("Votes A"), "100");
+    await user.type(screen.getByLabelText("Votes B"), "200");
     await user.click(screen.getByRole("button", { name: "Set winner" }));
 
     expect(fetch).toHaveBeenCalledWith(

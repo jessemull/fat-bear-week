@@ -116,7 +116,7 @@ export function SetWinnerForm({
             className={formLabelClassName}
             htmlFor={`votes-a-${matchupId}`}
           >
-            Votes A (optional)
+            Votes A
           </label>
           <input
             className={formInputClassName}
@@ -133,7 +133,7 @@ export function SetWinnerForm({
             className={formLabelClassName}
             htmlFor={`votes-b-${matchupId}`}
           >
-            Votes B (optional)
+            Votes B
           </label>
           <input
             className={formInputClassName}

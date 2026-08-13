@@ -125,7 +125,7 @@ export function BearForm({ bear, mode, tournamentId }: BearFormProps) {
       </div>
       <div className="flex flex-col gap-2">
         <label className={formLabelClassName} htmlFor="bear-nickname">
-          Nickname (optional)
+          Nickname
         </label>
         <input
           className={formInputClassName}
@@ -138,7 +138,7 @@ export function BearForm({ bear, mode, tournamentId }: BearFormProps) {
       </div>
       <div className="flex flex-col gap-2">
         <label className={formLabelClassName} htmlFor="bear-identification">
-          Identification (optional)
+          Identification
         </label>
         <textarea
           className={formTextareaClassName}
@@ -151,7 +151,7 @@ export function BearForm({ bear, mode, tournamentId }: BearFormProps) {
       </div>
       <div className="flex flex-col gap-2">
         <label className={formLabelClassName} htmlFor="bear-biography">
-          Biography (optional)
+          Biography
         </label>
         <textarea
           className={formTextareaClassName}
@@ -168,7 +168,7 @@ export function BearForm({ bear, mode, tournamentId }: BearFormProps) {
         </p>
       ) : null}
       <button
-        className={formButtonPrimaryClassName}
+        className={`${formButtonPrimaryClassName} mt-4`}
         disabled={pending}
         type="submit"
       >
