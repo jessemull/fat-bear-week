@@ -58,8 +58,8 @@ features in phases below; check items off as they ship.
       `complete`)
 - [x] Import / edit bears (number, name, nickname, description, photos,
       profile URL, age/sex if available)
-- [x] Build generic bracket: rounds → matchups → bear A / bear B / byes
-- [x] Do **not** hardcode 64-team NCAA structure (support ~8–20 bears,
+- [ ] Build generic bracket: rounds → matchups → bear A / bear B / byes
+- [ ] Do **not** hardcode 64-team NCAA structure (support ~8–20 bears,
       byes, varying rounds)
 - [x] Publish tournament / open pool for picks
       (status transitions: `draft` → `live` → `locked` → `complete`)

@@ -59,24 +59,8 @@ export const updateBearBodySchema = z
   })
   .strict();
 
-export const seedBracketBodySchema = z
-  .object({
-    bearIdsInOrder: z.array(z.string().uuid()).min(2).max(128),
-  })
-  .strict();
-
-export const setMatchupWinnerBodySchema = z
-  .object({
-    officialVotesA: z.number().int().min(0).nullable().optional(),
-    officialVotesB: z.number().int().min(0).nullable().optional(),
-    winnerId: z.string().uuid(),
-  })
-  .strict();
-
 export type CreateBearBody = z.infer<typeof createBearBodySchema>;
 export type CreateTournamentBody = z.infer<typeof createTournamentBodySchema>;
-export type SeedBracketBody = z.infer<typeof seedBracketBodySchema>;
-export type SetMatchupWinnerBody = z.infer<typeof setMatchupWinnerBodySchema>;
 export type TransitionTournamentStatusBody = z.infer<
   typeof transitionTournamentStatusBodySchema
 >;

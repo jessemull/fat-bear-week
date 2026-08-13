@@ -18,8 +18,7 @@ export default async function AdminTournamentsPage() {
       <header className="flex flex-col gap-2">
         <h1 className={`text-3xl ${formHeadingClassName}`}>Tournaments</h1>
         <p className={formMutedClassName}>
-          One draft or live tournament per year. Open a year to manage bears and
-          brackets.
+          One draft or live tournament per year. Open a year to manage bears.
         </p>
         <Link className={`text-sm ${formLinkClassName}`} href="/admin/tournaments/new">
           Create Tournament

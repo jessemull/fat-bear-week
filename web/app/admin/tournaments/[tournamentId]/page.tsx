@@ -36,7 +36,7 @@ export default async function TournamentDetailPage({
           Tournament {tournament.year}
         </h1>
         <p className={formMutedClassName}>
-          Manage status, bears, bracket, and results for this year.
+          Manage status and bears for this year.
         </p>
         <Link
           className={`text-sm ${formLinkClassName}`}
@@ -56,33 +56,16 @@ export default async function TournamentDetailPage({
         />
       </section>
       <section className="flex flex-col gap-3">
-        <h2 className={`text-xl ${formHeadingClassName}`}>Manage</h2>
-        <ul className="flex flex-col gap-2">
-          <li>
-            <Link
-              className={formLinkClassName}
-              href={`/admin/tournaments/${tournament.id}/bears`}
-            >
-              Bears
-            </Link>
-          </li>
-          <li>
-            <Link
-              className={formLinkClassName}
-              href={`/admin/tournaments/${tournament.id}/bracket`}
-            >
-              Bracket
-            </Link>
-          </li>
-          <li>
-            <Link
-              className={formLinkClassName}
-              href={`/admin/tournaments/${tournament.id}/results`}
-            >
-              Results
-            </Link>
-          </li>
-        </ul>
+        <h2 className={`text-xl ${formHeadingClassName}`}>Bears</h2>
+        <p className={`text-sm ${formMutedClassName}`}>
+          Add and edit the catalog for this tournament year.
+        </p>
+        <Link
+          className={`text-sm ${formLinkClassName}`}
+          href={`/admin/tournaments/${tournament.id}/bears`}
+        >
+          Manage Bears
+        </Link>
       </section>
       <section className="flex flex-col gap-3 border-t border-zinc-200 pt-8 dark:border-zinc-700">
         <h2

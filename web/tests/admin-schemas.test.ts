@@ -3,8 +3,6 @@ import { describe, expect, it } from "vitest";
 import {
   createBearBodySchema,
   createTournamentBodySchema,
-  seedBracketBodySchema,
-  setMatchupWinnerBodySchema,
   transitionTournamentStatusBodySchema,
   updateBearBodySchema,
   updateTournamentMetaBodySchema,
@@ -56,32 +54,5 @@ describe("admin-schemas", () => {
     expect(
       updateBearBodySchema.parse({ nickname: "The King" }),
     ).toEqual({ nickname: "The King" });
-  });
-
-  it("should require at least two bear ids to seed a bracket", () => {
-    expect(
-      seedBracketBodySchema.safeParse({
-        bearIdsInOrder: ["11111111-1111-4111-8111-111111111111"],
-      }).success,
-    ).toBe(false);
-
-    expect(
-      seedBracketBodySchema.parse({
-        bearIdsInOrder: [
-          "11111111-1111-4111-8111-111111111111",
-          "22222222-2222-4222-8222-222222222222",
-        ],
-      }).bearIdsInOrder,
-    ).toHaveLength(2);
-  });
-
-  it("should accept set-winner bodies with optional vote totals", () => {
-    expect(
-      setMatchupWinnerBodySchema.parse({
-        officialVotesA: 100,
-        officialVotesB: 50,
-        winnerId: "11111111-1111-4111-8111-111111111111",
-      }),
-    ).toMatchObject({ officialVotesA: 100 });
   });
 });

@@ -37,7 +37,7 @@ export default async function TournamentBearsPage({
           Bears · {tournament.year}
         </h1>
         <p className={formMutedClassName}>
-          Shared catalog used when seeding the bracket.
+          Shared catalog of bears for this tournament year.
         </p>
         <Link
           className={`text-sm ${formLinkClassName}`}

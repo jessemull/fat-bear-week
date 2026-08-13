@@ -16,18 +16,14 @@ vi.mock("next/navigation", () => ({
 
 import { BearForm } from "@/components/admin/BearForm";
 import { BearList } from "@/components/admin/BearList";
-import { BracketSeedForm } from "@/components/admin/BracketSeedForm";
 import { CreateTournamentForm } from "@/components/admin/CreateTournamentForm";
 import { DeleteBearButton } from "@/components/admin/DeleteBearButton";
 import { DeleteTournamentButton } from "@/components/admin/DeleteTournamentButton";
-import { SetWinnerForm } from "@/components/admin/SetWinnerForm";
 import { TournamentList } from "@/components/admin/TournamentList";
 import { TournamentStatusControls } from "@/components/admin/TournamentStatusControls";
 
 const tournamentId = "11111111-1111-4111-8111-111111111111";
 const bearAId = "22222222-2222-4222-8222-222222222222";
-const bearBId = "33333333-3333-4333-8333-333333333333";
-const matchupId = "44444444-4444-4444-8444-444444444444";
 
 describe("admin forms", () => {
   beforeEach(() => {
@@ -382,41 +378,6 @@ describe("admin forms", () => {
     );
   });
 
-  it("should seed a bracket from selected bears", async () => {
-    const user = userEvent.setup();
-    const { container } = render(
-      <BracketSeedForm
-        bears={[
-          { id: bearAId, name: "Otis" },
-          { id: bearBId, name: "Chunk" },
-        ]}
-        tournamentId={tournamentId}
-      />,
-    );
-
-    expect(await axe(container)).toHaveNoViolations();
-
-    await user.click(screen.getByLabelText("Otis"));
-    await user.click(screen.getByLabelText("Chunk"));
-    await user.click(screen.getAllByRole("button", { name: "Down" })[0]);
-    await user.click(screen.getAllByRole("button", { name: "Up" })[1]);
-    await user.click(screen.getByRole("button", { name: "Seed bracket" }));
-
-    expect(fetch).toHaveBeenCalledWith(
-      `/api/admin/tournaments/${tournamentId}/bracket`,
-      expect.objectContaining({ method: "PUT" }),
-    );
-    expect(refresh).toHaveBeenCalled();
-  });
-
-  it("should prompt when no bears exist for seeding", () => {
-    render(<BracketSeedForm bears={[]} tournamentId={tournamentId} />);
-
-    expect(screen.getByRole("status")).toHaveTextContent(
-      "Add bears before seeding the bracket.",
-    );
-  });
-
   it("should transition tournament status", async () => {
     const user = userEvent.setup();
     const { container } = render(
@@ -436,74 +397,6 @@ describe("admin forms", () => {
       expect.objectContaining({ method: "POST" }),
     );
     expect(refresh).toHaveBeenCalled();
-  });
-
-  it("should set a matchup winner", async () => {
-    const user = userEvent.setup();
-    const { container } = render(
-      <SetWinnerForm
-        bearAId={bearAId}
-        bearALabel="#480 Otis"
-        bearBId={bearBId}
-        bearBLabel="#32 Chunk"
-        matchupId={matchupId}
-      />,
-    );
-
-    expect(await axe(container)).toHaveNoViolations();
-
-    await user.click(screen.getByLabelText("#32 Chunk"));
-    await user.type(screen.getByLabelText("Votes A"), "100");
-    await user.type(screen.getByLabelText("Votes B"), "200");
-    await user.click(screen.getByRole("button", { name: "Set winner" }));
-
-    expect(fetch).toHaveBeenCalledWith(
-      `/api/admin/matchups/${matchupId}/result`,
-      expect.objectContaining({ method: "POST" }),
-    );
-    expect(refresh).toHaveBeenCalled();
-  });
-
-  it("should show SetWinnerForm API errors", async () => {
-    const user = userEvent.setup();
-
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({
-        json: async () => ({ error: "Invalid winner." }),
-        ok: false,
-      }),
-    );
-
-    render(
-      <SetWinnerForm
-        bearAId={bearAId}
-        bearALabel="#480 Otis"
-        bearBId={bearBId}
-        bearBLabel="#32 Chunk"
-        matchupId={matchupId}
-      />,
-    );
-
-    await user.click(screen.getByRole("button", { name: "Set winner" }));
-
-    expect(screen.getByRole("alert")).toHaveTextContent("Invalid winner.");
-  });
-
-  it("should wait when SetWinnerForm has no bears", () => {
-    render(
-      <SetWinnerForm
-        bearAId={null}
-        bearALabel="TBD"
-        bearBId={null}
-        bearBLabel="TBD"
-        matchupId={matchupId}
-      />,
-    );
-
-    expect(screen.getByRole("status")).toHaveTextContent(
-      "Waiting for both sides.",
-    );
   });
 
   it("should show status transition errors", async () => {
@@ -528,38 +421,6 @@ describe("admin forms", () => {
 
     expect(screen.getByRole("alert")).toHaveTextContent(
       "That status transition is not allowed.",
-    );
-  });
-
-  it("should show bracket seed errors", async () => {
-    const user = userEvent.setup();
-
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({
-        json: async () => ({ error: "Invalid bear list for seeding." }),
-        ok: false,
-      }),
-    );
-
-    render(
-      <BracketSeedForm
-        bears={[
-          { id: bearAId, name: "Otis" },
-          { id: bearBId, name: "Chunk" },
-        ]}
-        tournamentId={tournamentId}
-      />,
-    );
-
-    const checkboxes = screen.getAllByRole("checkbox");
-
-    await user.click(checkboxes[0]);
-    await user.click(checkboxes[1]);
-    await user.click(screen.getByRole("button", { name: "Seed bracket" }));
-
-    expect(screen.getByRole("alert")).toHaveTextContent(
-      "Invalid bear list for seeding.",
     );
   });
 
