@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 
+import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
+
 interface SiteHeaderProps {
   isCommissioner?: boolean;
   isSignedIn: boolean;
@@ -148,7 +150,11 @@ export function SiteHeader({
               type="button"
               onClick={() => void onSignOut()}
             >
-              {signOutPending ? "Signing out…" : "Sign out"}
+              {signOutPending ? (
+                <ButtonPendingLabel>Signing out…</ButtonPendingLabel>
+              ) : (
+                "Sign out"
+              )}
             </button>
           ) : (
             <Link className={authLinkClassName} href="/login">
@@ -172,7 +178,11 @@ export function SiteHeader({
               type="button"
               onClick={() => void onSignOut()}
             >
-              {signOutPending ? "Signing out…" : "Sign out"}
+              {signOutPending ? (
+                <ButtonPendingLabel>Signing out…</ButtonPendingLabel>
+              ) : (
+                "Sign out"
+              )}
             </button>
           ) : (
             <Link

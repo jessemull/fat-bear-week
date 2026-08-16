@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
 import { useToast } from "@/components/Toast";
 import { formButtonPrimaryCompactClassName } from "@/lib/form-styles";
 
@@ -57,7 +58,11 @@ export function ResendInviteButton({
       type="button"
       onClick={() => void onResend()}
     >
-      {pending ? "Sending…" : "Resend Invite"}
+      {pending ? (
+        <ButtonPendingLabel>Sending…</ButtonPendingLabel>
+      ) : (
+        "Resend Invite"
+      )}
     </button>
   );
 }

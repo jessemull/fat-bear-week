@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useState } from "react";
 
+import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
 import { FormSelect } from "@/components/FormSelect";
 import {
   formActionsClassName,
@@ -298,13 +299,15 @@ export function PoolForm({ mode, pool }: PoolFormProps) {
           disabled={pending || !tournamentId}
           type="submit"
         >
-          {pending
-            ? mode === "create"
-              ? "Creating…"
-              : "Saving…"
-            : mode === "create"
-              ? "Create Pool"
-              : "Save Pool"}
+          {pending ? (
+            <ButtonPendingLabel>
+              {mode === "create" ? "Creating…" : "Saving…"}
+            </ButtonPendingLabel>
+          ) : mode === "create" ? (
+            "Create Pool"
+          ) : (
+            "Save Pool"
+          )}
         </button>
       </div>
     </form>

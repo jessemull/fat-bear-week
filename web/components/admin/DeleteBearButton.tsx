@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import {
   formButtonDangerClassName,
@@ -60,7 +61,11 @@ export function DeleteBearButton({
         type="button"
         onClick={() => setConfirmOpen(true)}
       >
-        {pending ? "Deleting…" : "Delete Bear"}
+        {pending ? (
+          <ButtonPendingLabel>Deleting…</ButtonPendingLabel>
+        ) : (
+          "Delete Bear"
+        )}
       </button>
       {error ? (
         <p className={formErrorClassName} role="alert">

@@ -12,6 +12,7 @@ import {
 } from "react";
 
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
 import {
   InviteCsvUploadDialog,
   type ParsedInviteRow,
@@ -388,7 +389,11 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
             disabled={pending}
             type="submit"
           >
-            {pending ? "Sending…" : "Send Invites"}
+            {pending ? (
+              <ButtonPendingLabel>Sending…</ButtonPendingLabel>
+            ) : (
+              "Send Invites"
+            )}
           </button>
         </div>
       </form>

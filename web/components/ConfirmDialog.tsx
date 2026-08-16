@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef } from "react";
 
+import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
 import {
   formButtonDangerClassName,
   formButtonPrimaryClassName,
@@ -104,7 +105,11 @@ export function ConfirmDialog({
             type="button"
             onClick={onConfirm}
           >
-            {pending ? "Working…" : confirmLabel}
+            {pending ? (
+              <ButtonPendingLabel>Working…</ButtonPendingLabel>
+            ) : (
+              confirmLabel
+            )}
           </button>
         </div>
       </div>

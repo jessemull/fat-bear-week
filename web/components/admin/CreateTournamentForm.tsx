@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
+import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
 import {
   formActionsClassName,
   formButtonPrimaryClassName,
@@ -107,7 +108,11 @@ export function CreateTournamentForm() {
           disabled={pending}
           type="submit"
         >
-          {pending ? "Creating…" : "Create Tournament"}
+          {pending ? (
+            <ButtonPendingLabel>Creating…</ButtonPendingLabel>
+          ) : (
+            "Create Tournament"
+          )}
         </button>
       </div>
     </form>

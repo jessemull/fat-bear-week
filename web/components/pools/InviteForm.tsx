@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
+import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
 import { useToast } from "@/components/Toast";
 import {
   formActionsClassName,
@@ -145,7 +146,11 @@ export function InviteForm({ invite, poolId }: InviteFormProps) {
           disabled={readOnly || pending}
           type="submit"
         >
-          {pending ? "Saving…" : "Save Invite"}
+          {pending ? (
+            <ButtonPendingLabel>Saving…</ButtonPendingLabel>
+          ) : (
+            "Save Invite"
+          )}
         </button>
       </div>
     </form>

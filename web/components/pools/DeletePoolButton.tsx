@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import {
   formButtonDangerClassName,
@@ -55,7 +56,11 @@ export function DeletePoolButton({ name, poolId }: DeletePoolButtonProps) {
         type="button"
         onClick={() => setConfirmOpen(true)}
       >
-        {pending ? "Deleting…" : "Delete Pool"}
+        {pending ? (
+          <ButtonPendingLabel>Deleting…</ButtonPendingLabel>
+        ) : (
+          "Delete Pool"
+        )}
       </button>
       {error ? (
         <p className={formErrorClassName} role="alert">

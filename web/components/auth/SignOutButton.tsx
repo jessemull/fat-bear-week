@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
 import { formButtonSecondaryClassName } from "@/lib/form-styles";
 
 export function SignOutButton() {
@@ -28,7 +29,11 @@ export function SignOutButton() {
       type="button"
       onClick={onClick}
     >
-      {pending ? "Signing out…" : "Sign out"}
+      {pending ? (
+        <ButtonPendingLabel>Signing out…</ButtonPendingLabel>
+      ) : (
+        "Sign out"
+      )}
     </button>
   );
 }

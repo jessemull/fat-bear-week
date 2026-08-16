@@ -57,4 +57,22 @@ describe("ConfirmDialog", () => {
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
+
+  it("should show a pending label while working", () => {
+    render(
+      <ConfirmDialog
+        confirmLabel="Delete"
+        description="This cannot be undone."
+        open
+        pending
+        title="Delete item"
+        onCancel={vi.fn()}
+        onConfirm={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Working…" }),
+    ).toBeInTheDocument();
+  });
 });

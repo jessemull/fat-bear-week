@@ -4,6 +4,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
+import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
 import {
   formButtonPrimaryClassName,
   formErrorClassName,
@@ -114,7 +115,11 @@ export function SignInForm({ turnstileToken }: SignInFormProps) {
         disabled={pending}
         type="submit"
       >
-        {pending ? "Signing in…" : "Sign In"}
+        {pending ? (
+          <ButtonPendingLabel>Signing in…</ButtonPendingLabel>
+        ) : (
+          "Sign In"
+        )}
       </button>
     </form>
   );

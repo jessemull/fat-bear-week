@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
+import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
 import {
   formActionsClassName,
   formButtonPrimaryClassName,
@@ -183,13 +184,15 @@ export function BearForm({ bear, mode, tournamentId }: BearFormProps) {
           disabled={pending}
           type="submit"
         >
-          {pending
-            ? mode === "create"
-              ? "Creating…"
-              : "Saving…"
-            : mode === "create"
-              ? "Create Bear"
-              : "Save Bear"}
+          {pending ? (
+            <ButtonPendingLabel>
+              {mode === "create" ? "Creating…" : "Saving…"}
+            </ButtonPendingLabel>
+          ) : mode === "create" ? (
+            "Create Bear"
+          ) : (
+            "Save Bear"
+          )}
         </button>
       </div>
     </form>

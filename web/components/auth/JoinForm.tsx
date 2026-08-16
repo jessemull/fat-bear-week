@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
+import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
 import {
   formButtonPrimaryClassName,
   formErrorClassName,
@@ -154,7 +155,11 @@ export function JoinForm({
         disabled={pending}
         type="submit"
       >
-        {pending ? "Joining…" : "Join pool"}
+        {pending ? (
+          <ButtonPendingLabel>Joining…</ButtonPendingLabel>
+        ) : (
+          "Join pool"
+        )}
       </button>
     </form>
   );
