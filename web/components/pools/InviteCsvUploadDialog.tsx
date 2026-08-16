@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 
 import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
 import {
+  formButtonPrimaryClassName,
   formButtonSecondaryClassName,
   formErrorClassName,
   formHeadingClassName,
@@ -202,6 +203,7 @@ export function InviteCsvUploadDialog({
   const fileRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<null | string>(null);
   const [pending, setPending] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (!open) {
@@ -210,6 +212,7 @@ export function InviteCsvUploadDialog({
 
     setError(null);
     setPending(false);
+    setSelectedFile(null);
 
     if (fileRef.current) {
       fileRef.current.value = "";
@@ -238,28 +241,44 @@ export function InviteCsvUploadDialog({
     return null;
   }
 
-  async function onFileChange(file: File | null) {
+  function onFileChange(file: File | null) {
     setError(null);
 
     if (!file) {
+      setSelectedFile(null);
       return;
     }
 
     const lowerName = file.name.toLowerCase();
 
     if (lowerName.endsWith(".xlsx") || lowerName.endsWith(".xls")) {
+      setSelectedFile(null);
+
+      if (fileRef.current) {
+        fileRef.current.value = "";
+      }
+
       setError(
         "Excel files are not supported. Export as CSV (.csv) from Excel or Google Sheets, then upload that file.",
       );
       return;
     }
 
+    setSelectedFile(file);
+  }
+
+  async function onUpload() {
+    if (!selectedFile) {
+      return;
+    }
+
+    setError(null);
     setPending(true);
 
     try {
-      const text = await readInviteFileText(file);
+      const text = await readInviteFileText(selectedFile);
 
-      if (looksLikeRtf(file.name, text)) {
+      if (looksLikeRtf(selectedFile.name, text)) {
         setError(
           "That looks like a TextEdit rich text (.rtf) file. In TextEdit choose Format → Make Plain Text, save, then upload the .txt file.",
         );
@@ -319,33 +338,55 @@ export function InviteCsvUploadDialog({
           <input
             accept=".csv,.rtf,.text,.txt,text/*,text/csv,text/plain,text/rtf"
             aria-label="Email list file"
-            className="block w-full text-sm text-zinc-700 file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-amber-700 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-white hover:file:bg-amber-800 dark:text-zinc-300 dark:file:bg-amber-600 dark:hover:file:bg-amber-500"
+            className="sr-only"
             disabled={pending}
             ref={fileRef}
             type="file"
             onChange={(event) => {
-              void onFileChange(event.target.files?.[0] ?? null);
+              onFileChange(event.target.files?.[0] ?? null);
             }}
           />
-          {pending ? (
-            <p className={`text-sm ${formMutedClassName}`}>
-              <ButtonPendingLabel>Reading file…</ButtonPendingLabel>
+          <div className="flex min-w-0 items-center gap-3">
+            <button
+              className={`${formButtonPrimaryClassName} shrink-0`}
+              disabled={pending}
+              type="button"
+              onClick={() => fileRef.current?.click()}
+            >
+              Choose file
+            </button>
+            <p
+              className={`min-w-0 truncate text-sm ${selectedFile ? "text-zinc-900 dark:text-zinc-100" : formMutedClassName}`}
+            >
+              {selectedFile?.name ?? "No file chosen."}
             </p>
-          ) : null}
+          </div>
           {error ? (
             <p className={formErrorClassName} role="alert">
               {error}
             </p>
           ) : null}
         </div>
-        <div className="mt-5 flex justify-end">
+        <div className="mt-5 grid w-full grid-cols-2 gap-2">
           <button
-            className={formButtonSecondaryClassName}
+            className={`${formButtonSecondaryClassName} w-full justify-center`}
             disabled={pending}
             type="button"
             onClick={onCancel}
           >
             Cancel
+          </button>
+          <button
+            className={`${formButtonPrimaryClassName} w-full justify-center`}
+            disabled={pending || !selectedFile}
+            type="button"
+            onClick={() => void onUpload()}
+          >
+            {pending ? (
+              <ButtonPendingLabel>Reading file…</ButtonPendingLabel>
+            ) : (
+              "Upload"
+            )}
           </button>
         </div>
       </div>

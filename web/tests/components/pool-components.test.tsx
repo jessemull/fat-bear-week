@@ -278,8 +278,13 @@ describe("pool components", () => {
     const file = new File(["email\n"], "empty.csv", { type: "text/csv" });
 
     await user.upload(screen.getByLabelText("Email list file"), file);
+    await user.click(
+      within(screen.getByRole("dialog")).getByRole("button", {
+        name: "Upload",
+      }),
+    );
 
-    expect(screen.getByRole("alert")).toHaveTextContent(
+    expect(await screen.findByRole("alert")).toHaveTextContent(
       /No email addresses found/i,
     );
   });
@@ -355,8 +360,15 @@ describe("pool components", () => {
     );
 
     await user.upload(screen.getByLabelText("Email list file"), file);
+    await user.click(
+      within(screen.getByRole("dialog")).getByRole("button", {
+        name: "Upload",
+      }),
+    );
 
-    expect(screen.getByRole("alert")).toHaveTextContent(/Make Plain Text/i);
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /Make Plain Text/i,
+    );
   });
 
   it("should reset upload modal errors when cancelled and reopened", async () => {
@@ -370,7 +382,12 @@ describe("pool components", () => {
     });
 
     await user.upload(screen.getByLabelText("Email list file"), file);
-    expect(screen.getByRole("alert")).toBeInTheDocument();
+    await user.click(
+      within(screen.getByRole("dialog")).getByRole("button", {
+        name: "Upload",
+      }),
+    );
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
 
     await user.click(
       within(screen.getByRole("dialog")).getByRole("button", {
@@ -397,8 +414,15 @@ describe("pool components", () => {
     );
 
     await user.upload(screen.getByLabelText("Email list file"), file);
+    await user.click(
+      within(screen.getByRole("dialog")).getByRole("button", {
+        name: "Upload",
+      }),
+    );
 
-    expect(screen.getByLabelText("Email 1")).toHaveValue("a@example.com");
+    await waitFor(() => {
+      expect(screen.getByLabelText("Email 1")).toHaveValue("a@example.com");
+    });
     expect(screen.getByLabelText("Name Hint 1")).toHaveValue("Alex");
     expect(screen.getByLabelText("Email 2")).toHaveValue("b@example.com");
     expect(screen.getByLabelText("Name Hint 2")).toHaveValue("Bea");
@@ -416,8 +440,15 @@ describe("pool components", () => {
     });
 
     await user.upload(screen.getByLabelText("Email list file"), file);
+    await user.click(
+      within(screen.getByRole("dialog")).getByRole("button", {
+        name: "Upload",
+      }),
+    );
 
-    expect(screen.getByLabelText("Email 1")).toHaveValue("a@example.com");
+    await waitFor(() => {
+      expect(screen.getByLabelText("Email 1")).toHaveValue("a@example.com");
+    });
     expect(screen.getByLabelText("Email 2")).toHaveValue("b@example.com");
   });
 
