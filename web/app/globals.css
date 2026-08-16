@@ -43,3 +43,20 @@ body {
 .subtle-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
+
+/* Native datetime field: pointer on calendar glyph; amber accent when supported. */
+.datetime-local-input {
+  accent-color: #d97706;
+  cursor: pointer;
+}
+
+.datetime-local-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  .datetime-local-input {
+    color-scheme: dark;
+  }
+}

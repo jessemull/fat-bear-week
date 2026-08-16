@@ -64,6 +64,7 @@ export function PoolForm({ mode, pool }: PoolFormProps) {
   const [pending, setPending] = useState(false);
   const [tournamentId, setTournamentId] = useState(pool?.tournamentId ?? "");
   const [tournaments, setTournaments] = useState<TournamentOption[]>([]);
+  const [tournamentsLoading, setTournamentsLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -97,6 +98,10 @@ export function PoolForm({ mode, pool }: PoolFormProps) {
       } catch {
         if (!cancelled) {
           setLoadError("Unable to load tournaments right now.");
+        }
+      } finally {
+        if (!cancelled) {
+          setTournamentsLoading(false);
         }
       }
     }
@@ -188,8 +193,9 @@ export function PoolForm({ mode, pool }: PoolFormProps) {
     }
   }
 
-  const tournamentOptions =
-    tournaments.length === 0
+  const tournamentOptions = tournamentsLoading
+    ? [{ label: "Loading tournaments…", value: "" }]
+    : tournaments.length === 0
       ? [{ label: "No tournaments available", value: "" }]
       : tournaments.map((tournament) => ({
           label: `${tournament.year} (${formatTournamentStatus(tournament.status)})`,
@@ -225,11 +231,11 @@ export function PoolForm({ mode, pool }: PoolFormProps) {
           Tournament
         </label>
         <FormSelect
-          disabled={pending || tournaments.length === 0}
+          disabled={pending || tournamentsLoading || tournaments.length === 0}
           id={tournamentFieldId}
           label="Tournament"
           options={tournamentOptions}
-          value={tournamentId}
+          value={tournamentsLoading ? "" : tournamentId}
           onChange={setTournamentId}
         />
         {loadError ? (
@@ -237,7 +243,7 @@ export function PoolForm({ mode, pool }: PoolFormProps) {
             {loadError}
           </p>
         ) : null}
-        {!loadError && tournaments.length === 0 ? (
+        {!loadError && !tournamentsLoading && tournaments.length === 0 ? (
           <p className={`text-sm ${formMutedClassName}`} role="status">
             Create a tournament in admin before creating a pool.
           </p>
@@ -265,7 +271,7 @@ export function PoolForm({ mode, pool }: PoolFormProps) {
           Bracket deadline
         </label>
         <input
-          className={`${formInputClassName} dark:[color-scheme:dark]`}
+          className={`${formInputClassName} datetime-local-input`}
           id={deadlineId}
           name="bracketDeadline"
           type="datetime-local"
