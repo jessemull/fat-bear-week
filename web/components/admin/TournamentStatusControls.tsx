@@ -62,17 +62,21 @@ export function TournamentStatusControls({
     }
   }
 
+  const options = pending
+    ? [{ label: "Updating…", value: "" }]
+    : TOURNAMENT_STATUSES.map((option) => ({
+        label: formatTournamentStatus(option),
+        value: option,
+      }));
+
   return (
     <div className="flex max-w-xs flex-col gap-3">
       <FormSelect
         disabled={pending}
         id="tournament-status"
         label="Status"
-        options={TOURNAMENT_STATUSES.map((option) => ({
-          label: formatTournamentStatus(option),
-          value: option,
-        }))}
-        value={status}
+        options={options}
+        value={pending ? "" : status}
         onChange={(nextStatus) =>
           void onChange(nextStatus as TournamentStatus)
         }

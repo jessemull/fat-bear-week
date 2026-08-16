@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 
+import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
 import {
   formButtonSecondaryClassName,
   formErrorClassName,
@@ -326,6 +327,11 @@ export function InviteCsvUploadDialog({
               void onFileChange(event.target.files?.[0] ?? null);
             }}
           />
+          {pending ? (
+            <p className={`text-sm ${formMutedClassName}`}>
+              <ButtonPendingLabel>Reading file…</ButtonPendingLabel>
+            </p>
+          ) : null}
           {error ? (
             <p className={formErrorClassName} role="alert">
               {error}
