@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { TournamentList } from "@/components/admin/TournamentList";
-import { formButtonPrimaryCompactClassName } from "@/lib/form-styles";
+import { formButtonPrimaryClassName } from "@/lib/form-styles";
 import { listTournaments } from "@/lib/tournament.server";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +14,7 @@ export default async function AdminTournamentsPage() {
     <AdminPageHeader
       action={
         <Link
-          className={formButtonPrimaryCompactClassName}
+          className={formButtonPrimaryClassName}
           href="/admin/tournaments/new"
         >
           Create Tournament

@@ -21,9 +21,7 @@ import { useToast } from "@/components/Toast";
 import {
   formActionsClassName,
   formButtonPrimaryClassName,
-  formButtonPrimaryCompactClassName,
   formButtonSecondaryClassName,
-  formButtonSecondaryCompactClassName,
   formErrorClassName,
   formInputClassName,
   formLabelClassName,
@@ -263,7 +261,7 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
       <AdminPageHeader
         action={
           <button
-            className={formButtonPrimaryCompactClassName}
+            className={formButtonPrimaryClassName}
             disabled={pending}
             type="button"
             onClick={() => setUploadOpen(true)}
@@ -279,7 +277,7 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
           <div className="flex items-end justify-between gap-3">
             <p className={formLabelClassName}>Invitees</p>
             <button
-              className={formButtonSecondaryCompactClassName}
+              className={formButtonSecondaryClassName}
               disabled={pending}
               type="button"
               onClick={() => setRows((current) => [...current, createRow()])}

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { PoolList } from "@/components/pools/PoolList";
-import { formButtonPrimaryCompactClassName } from "@/lib/form-styles";
+import { formButtonPrimaryClassName } from "@/lib/form-styles";
 import { listPoolsForUser } from "@/lib/pools.server";
 import { getSession } from "@/lib/sessions.server";
 
@@ -25,7 +25,7 @@ export default async function AdminPoolsPage() {
     <AdminPageHeader
       action={
         <Link
-          className={formButtonPrimaryCompactClassName}
+          className={formButtonPrimaryClassName}
           href="/admin/pools/new"
         >
           Create Pool

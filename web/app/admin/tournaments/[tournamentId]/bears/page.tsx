@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { BearList } from "@/components/admin/BearList";
 import { listBearsForTournament } from "@/lib/bears.server";
-import { formButtonPrimaryCompactClassName } from "@/lib/form-styles";
+import { formButtonPrimaryClassName } from "@/lib/form-styles";
 import { getTournament } from "@/lib/tournament.server";
 
 export const dynamic = "force-dynamic";
@@ -31,7 +31,7 @@ export default async function TournamentBearsPage({
     <AdminPageHeader
       action={
         <Link
-          className={formButtonPrimaryCompactClassName}
+          className={formButtonPrimaryClassName}
           href={`/admin/tournaments/${tournament.id}/bears/new`}
         >
           Create Bear

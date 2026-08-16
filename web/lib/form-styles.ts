@@ -23,14 +23,8 @@ export const formActionsClassName =
 export const formButtonPrimaryClassName =
   "inline-flex h-8 cursor-pointer items-center justify-center rounded-md bg-amber-700 px-3 text-sm font-medium text-white transition-colors hover:bg-amber-800 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-500 dark:disabled:hover:bg-amber-600";
 
-export const formButtonPrimaryCompactClassName =
-  "inline-flex h-7 cursor-pointer items-center justify-center rounded-md bg-amber-700 px-2.5 text-xs font-medium text-white transition-colors hover:bg-amber-800 dark:bg-amber-600 dark:hover:bg-amber-500";
-
 export const formButtonSecondaryClassName =
   "inline-flex h-8 cursor-pointer items-center justify-center rounded-md border border-zinc-300 px-2.5 text-sm text-zinc-900 transition-colors hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-transparent dark:border-zinc-600 dark:text-zinc-100 dark:hover:bg-zinc-800 dark:disabled:hover:bg-transparent";
-
-export const formButtonSecondaryCompactClassName =
-  "inline-flex h-7 cursor-pointer items-center justify-center rounded-md border border-zinc-300 px-2.5 text-xs text-zinc-900 transition-colors hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-transparent dark:border-zinc-600 dark:text-zinc-100 dark:hover:bg-zinc-800 dark:disabled:hover:bg-transparent";
 
 export const formButtonDangerClassName =
   "inline-flex h-8 cursor-pointer items-center justify-center rounded-md border border-red-300 px-2.5 text-sm text-red-800 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-transparent dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/60 dark:disabled:hover:bg-transparent";

@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
 import { useToast } from "@/components/Toast";
-import { formButtonPrimaryCompactClassName } from "@/lib/form-styles";
+import { formButtonPrimaryClassName } from "@/lib/form-styles";
 
 interface ResendInviteButtonProps {
   inviteId: string;
@@ -53,7 +53,7 @@ export function ResendInviteButton({
 
   return (
     <button
-      className={formButtonPrimaryCompactClassName}
+      className={formButtonPrimaryClassName}
       disabled={pending}
       type="button"
       onClick={() => void onResend()}

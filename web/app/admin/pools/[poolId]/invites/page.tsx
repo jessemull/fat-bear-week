@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { InviteList } from "@/components/pools/InviteList";
-import { formButtonPrimaryCompactClassName } from "@/lib/form-styles";
+import { formButtonPrimaryClassName } from "@/lib/form-styles";
 import { listInvitesForPool } from "@/lib/invites.server";
 import { getPool, userCanManagePool } from "@/lib/pools.server";
 import { getSession } from "@/lib/sessions.server";
@@ -47,7 +47,7 @@ export default async function AdminPoolInvitesPage({
     <AdminPageHeader
       action={
         <Link
-          className={formButtonPrimaryCompactClassName}
+          className={formButtonPrimaryClassName}
           href={`/admin/pools/${poolId}/invites/new`}
         >
           Send Invites
