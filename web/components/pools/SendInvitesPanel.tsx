@@ -2,7 +2,14 @@
 
 import { Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { type FormEvent, useId, useRef, useState } from "react";
+import {
+  type FormEvent,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
@@ -33,11 +40,15 @@ interface SendInvitesPanelProps {
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const INITIAL_ROW: InviteRow = { email: "", id: "row-0", nameHint: "" };
+/** Form gap + actions mt + admin main bottom padding. */
+const LIST_BOTTOM_GAP_PX = 56;
 
 export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
   const router = useRouter();
   const { toast } = useToast();
   const baseId = useId();
+  const actionsRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
   const nextRowId = useRef(1);
   const [error, setError] = useState<null | string>(null);
   const [pending, setPending] = useState(false);
@@ -55,6 +66,59 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
       nameHint,
     };
   }
+
+  useLayoutEffect(() => {
+    function updateListMaxHeight() {
+      const list = listRef.current;
+      const actions = actionsRef.current;
+
+      if (!list || !actions) {
+        return;
+      }
+
+      function measure() {
+        const listTop = list.getBoundingClientRect().top;
+        const actionsHeight = actions.getBoundingClientRect().height;
+        const available =
+          window.innerHeight - listTop - actionsHeight - LIST_BOTTOM_GAP_PX;
+
+        list.style.maxHeight = `${Math.max(available, 12 * 16)}px`;
+
+        const pageOverflow =
+          document.documentElement.scrollHeight - window.innerHeight;
+
+        if (pageOverflow > 0) {
+          list.style.maxHeight = `${Math.max(list.clientHeight - pageOverflow, 12 * 16)}px`;
+        }
+      }
+
+      measure();
+      // Clamping the list can move the actions; measure again after layout.
+      window.requestAnimationFrame(measure);
+    }
+
+    updateListMaxHeight();
+    window.addEventListener("resize", updateListMaxHeight);
+
+    return () => {
+      window.removeEventListener("resize", updateListMaxHeight);
+    };
+  }, [error, rows.length]);
+
+  useEffect(() => {
+    const list = listRef.current;
+
+    if (!list) {
+      return;
+    }
+
+    if (list.scrollHeight > list.clientHeight) {
+      list.scrollTo({
+        behavior: "smooth",
+        top: list.scrollHeight,
+      });
+    }
+  }, [rows.length]);
 
   async function submitInvites(
     invites: { email: string; nameHint: null | string }[],
@@ -229,83 +293,88 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
               </span>
             </button>
           </div>
-          {rows.map((row, index) => (
-            <div
-              key={row.id}
-              className="flex flex-col gap-2 rounded-sm border border-zinc-300 p-3 dark:border-zinc-600 sm:flex-row sm:items-end"
-            >
-              <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:gap-3">
-                <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                  <label
-                    className={`text-sm ${formLabelClassName}`}
-                    htmlFor={`${baseId}-email-${row.id}`}
-                  >
-                    Email
-                  </label>
-                  <input
-                    aria-label={`Email ${index + 1}`}
-                    className={`${formInputClassName} w-full min-w-0`}
-                    disabled={pending}
-                    id={`${baseId}-email-${row.id}`}
-                    name={`email-${row.id}`}
-                    placeholder="Enter an email..."
-                    type="email"
-                    value={row.email}
-                    onChange={(event) =>
-                      updateRow(row.id, { email: event.target.value })
-                    }
-                  />
+          <div
+            ref={listRef}
+            className="subtle-scrollbar flex flex-col gap-3 overflow-y-auto overscroll-contain pr-1"
+          >
+            {rows.map((row, index) => (
+              <div
+                key={row.id}
+                className="flex flex-col gap-2 rounded-sm border border-zinc-300 p-3 dark:border-zinc-600 sm:flex-row sm:items-end"
+              >
+                <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:gap-3">
+                  <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                    <label
+                      className={`text-sm ${formLabelClassName}`}
+                      htmlFor={`${baseId}-email-${row.id}`}
+                    >
+                      Email
+                    </label>
+                    <input
+                      aria-label={`Email ${index + 1}`}
+                      className={`${formInputClassName} w-full min-w-0`}
+                      disabled={pending}
+                      id={`${baseId}-email-${row.id}`}
+                      name={`email-${row.id}`}
+                      placeholder="Enter an email..."
+                      type="email"
+                      value={row.email}
+                      onChange={(event) =>
+                        updateRow(row.id, { email: event.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                    <label
+                      className={`text-sm ${formLabelClassName}`}
+                      htmlFor={`${baseId}-name-${row.id}`}
+                    >
+                      Name Hint
+                    </label>
+                    <input
+                      aria-label={`Name Hint ${index + 1}`}
+                      className={`${formInputClassName} w-full min-w-0`}
+                      disabled={pending}
+                      id={`${baseId}-name-${row.id}`}
+                      name={`nameHint-${row.id}`}
+                      placeholder="Optional display name..."
+                      type="text"
+                      value={row.nameHint}
+                      onChange={(event) =>
+                        updateRow(row.id, { nameHint: event.target.value })
+                      }
+                    />
+                  </div>
                 </div>
-                <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                  <label
-                    className={`text-sm ${formLabelClassName}`}
-                    htmlFor={`${baseId}-name-${row.id}`}
-                  >
-                    Name Hint
-                  </label>
-                  <input
-                    aria-label={`Name Hint ${index + 1}`}
-                    className={`${formInputClassName} w-full min-w-0`}
+                {rows.length > 1 ? (
+                  <button
+                    aria-label={`Remove invitee ${index + 1}`}
+                    className={`${formButtonSecondaryClassName} shrink-0 self-end px-2`}
                     disabled={pending}
-                    id={`${baseId}-name-${row.id}`}
-                    name={`nameHint-${row.id}`}
-                    placeholder="Optional display name..."
-                    type="text"
-                    value={row.nameHint}
-                    onChange={(event) =>
-                      updateRow(row.id, { nameHint: event.target.value })
+                    type="button"
+                    onClick={() =>
+                      setRows((current) =>
+                        current.filter((item) => item.id !== row.id),
+                      )
                     }
-                  />
-                </div>
+                  >
+                    <Trash2
+                      aria-hidden="true"
+                      className="size-4"
+                      strokeWidth={1.75}
+                    />
+                  </button>
+                ) : null}
               </div>
-              {rows.length > 1 ? (
-                <button
-                  aria-label={`Remove invitee ${index + 1}`}
-                  className={`${formButtonSecondaryClassName} shrink-0 self-end px-2`}
-                  disabled={pending}
-                  type="button"
-                  onClick={() =>
-                    setRows((current) =>
-                      current.filter((item) => item.id !== row.id),
-                    )
-                  }
-                >
-                  <Trash2
-                    aria-hidden="true"
-                    className="size-4"
-                    strokeWidth={1.75}
-                  />
-                </button>
-              ) : null}
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
         {error ? (
           <p className={formErrorClassName} role="alert">
             {error}
           </p>
         ) : null}
-        <div className={formActionsClassName}>
+        <div ref={actionsRef} className={formActionsClassName}>
           <button
             className={`${formButtonSecondaryClassName} w-full justify-center`}
             disabled={pending}

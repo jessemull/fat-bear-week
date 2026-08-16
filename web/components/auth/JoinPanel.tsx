@@ -28,9 +28,8 @@ export function JoinPanel({
     <>
       <div className="flex flex-col gap-2 text-center">
         <h1 className={`text-3xl ${formHeadingClassName}`}>Join {poolName}</h1>
-        <p className={formMutedClassName}>
-          Invite-only pool. Confirm your email, choose a display name, and set a
-          password to create your entry.
+        <p className={`text-sm ${formMutedClassName}`}>
+          Invite-only pool. Confirm your info and create a password.
         </p>
       </div>
       <JoinForm

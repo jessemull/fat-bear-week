@@ -104,7 +104,7 @@ export function JoinForm({
           className={formInputClassName}
           id="join-name"
           name="name"
-          placeholder={nameHint ?? undefined}
+          placeholder="Enter a display name..."
           required
           value={name}
           onChange={(event) => setName(event.target.value)}
@@ -120,6 +120,7 @@ export function JoinForm({
           id="join-password"
           minLength={8}
           name="password"
+          placeholder="Enter a password..."
           required
           type="password"
           value={password}
@@ -136,6 +137,7 @@ export function JoinForm({
           id="join-password-confirm"
           minLength={8}
           name="passwordConfirm"
+          placeholder="Confirm your password..."
           required
           type="password"
           value={passwordConfirm}
