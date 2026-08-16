@@ -28,20 +28,19 @@ export default async function TournamentBearsPage({
   const bears = await listBearsForTournament(tournamentId);
 
   return (
-    <div className="flex flex-col gap-4">
-      <AdminPageHeader
-        action={
-          <Link
-            className={formButtonPrimaryCompactClassName}
-            href={`/admin/tournaments/${tournament.id}/bears/new`}
-          >
-            Create Bear
-          </Link>
-        }
-        description="Shared catalog of bears for this tournament year."
-        title={`Bears · ${tournament.year}`}
-      />
+    <AdminPageHeader
+      action={
+        <Link
+          className={formButtonPrimaryCompactClassName}
+          href={`/admin/tournaments/${tournament.id}/bears/new`}
+        >
+          Create Bear
+        </Link>
+      }
+      description="Shared catalog of bears for this tournament year."
+      title={`Bears · ${tournament.year}`}
+    >
       <BearList bears={bears} tournamentId={tournament.id} />
-    </div>
+    </AdminPageHeader>
   );
 }

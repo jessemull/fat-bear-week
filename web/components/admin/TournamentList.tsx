@@ -7,6 +7,7 @@ import { type KeyboardEvent } from "react";
 import type { TournamentRecord } from "@/lib/tournament.server";
 
 import { formMutedClassName } from "@/lib/form-styles";
+import { formatTournamentStatus } from "@/lib/tournament-types";
 
 interface TournamentListProps {
   tournaments: TournamentRecord[];
@@ -91,8 +92,8 @@ export function TournamentList({ tournaments }: TournamentListProps) {
               <td className="py-3 pl-3 pr-4 font-medium text-zinc-900 dark:text-zinc-50">
                 {tournament.year}
               </td>
-              <td className="py-3 pr-4 capitalize text-zinc-700 dark:text-zinc-300">
-                {tournament.status}
+              <td className="py-3 pr-4 text-zinc-700 dark:text-zinc-300">
+                {formatTournamentStatus(tournament.status)}
               </td>
               <td className={`py-3 pr-4 ${formMutedClassName}`}>
                 {formatDate(tournament.startsAt)}

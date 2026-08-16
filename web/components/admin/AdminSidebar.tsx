@@ -5,7 +5,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useId, useState } from "react";
 
-import type { TournamentStatus } from "@/lib/tournament-types";
+import {
+  formatTournamentStatus,
+  type TournamentStatus,
+} from "@/lib/tournament-types";
 
 export interface AdminSidebarPool {
   id: string;
@@ -23,47 +26,31 @@ interface AdminSidebarProps {
   tournaments: AdminSidebarTournament[];
 }
 
-const navLinkClassName =
-  "rounded px-2 py-1 text-sm text-zinc-700 hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-zinc-50";
+const childLinkActiveClassName = "bg-amber-500/15 font-medium text-amber-800";
+const childLinkClassName =
+  "block rounded-md px-2 py-1.5 text-sm text-zinc-400 transition-colors hover:bg-zinc-900 hover:text-zinc-100";
+const childLinkInactiveClassName = "font-normal";
 
+const nestedLinkActiveClassName = "bg-amber-500/15 font-medium text-amber-800";
 const nestedLinkClassName =
-  "rounded py-1 pr-2 pl-3 text-sm text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200";
+  "block rounded-md px-2 py-1 text-sm text-zinc-500 transition-colors hover:bg-zinc-900 hover:text-zinc-200";
+const nestedLinkInactiveClassName = "font-normal";
 
-const navLinkActiveClassName =
-  "rounded px-2 py-1 text-sm font-medium text-amber-800 dark:text-amber-400";
+const sectionLinkActiveClassName = "text-amber-800";
+const sectionLinkClassName =
+  "block px-2 text-xs font-semibold tracking-[0.14em] text-zinc-500 uppercase transition-colors hover:text-zinc-300";
+const sectionLinkInactiveClassName = "";
 
-const nestedLinkActiveClassName =
-  "rounded py-1 pr-2 pl-3 text-sm font-medium text-amber-800 dark:text-amber-400";
-
-function isTournamentsIndex(pathname: string): boolean {
-  return pathname === "/admin/tournaments";
+function linkClassName(
+  active: boolean,
+  base: string,
+  activeClass: string,
+  inactiveClass: string,
+): string {
+  return `${base} ${active ? activeClass : inactiveClass}`;
 }
 
-function isCreateTournament(pathname: string): boolean {
-  return pathname === "/admin/tournaments/new";
-}
-
-function isTournamentOverview(pathname: string, tournamentId: string): boolean {
-  return pathname === `/admin/tournaments/${tournamentId}`;
-}
-
-function isTournamentBears(pathname: string, tournamentId: string): boolean {
-  return pathname.startsWith(`/admin/tournaments/${tournamentId}/bears`);
-}
-
-function isPoolsIndex(pathname: string): boolean {
-  return pathname === "/admin/pools";
-}
-
-function isCreatePool(pathname: string): boolean {
-  return pathname === "/admin/pools/new";
-}
-
-function isPoolInvites(pathname: string, poolId: string): boolean {
-  return pathname.startsWith(`/admin/pools/${poolId}/invites`);
-}
-
-function AdminNav({
+function NavBody({
   onNavigate,
   pathname,
   pools,
@@ -75,159 +62,215 @@ function AdminNav({
   tournaments: AdminSidebarTournament[];
 }) {
   return (
-    <nav aria-label="Admin" className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
+    <div className="space-y-6">
+      <section aria-labelledby="admin-nav-tournaments">
+        <h2 className="sr-only" id="admin-nav-tournaments">
+          Tournaments
+        </h2>
         <Link
-          className={
-            isTournamentsIndex(pathname)
-              ? navLinkActiveClassName
-              : navLinkClassName
-          }
+          className={linkClassName(
+            pathname === "/admin/tournaments",
+            sectionLinkClassName,
+            sectionLinkActiveClassName,
+            sectionLinkInactiveClassName,
+          )}
           href="/admin/tournaments"
           onClick={onNavigate}
         >
           Tournaments
         </Link>
+        <ul className="mt-2 space-y-0.5 border-l border-zinc-800 pl-3">
+          <li>
+            <Link
+              className={linkClassName(
+                pathname === "/admin/tournaments/new",
+                childLinkClassName,
+                childLinkActiveClassName,
+                childLinkInactiveClassName,
+              )}
+              href="/admin/tournaments/new"
+              onClick={onNavigate}
+            >
+              Create Tournament
+            </Link>
+          </li>
+          {tournaments.map((tournament) => {
+            const bearsHref = `/admin/tournaments/${tournament.id}/bears`;
+            const overviewHref = `/admin/tournaments/${tournament.id}`;
+            const bearsActive =
+              pathname === bearsHref || pathname.startsWith(`${bearsHref}/`);
+            const overviewActive = pathname === overviewHref;
+
+            return (
+              <li key={tournament.id} className="pt-2">
+                <p className="px-2 py-1 text-sm font-medium text-zinc-200">
+                  {tournament.year} · {formatTournamentStatus(tournament.status)}
+                </p>
+                <ul className="mt-0.5 space-y-0.5 border-l border-zinc-800 pl-3">
+                  <li>
+                    <Link
+                      className={linkClassName(
+                        overviewActive,
+                        nestedLinkClassName,
+                        nestedLinkActiveClassName,
+                        nestedLinkInactiveClassName,
+                      )}
+                      href={overviewHref}
+                      onClick={onNavigate}
+                    >
+                      Overview
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      className={linkClassName(
+                        bearsActive,
+                        nestedLinkClassName,
+                        nestedLinkActiveClassName,
+                        nestedLinkInactiveClassName,
+                      )}
+                      href={bearsHref}
+                      onClick={onNavigate}
+                    >
+                      Bears
+                    </Link>
+                  </li>
+                </ul>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+
+      <section aria-labelledby="admin-nav-pools">
+        <h2 className="sr-only" id="admin-nav-pools">
+          Pools
+        </h2>
         <Link
-          className={
-            isCreateTournament(pathname)
-              ? navLinkActiveClassName
-              : navLinkClassName
-          }
-          href="/admin/tournaments/new"
-          onClick={onNavigate}
-        >
-          Create Tournament
-        </Link>
-      </div>
-      {tournaments.map((tournament) => (
-        <div key={tournament.id} className="flex flex-col gap-0.5">
-          <p className="px-2 pb-1 text-sm font-semibold capitalize text-zinc-900 dark:text-zinc-100">
-            {tournament.year} · {tournament.status}
-          </p>
-          <Link
-            className={
-              isTournamentOverview(pathname, tournament.id)
-                ? nestedLinkActiveClassName
-                : nestedLinkClassName
-            }
-            href={`/admin/tournaments/${tournament.id}`}
-            onClick={onNavigate}
-          >
-            Overview
-          </Link>
-          <Link
-            className={
-              isTournamentBears(pathname, tournament.id)
-                ? nestedLinkActiveClassName
-                : nestedLinkClassName
-            }
-            href={`/admin/tournaments/${tournament.id}/bears`}
-            onClick={onNavigate}
-          >
-            Bears
-          </Link>
-        </div>
-      ))}
-      <div className="flex flex-col gap-1">
-        <Link
-          className={
-            isPoolsIndex(pathname) ? navLinkActiveClassName : navLinkClassName
-          }
+          className={linkClassName(
+            pathname === "/admin/pools",
+            sectionLinkClassName,
+            sectionLinkActiveClassName,
+            sectionLinkInactiveClassName,
+          )}
           href="/admin/pools"
           onClick={onNavigate}
         >
           Pools
         </Link>
-        <Link
-          className={
-            isCreatePool(pathname) ? navLinkActiveClassName : navLinkClassName
-          }
-          href="/admin/pools/new"
-          onClick={onNavigate}
-        >
-          Create Pool
-        </Link>
-      </div>
-      {pools.map((pool) => (
-        <div key={pool.id} className="flex flex-col gap-0.5">
-          <p className="px-2 pb-1 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-            {pool.name}
-          </p>
-          <Link
-            className={
-              isPoolInvites(pathname, pool.id)
-                ? nestedLinkActiveClassName
-                : nestedLinkClassName
-            }
-            href={`/admin/pools/${pool.id}/invites`}
-            onClick={onNavigate}
-          >
-            Invites
-          </Link>
-        </div>
-      ))}
-    </nav>
+        <ul className="mt-2 space-y-0.5 border-l border-zinc-800 pl-3">
+          <li>
+            <Link
+              className={linkClassName(
+                pathname === "/admin/pools/new",
+                childLinkClassName,
+                childLinkActiveClassName,
+                childLinkInactiveClassName,
+              )}
+              href="/admin/pools/new"
+              onClick={onNavigate}
+            >
+              Create Pool
+            </Link>
+          </li>
+          {pools.map((pool) => {
+            const overviewHref = `/admin/pools/${pool.id}`;
+            const invitesHref = `/admin/pools/${pool.id}/invites`;
+            const overviewActive = pathname === overviewHref;
+            const invitesActive =
+              pathname === invitesHref || pathname.startsWith(`${invitesHref}/`);
+
+            return (
+              <li key={pool.id} className="pt-2">
+                <p className="px-2 py-1 text-sm font-medium text-zinc-200">
+                  {pool.name}
+                </p>
+                <ul className="mt-0.5 space-y-0.5 border-l border-zinc-800 pl-3">
+                  <li>
+                    <Link
+                      className={linkClassName(
+                        overviewActive,
+                        nestedLinkClassName,
+                        nestedLinkActiveClassName,
+                        nestedLinkInactiveClassName,
+                      )}
+                      href={overviewHref}
+                      onClick={onNavigate}
+                    >
+                      Overview
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      className={linkClassName(
+                        invitesActive,
+                        nestedLinkClassName,
+                        nestedLinkActiveClassName,
+                        nestedLinkInactiveClassName,
+                      )}
+                      href={invitesHref}
+                      onClick={onNavigate}
+                    >
+                      Invites
+                    </Link>
+                  </li>
+                </ul>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+    </div>
   );
 }
 
 export function AdminSidebar({ pools, tournaments }: AdminSidebarProps) {
-  const pathname = usePathname();
   const menuId = useId();
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  function closeMenu() {
-    setMenuOpen(false);
-  }
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
 
   return (
-    <div className="md:sticky md:top-16 md:flex md:h-[calc(100dvh-4rem)] md:w-56 md:shrink-0 md:flex-col md:overflow-y-auto md:border-r md:border-zinc-200 dark:md:border-zinc-800">
-      <div className="sticky top-16 z-40 border-b border-zinc-200 bg-zinc-50 px-4 py-2 md:hidden dark:border-zinc-800 dark:bg-zinc-950">
+    <>
+      <div className="mb-6 lg:hidden">
         <button
           aria-controls={menuId}
-          aria-expanded={menuOpen}
-          className="inline-flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm font-medium text-zinc-800 transition-colors hover:bg-zinc-200 dark:text-zinc-100 dark:hover:bg-zinc-800"
+          aria-expanded={open}
+          className="inline-flex items-center gap-2 rounded-md border border-zinc-800 px-3 py-2 text-sm text-zinc-200 transition-colors hover:border-zinc-600 hover:bg-zinc-900"
           type="button"
-          onClick={() => setMenuOpen((open) => !open)}
+          onClick={() => setOpen((current) => !current)}
         >
-          {menuOpen ? (
-            <X aria-hidden="true" className="size-4" strokeWidth={2} />
+          {open ? (
+            <X aria-hidden="true" className="h-4 w-4" />
           ) : (
-            <PanelLeft aria-hidden="true" className="size-4" strokeWidth={2} />
+            <PanelLeft aria-hidden="true" className="h-4 w-4" />
           )}
           Admin menu
         </button>
-      </div>
-
-      {menuOpen ? (
-        <div className="md:hidden">
-          <button
-            aria-label="Close admin menu"
-            className="fixed inset-x-0 top-16 bottom-0 z-40 cursor-pointer bg-zinc-950/50"
-            type="button"
-            onClick={closeMenu}
-          />
-          <div
-            className="fixed top-16 bottom-0 left-0 z-50 w-64 overflow-y-auto border-r border-zinc-200 bg-zinc-50 px-3 py-4 dark:border-zinc-800 dark:bg-zinc-950"
+        {open ? (
+          <nav
+            aria-label="Admin"
+            className="mt-3 rounded-md border border-zinc-800 bg-black p-3"
             id={menuId}
           >
-            <AdminNav
+            <NavBody
               pathname={pathname}
               pools={pools}
               tournaments={tournaments}
-              onNavigate={closeMenu}
+              onNavigate={() => setOpen(false)}
             />
-          </div>
-        </div>
-      ) : null}
-
-      <div className="hidden px-3 py-6 md:block">
-        <AdminNav
-          pathname={pathname}
-          pools={pools}
-          tournaments={tournaments}
-        />
+          </nav>
+        ) : null}
       </div>
-    </div>
+
+      <aside className="hidden w-56 shrink-0 lg:block">
+        <nav aria-label="Admin" className="sticky top-24">
+          <NavBody
+            pathname={pathname}
+            pools={pools}
+            tournaments={tournaments}
+          />
+        </nav>
+      </aside>
+    </>
   );
 }

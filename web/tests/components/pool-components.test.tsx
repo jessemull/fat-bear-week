@@ -1,22 +1,36 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { describe, expect, it, vi } from "vitest";
 
+const push = vi.fn();
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
-    push: vi.fn(),
+    push,
     refresh: vi.fn(),
     replace: vi.fn(),
   }),
 }));
 
+import type { ReactElement } from "react";
+
 import { CreatePoolForm } from "@/components/pools/CreatePoolForm";
+import { DeletePoolButton } from "@/components/pools/DeletePoolButton";
+import { parseInviteCsv } from "@/components/pools/InviteCsvUploadDialog";
+import { InviteForm } from "@/components/pools/InviteForm";
 import { InviteList } from "@/components/pools/InviteList";
-import { MintInviteForm } from "@/components/pools/MintInviteForm";
+import { PoolForm } from "@/components/pools/PoolForm";
 import { PoolList } from "@/components/pools/PoolList";
+import { ResendInviteButton } from "@/components/pools/ResendInviteButton";
+import { SendInvitesPanel } from "@/components/pools/SendInvitesPanel";
+import { ToastProvider } from "@/components/Toast";
 
 const tournamentId = "11111111-1111-4111-8111-111111111111";
+
+function renderWithToast(ui: ReactElement) {
+  return render(<ToastProvider>{ui}</ToastProvider>);
+}
 
 function mockFetchWithTournaments(
   overrides?: (url: string, init?: RequestInit) => unknown,
@@ -46,8 +60,16 @@ function mockFetchWithTournaments(
     return {
       json: async () => ({
         data: {
-          emailSent: true,
-          inviteUrl: "http://localhost:3000/invite/abc",
+          created: 1,
+          failed: 0,
+          results: [
+            {
+              email: "a@example.com",
+              emailSent: true,
+              inviteId: "inv-1",
+              inviteUrl: "http://localhost:3000/invite/abc",
+            },
+          ],
         },
       }),
       ok: true,
@@ -56,20 +78,21 @@ function mockFetchWithTournaments(
 }
 
 describe("pool components", () => {
-  it("should submit CreatePoolForm and MintInviteForm", async () => {
+  it("should submit CreatePoolForm and SendInvitesPanel", async () => {
     const user = userEvent.setup();
     const fetchMock = mockFetchWithTournaments();
 
     vi.stubGlobal("fetch", fetchMock);
+    push.mockClear();
 
-    const { rerender } = render(<CreatePoolForm />);
+    const { rerender } = renderWithToast(<CreatePoolForm />);
 
     await waitFor(() => {
       expect(screen.getByLabelText("Tournament")).toHaveTextContent("2026");
     });
 
     await user.type(screen.getByLabelText("Pool name"), "Friends");
-    await user.click(screen.getByRole("button", { name: "Create pool" }));
+    await user.click(screen.getByRole("button", { name: "Create Pool" }));
 
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/pools",
@@ -77,25 +100,28 @@ describe("pool components", () => {
     );
 
     rerender(
-      <MintInviteForm poolId="11111111-1111-4111-8111-111111111111" />,
+      <ToastProvider>
+        <SendInvitesPanel poolId="11111111-1111-4111-8111-111111111111" />
+      </ToastProvider>,
     );
-    await user.type(screen.getByLabelText("Invitee email"), "a@example.com");
-    await user.click(screen.getByRole("button", { name: "Send invite" }));
+    await user.type(screen.getByLabelText("Email 1"), "a@example.com");
+    await user.click(screen.getByRole("button", { name: "Add" }));
+    await user.type(screen.getByLabelText("Email 2"), "b@example.com");
+    await user.click(screen.getByRole("button", { name: "Send Invites" }));
 
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/pools/11111111-1111-4111-8111-111111111111/invites",
       expect.objectContaining({ method: "POST" }),
     );
+    expect(push).toHaveBeenCalledWith(
+      "/admin/pools/11111111-1111-4111-8111-111111111111/invites",
+    );
   });
 
-  it("should resend an unused invite", async () => {
+  it("should open an invite from the list", async () => {
     const user = userEvent.setup();
-    const fetchMock = vi.fn().mockResolvedValue({
-      json: async () => ({ data: { emailSent: true } }),
-      ok: true,
-    });
 
-    vi.stubGlobal("fetch", fetchMock);
+    push.mockClear();
 
     render(
       <InviteList
@@ -112,15 +138,153 @@ describe("pool components", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "Resend" }));
+    await user.click(
+      screen.getByRole("link", { name: "Open invite a@example.com" }),
+    );
 
-    expect(fetchMock).toHaveBeenCalledWith(
-      "/api/pools/pool-1/invites/inv-1/resend",
-      expect.objectContaining({ method: "POST" }),
+    expect(push).toHaveBeenCalledWith("/admin/pools/pool-1/invites/inv-1");
+  });
+
+  it("should open an invite with the keyboard", async () => {
+    const user = userEvent.setup();
+
+    push.mockClear();
+
+    render(
+      <InviteList
+        invites={[
+          {
+            email: "a@example.com",
+            expiresAt: "not-a-date",
+            id: "inv-1",
+            nameHint: null,
+            status: "unused",
+          },
+        ]}
+        poolId="pool-1"
+      />,
+    );
+
+    screen
+      .getByRole("link", { name: "Open invite a@example.com" })
+      .focus();
+    await user.keyboard("{Enter}");
+
+    expect(push).toHaveBeenCalledWith("/admin/pools/pool-1/invites/inv-1");
+  });
+
+  it("should reject empty bulk invite submissions", async () => {
+    const user = userEvent.setup();
+
+    renderWithToast(<SendInvitesPanel poolId="pool-1" />);
+    await user.click(screen.getByRole("button", { name: "Send Invites" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Enter at least one email address.",
     );
   });
 
-  it("should show email failure warning on mint", async () => {
+  it("should save an invite and toast", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.fn().mockResolvedValue({
+      json: async () => ({
+        data: {
+          invite: {
+            email: "b@example.com",
+            id: "inv-1",
+            nameHint: "Bea",
+            status: "unused",
+          },
+        },
+      }),
+      ok: true,
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWithToast(
+      <InviteForm
+        invite={{
+          email: "a@example.com",
+          id: "inv-1",
+          nameHint: "Alex",
+          status: "unused",
+        }}
+        poolId="pool-1"
+      />,
+    );
+
+    expect(screen.getByLabelText("Status")).toHaveValue("Unused");
+
+    await user.clear(screen.getByLabelText("Invitee email"));
+    await user.type(screen.getByLabelText("Invitee email"), "b@example.com");
+    await user.click(screen.getByRole("button", { name: "Save Invite" }));
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/pools/pool-1/invites/inv-1",
+      expect.objectContaining({ method: "PATCH" }),
+    );
+    expect(screen.getByRole("status")).toHaveTextContent("Invite saved.");
+  });
+
+  it("should resend an invite from the header button", async () => {
+    const user = userEvent.setup();
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        json: async () => ({ data: { emailSent: true } }),
+        ok: true,
+      }),
+    );
+
+    renderWithToast(
+      <ResendInviteButton inviteId="inv-1" poolId="pool-1" />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Resend Invite" }));
+
+    expect(screen.getByRole("status")).toHaveTextContent("Invite resent.");
+  });
+
+  it("should toast when resend email delivery fails", async () => {
+    const user = userEvent.setup();
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        json: async () => ({ data: { emailSent: false } }),
+        ok: true,
+      }),
+    );
+
+    renderWithToast(
+      <ResendInviteButton inviteId="inv-1" poolId="pool-1" />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Resend Invite" }));
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      /email could not be sent/i,
+    );
+  });
+
+  it("should show an error for an empty CSV", async () => {
+    const user = userEvent.setup();
+
+    renderWithToast(<SendInvitesPanel poolId="pool-1" />);
+    await user.click(screen.getByRole("button", { name: "Upload" }));
+
+    const file = new File(["email\n"], "empty.csv", { type: "text/csv" });
+
+    await user.upload(screen.getByLabelText("Email list file"), file);
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      /No email addresses found/i,
+    );
+  });
+
+  it("should warn when some bulk invites fail", async () => {
     const user = userEvent.setup();
 
     vi.stubGlobal(
@@ -128,21 +292,166 @@ describe("pool components", () => {
       vi.fn().mockResolvedValue({
         json: async () => ({
           data: {
-            emailSent: false,
-            inviteUrl: "http://localhost:3000/invite/abc",
+            created: 1,
+            failed: 1,
+            results: [
+              {
+                email: "a@example.com",
+                emailSent: true,
+                inviteId: "inv-1",
+              },
+              {
+                email: "b@example.com",
+                error: "An unused invite already exists for that email.",
+              },
+            ],
           },
         }),
         ok: true,
       }),
     );
 
-    render(<MintInviteForm poolId="pool-1" />);
-    await user.type(screen.getByLabelText("Invitee email"), "a@example.com");
-    await user.click(screen.getByRole("button", { name: "Send invite" }));
+    renderWithToast(<SendInvitesPanel poolId="pool-1" />);
+    await user.type(screen.getByLabelText("Email 1"), "a@example.com");
+    await user.click(screen.getByRole("button", { name: "Add" }));
+    await user.type(screen.getByLabelText("Email 2"), "b@example.com");
+    await user.click(screen.getByRole("button", { name: "Send Invites" }));
+
+    expect(screen.getByRole("status")).toHaveTextContent(/Skipped/);
+  });
+
+  it("should parse invite CSV text", () => {
+    expect(
+      parseInviteCsv("email,name\na@example.com,Alex\nb@example.com,Bea\n"),
+    ).toEqual([
+      { email: "a@example.com", nameHint: "Alex" },
+      { email: "b@example.com", nameHint: "Bea" },
+    ]);
+    expect(
+      parseInviteCsv("a@example.com, Alice\nbob@example.com"),
+    ).toEqual([
+      { email: "a@example.com", nameHint: "Alice" },
+      { email: "bob@example.com", nameHint: null },
+    ]);
+    expect(
+      parseInviteCsv("a@example.com, b@example.com, c@example.com"),
+    ).toEqual([
+      { email: "a@example.com", nameHint: null },
+      { email: "b@example.com", nameHint: null },
+      { email: "c@example.com", nameHint: null },
+    ]);
+  });
+
+  it("should reject TextEdit RTF uploads with a plain-text hint", async () => {
+    const user = userEvent.setup();
+
+    renderWithToast(<SendInvitesPanel poolId="pool-1" />);
+    await user.click(screen.getByRole("button", { name: "Upload" }));
+
+    const file = new File(
+      ["{\\rtf1\\ansi hello a@example.com}"],
+      "invites.rtf",
+      { type: "text/rtf" },
+    );
+
+    await user.upload(screen.getByLabelText("Email list file"), file);
+
+    expect(screen.getByRole("alert")).toHaveTextContent(/Make Plain Text/i);
+  });
+
+  it("should reset upload modal errors when cancelled and reopened", async () => {
+    const user = userEvent.setup();
+
+    renderWithToast(<SendInvitesPanel poolId="pool-1" />);
+    await user.click(screen.getByRole("button", { name: "Upload" }));
+
+    const file = new File(["not-an-email"], "empty.txt", {
+      type: "text/plain",
+    });
+
+    await user.upload(screen.getByLabelText("Email list file"), file);
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+
+    await user.click(
+      within(screen.getByRole("dialog")).getByRole("button", {
+        name: "Cancel",
+      }),
+    );
+    await user.click(screen.getByRole("button", { name: "Upload" }));
+
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("should import emails from a CSV upload", async () => {
+    const user = userEvent.setup();
+
+    renderWithToast(<SendInvitesPanel poolId="pool-1" />);
+    await user.click(screen.getByRole("button", { name: "Upload" }));
+
+    const file = new File(
+      ["email,name\na@example.com,Alex\nb@example.com,Bea\n"],
+      "invites.csv",
+      {
+        type: "text/csv",
+      },
+    );
+
+    await user.upload(screen.getByLabelText("Email list file"), file);
+
+    expect(screen.getByLabelText("Email 1")).toHaveValue("a@example.com");
+    expect(screen.getByLabelText("Name Hint 1")).toHaveValue("Alex");
+    expect(screen.getByLabelText("Email 2")).toHaveValue("b@example.com");
+    expect(screen.getByLabelText("Name Hint 2")).toHaveValue("Bea");
+    expect(screen.getByRole("status")).toHaveTextContent(/Loaded 2 invites/);
+  });
+
+  it("should import emails from a txt upload", async () => {
+    const user = userEvent.setup();
+
+    renderWithToast(<SendInvitesPanel poolId="pool-1" />);
+    await user.click(screen.getByRole("button", { name: "Upload" }));
+
+    const file = new File(["a@example.com\nb@example.com\n"], "invites.txt", {
+      type: "text/plain",
+    });
+
+    await user.upload(screen.getByLabelText("Email list file"), file);
+
+    expect(screen.getByLabelText("Email 1")).toHaveValue("a@example.com");
+    expect(screen.getByLabelText("Email 2")).toHaveValue("b@example.com");
+  });
+
+  it("should reject Excel uploads in the CSV dialog", async () => {
+    const user = userEvent.setup();
+
+    renderWithToast(<SendInvitesPanel poolId="pool-1" />);
+    await user.click(screen.getByRole("button", { name: "Upload" }));
+
+    const input = screen.getByLabelText("Email list file");
+    const file = new File(["unused"], "invites.xlsx", {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    Object.defineProperty(input, "files", {
+      configurable: true,
+      value: [file],
+    });
+    input.dispatchEvent(new Event("change", { bubbles: true }));
 
     expect(
-      screen.getByRole("status"),
-    ).toHaveTextContent(/email could not be sent/i);
+      await screen.findByRole("alert"),
+    ).toHaveTextContent(/Excel files are not supported/);
+  });
+
+  it("should remove an email row", async () => {
+    const user = userEvent.setup();
+
+    renderWithToast(<SendInvitesPanel poolId="pool-1" />);
+    await user.click(screen.getByRole("button", { name: "Add" }));
+    expect(screen.getByLabelText("Email 2")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Remove invitee 2" }));
+    expect(screen.queryByLabelText("Email 2")).not.toBeInTheDocument();
   });
 
   it("should render CreatePoolForm without a11y violations", async () => {
@@ -157,12 +466,13 @@ describe("pool components", () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 
-  it("should render MintInviteForm without a11y violations", async () => {
-    const { container } = render(
-      <MintInviteForm poolId="11111111-1111-4111-8111-111111111111" />,
+  it("should render SendInvitesPanel without a11y violations", async () => {
+    const { container } = renderWithToast(
+      <SendInvitesPanel poolId="11111111-1111-4111-8111-111111111111" />,
     );
 
-    expect(screen.getByLabelText("Invitee email")).toBeInTheDocument();
+    expect(screen.getByLabelText("Email 1")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Upload" })).toBeInTheDocument();
     expect(await axe(container)).toHaveNoViolations();
   });
 
@@ -173,7 +483,11 @@ describe("pool components", () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 
-  it("should link commissioner pools to invite management", () => {
+  it("should open commissioner pools to overview", async () => {
+    const user = userEvent.setup();
+
+    push.mockClear();
+
     render(
       <PoolList
         pools={[
@@ -188,9 +502,34 @@ describe("pool components", () => {
       />,
     );
 
-    expect(
-      screen.getByRole("link", { name: "Manage invites" }),
-    ).toHaveAttribute("href", "/admin/pools/pool-1/invites");
+    await user.click(screen.getByRole("link", { name: "Open Friends" }));
+
+    expect(push).toHaveBeenCalledWith("/admin/pools/pool-1");
+  });
+
+  it("should open commissioner pools with the keyboard", async () => {
+    const user = userEvent.setup();
+
+    push.mockClear();
+
+    render(
+      <PoolList
+        pools={[
+          {
+            entryCount: 1,
+            id: "pool-1",
+            maxPlayers: 10,
+            name: "Friends",
+            role: "commissioner",
+          },
+        ]}
+      />,
+    );
+
+    screen.getByRole("link", { name: "Open Friends" }).focus();
+    await user.keyboard("{Enter}");
+
+    expect(push).toHaveBeenCalledWith("/admin/pools/pool-1");
   });
 
   it("should render InviteList without a11y violations", async () => {
@@ -209,7 +548,9 @@ describe("pool components", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: "Resend" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Open invite a@example.com" }),
+    ).toBeInTheDocument();
     expect(await axe(container)).toHaveNoViolations();
   });
 
@@ -237,7 +578,7 @@ describe("pool components", () => {
     });
 
     await user.type(screen.getByLabelText("Pool name"), "Friends");
-    await user.click(screen.getByRole("button", { name: "Create pool" }));
+    await user.click(screen.getByRole("button", { name: "Create Pool" }));
 
     expect(screen.getByRole("alert")).toHaveTextContent("Unknown tournament.");
   });
@@ -293,7 +634,7 @@ describe("pool components", () => {
       screen.getByLabelText("Bracket deadline"),
       "2026-10-01T12:00",
     );
-    await user.click(screen.getByRole("button", { name: "Create pool" }));
+    await user.click(screen.getByRole("button", { name: "Create Pool" }));
 
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/pools",
@@ -301,7 +642,7 @@ describe("pool components", () => {
     );
   });
 
-  it("should omit manage link for member pools", () => {
+  it("should omit open link for member pools", () => {
     render(
       <PoolList
         pools={[
@@ -317,11 +658,40 @@ describe("pool components", () => {
     );
 
     expect(
-      screen.queryByRole("link", { name: "Manage invites" }),
+      screen.queryByRole("link", { name: "Open Friends" }),
     ).not.toBeInTheDocument();
+    expect(screen.getByText("Friends")).toBeInTheDocument();
   });
 
-  it("should omit resend for used invites", () => {
+  it("should render empty InviteList status", async () => {
+    const { container } = render(<InviteList invites={[]} poolId="pool-1" />);
+
+    expect(screen.getByRole("status")).toHaveTextContent("No invites yet.");
+    expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it("should show InviteForm read-only state for used invites", () => {
+    renderWithToast(
+      <InviteForm
+        invite={{
+          email: "a@example.com",
+          id: "inv-1",
+          nameHint: null,
+          status: "used",
+        }}
+        poolId="pool-1"
+      />,
+    );
+
+    expect(screen.getByLabelText("Invitee email")).toBeDisabled();
+    expect(screen.getByLabelText("Status")).toHaveValue("Used");
+    expect(screen.getByLabelText("Status")).toBeDisabled();
+    expect(
+      screen.getByText("Used invites cannot be edited."),
+    ).toBeInTheDocument();
+  });
+
+  it("should open used invites for viewing", () => {
     render(
       <InviteList
         invites={[
@@ -337,6 +707,102 @@ describe("pool components", () => {
       />,
     );
 
-    expect(screen.queryByRole("button", { name: "Resend" })).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Open invite inv-1" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Used")).toBeInTheDocument();
+  });
+
+  it("should delete a pool after confirm", async () => {
+    const user = userEvent.setup();
+
+    push.mockClear();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        json: async () => ({ data: { deleted: true } }),
+        ok: true,
+      }),
+    );
+
+    render(<DeletePoolButton name="Friends" poolId="pool-1" />);
+
+    await user.click(screen.getByRole("button", { name: "Delete Pool" }));
+    await user.click(
+      within(screen.getByRole("dialog")).getByRole("button", {
+        name: "Delete Pool",
+      }),
+    );
+
+    expect(push).toHaveBeenCalledWith("/admin/pools");
+  });
+
+  it("should save pool edits", async () => {
+    const user = userEvent.setup();
+    const fetchMock = mockFetchWithTournaments((url) => {
+      if (url === "/api/pools/pool-1") {
+        return {
+          json: async () => ({
+            data: { pool: { id: "pool-1" } },
+          }),
+          ok: true,
+        };
+      }
+
+      return null;
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <PoolForm
+        mode="edit"
+        pool={{
+          bracketDeadline: "2026-10-01T19:00:00.000Z",
+          id: "pool-1",
+          maxPlayers: 50,
+          name: "Friends",
+          tournamentId: tournamentId,
+        }}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Tournament")).toHaveTextContent("2026");
+    });
+
+    await user.clear(screen.getByLabelText("Pool name"));
+    await user.type(screen.getByLabelText("Pool name"), "Renamed");
+    await user.click(screen.getByRole("button", { name: "Save Pool" }));
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/pools/pool-1",
+      expect.objectContaining({ method: "PATCH" }),
+    );
+  });
+
+  it("should show delete pool errors", async () => {
+    const user = userEvent.setup();
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        json: async () => ({ error: "Unable to delete pool." }),
+        ok: false,
+      }),
+    );
+
+    render(<DeletePoolButton name="Friends" poolId="pool-1" />);
+
+    await user.click(screen.getByRole("button", { name: "Delete Pool" }));
+    await user.click(
+      within(screen.getByRole("dialog")).getByRole("button", {
+        name: "Delete Pool",
+      }),
+    );
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Unable to delete pool.",
+    );
   });
 });

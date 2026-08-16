@@ -80,7 +80,7 @@ describe("admin forms", () => {
 
     expect(screen.getByRole("columnheader", { name: "Year" })).toBeInTheDocument();
     expect(screen.getByText("2026")).toBeInTheDocument();
-    expect(screen.getByText("live")).toBeInTheDocument();
+    expect(screen.getByText("Live")).toBeInTheDocument();
     expect(screen.getByText("2025")).toBeInTheDocument();
     expect(screen.getAllByText("—").length).toBeGreaterThan(0);
 
@@ -408,10 +408,10 @@ describe("admin forms", () => {
     );
 
     expect(await axe(container)).toHaveNoViolations();
-    expect(screen.getByLabelText("Status")).toHaveTextContent("draft");
+    expect(screen.getByLabelText("Status")).toHaveTextContent("Draft");
 
     await user.click(screen.getByLabelText("Status"));
-    await user.click(screen.getByRole("option", { name: "live" }));
+    await user.click(screen.getByRole("option", { name: "Live" }));
 
     expect(fetch).toHaveBeenCalledWith(
       `/api/admin/tournaments/${tournamentId}/status`,
@@ -439,7 +439,7 @@ describe("admin forms", () => {
     );
 
     await user.click(screen.getByLabelText("Status"));
-    await user.click(screen.getByRole("option", { name: "locked" }));
+    await user.click(screen.getByRole("option", { name: "Locked" }));
 
     expect(screen.getByRole("alert")).toHaveTextContent(
       "That status transition is not allowed.",

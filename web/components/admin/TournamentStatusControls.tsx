@@ -3,10 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import type { TournamentStatus } from "@/lib/tournament-types";
-
 import { FormSelect } from "@/components/FormSelect";
 import { formErrorClassName } from "@/lib/form-styles";
+import {
+  formatTournamentStatus,
+  type TournamentStatus,
+} from "@/lib/tournament-types";
 
 const TOURNAMENT_STATUSES: TournamentStatus[] = [
   "complete",
@@ -67,11 +69,10 @@ export function TournamentStatusControls({
         id="tournament-status"
         label="Status"
         options={TOURNAMENT_STATUSES.map((option) => ({
-          label: option,
+          label: formatTournamentStatus(option),
           value: option,
         }))}
         value={status}
-        valueClassName="capitalize"
         onChange={(nextStatus) =>
           void onChange(nextStatus as TournamentStatus)
         }

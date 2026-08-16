@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 import { Geist, Geist_Mono } from "next/font/google";
 
+import { AppProviders } from "@/components/AppProviders";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getSession } from "@/lib/sessions.server";
 
@@ -37,11 +38,13 @@ export default async function RootLayout({ children }: RootLayoutProps) {
       lang="en"
     >
       <body className="flex min-h-full flex-col">
-        <SiteHeader
-          isCommissioner={Boolean(session?.isCommissioner)}
-          isSignedIn={Boolean(session)}
-        />
-        {children}
+        <AppProviders>
+          <SiteHeader
+            isCommissioner={Boolean(session?.isCommissioner)}
+            isSignedIn={Boolean(session)}
+          />
+          {children}
+        </AppProviders>
       </body>
     </html>
   );

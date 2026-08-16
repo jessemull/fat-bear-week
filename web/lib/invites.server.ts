@@ -218,6 +218,120 @@ export async function listInvitesForPool(
 }
 
 /**
+ * Load one invite for a pool (commissioner UI).
+ */
+export async function getInviteForPool(params: {
+  inviteId: string;
+  poolId: string;
+}): Promise<ListedInvite | null> {
+  const { inviteId, poolId } = params;
+  const supabase = getServiceSupabase();
+
+  const { data, error } = await supabase
+    .from("invitations")
+    .select("email, expires_at, id, name_hint, used_at")
+    .eq("id", inviteId)
+    .eq("pool_id", poolId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to load invite: ${error.message}`);
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  return {
+    email: (data.email as null | string) ?? null,
+    expiresAt: (data.expires_at as null | string) ?? null,
+    id: data.id as string,
+    nameHint: (data.name_hint as null | string) ?? null,
+    status: resolveInviteStatus({
+      expiresAt: (data.expires_at as null | string) ?? null,
+      usedAt: (data.used_at as null | string) ?? null,
+    }),
+  };
+}
+
+/**
+ * Update invitee email / name hint for an unused invite.
+ */
+export async function updateInvite(params: {
+  email: string;
+  inviteId: string;
+  nameHint?: null | string;
+  poolId: string;
+}): Promise<ListedInvite> {
+  const email = params.email.trim().toLowerCase();
+  const { inviteId, nameHint = null, poolId } = params;
+  const supabase = getServiceSupabase();
+
+  const existing = await getInviteForPool({ inviteId, poolId });
+
+  if (!existing) {
+    throw new Error("not_found");
+  }
+
+  if (existing.status === "used") {
+    throw new Error("invite_used");
+  }
+
+  const { data: duplicate, error: duplicateError } = await supabase
+    .from("invitations")
+    .select("id")
+    .eq("pool_id", poolId)
+    .is("used_at", null)
+    .ilike("email", email)
+    .neq("id", inviteId)
+    .maybeSingle();
+
+  if (duplicateError) {
+    throw new Error(`Failed to check invites: ${duplicateError.message}`);
+  }
+
+  if (duplicate) {
+    throw new Error("email_invited");
+  }
+
+  const { data, error } = await supabase
+    .from("invitations")
+    .update({
+      email,
+      name_hint: nameHint,
+    })
+    .eq("id", inviteId)
+    .eq("pool_id", poolId)
+    .select("email, expires_at, id, name_hint, used_at")
+    .maybeSingle();
+
+  if (error) {
+    const message = error.message;
+
+    if (message.includes("duplicate") || message.includes("unique")) {
+      throw new Error("email_invited");
+    }
+
+    throw new Error(`Failed to update invite: ${message}`);
+  }
+
+  if (!data) {
+    throw new Error("not_found");
+  }
+
+  return {
+    email: (data.email as null | string) ?? null,
+    expiresAt: (data.expires_at as null | string) ?? null,
+    id: data.id as string,
+    nameHint: (data.name_hint as null | string) ?? null,
+    status: resolveInviteStatus({
+      expiresAt: (data.expires_at as null | string) ?? null,
+      usedAt: (data.used_at as null | string) ?? null,
+    }),
+  };
+}
+
+/**
  * Load an unused, non-expired invite owned by a pool (for resend).
  */
 export async function getResendableInvite(params: {

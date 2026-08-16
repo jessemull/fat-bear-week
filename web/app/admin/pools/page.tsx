@@ -22,20 +22,19 @@ export default async function AdminPoolsPage() {
   });
 
   return (
-    <div className="flex flex-col gap-4">
-      <AdminPageHeader
-        action={
-          <Link
-            className={formButtonPrimaryCompactClassName}
-            href="/admin/pools/new"
-          >
-            Create Pool
-          </Link>
-        }
-        description="One pool per tournament for v1. Manage invites from each pool."
-        title="Pools"
-      />
+    <AdminPageHeader
+      action={
+        <Link
+          className={formButtonPrimaryCompactClassName}
+          href="/admin/pools/new"
+        >
+          Create Pool
+        </Link>
+      }
+      description="One pool per tournament for v1. Manage invites from each pool."
+      title="Pools"
+    >
       <PoolList pools={pools} />
-    </div>
+    </AdminPageHeader>
   );
 }

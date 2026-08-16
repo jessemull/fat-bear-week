@@ -11,6 +11,16 @@ export interface CreatePoolInput {
   tournamentId: string;
 }
 
+export interface CreatedPool {
+  bracketDeadline: null | string;
+  id: string;
+  maxPlayers: number;
+  name: string;
+  scoringSystem: string;
+  showBracketsBeforeLock: boolean;
+  tournamentId: string;
+}
+
 export interface PoolSummary {
   bracketDeadline: null | string;
   entryCount: number;
@@ -23,14 +33,28 @@ export interface PoolSummary {
   tournamentId: string;
 }
 
-export interface CreatedPool {
-  bracketDeadline: null | string;
-  id: string;
+export interface UpdatePoolInput {
+  bracketDeadline?: null | string;
   maxPlayers: number;
   name: string;
-  scoringSystem: string;
-  showBracketsBeforeLock: boolean;
+  scoringSystem?: string;
+  showBracketsBeforeLock?: boolean;
   tournamentId: string;
+}
+
+const POOL_SELECT =
+  "bracket_deadline, id, max_players, name, scoring_system, show_brackets_before_lock, tournament_id";
+
+function mapPoolRow(data: Record<string, unknown>): CreatedPool {
+  return {
+    bracketDeadline: (data.bracket_deadline as null | string) ?? null,
+    id: data.id as string,
+    maxPlayers: data.max_players as number,
+    name: data.name as string,
+    scoringSystem: data.scoring_system as string,
+    showBracketsBeforeLock: data.show_brackets_before_lock as boolean,
+    tournamentId: data.tournament_id as string,
+  };
 }
 
 /**
@@ -51,9 +75,7 @@ export async function createPool(
       show_brackets_before_lock: input.showBracketsBeforeLock,
       tournament_id: input.tournamentId,
     })
-    .select(
-      "bracket_deadline, id, max_players, name, scoring_system, show_brackets_before_lock, tournament_id",
-    )
+    .select(POOL_SELECT)
     .single();
 
   if (error || !data) {
@@ -66,15 +88,52 @@ export async function createPool(
     throw new Error(`Failed to create pool: ${message}`);
   }
 
-  return {
-    bracketDeadline: (data.bracket_deadline as null | string) ?? null,
-    id: data.id as string,
-    maxPlayers: data.max_players as number,
-    name: data.name as string,
-    scoringSystem: data.scoring_system as string,
-    showBracketsBeforeLock: data.show_brackets_before_lock as boolean,
-    tournamentId: data.tournament_id as string,
-  };
+  return mapPoolRow(data as Record<string, unknown>);
+}
+
+/**
+ * Delete a pool and cascaded invites / entries.
+ */
+export async function deletePool(poolId: string): Promise<void> {
+  const supabase = getServiceSupabase();
+
+  const { data, error } = await supabase
+    .from("pools")
+    .delete()
+    .eq("id", poolId)
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to delete pool: ${error.message}`);
+  }
+
+  if (!data) {
+    throw new Error("not_found");
+  }
+}
+
+/**
+ * Load one pool by id.
+ */
+export async function getPool(poolId: string): Promise<CreatedPool | null> {
+  const supabase = getServiceSupabase();
+
+  const { data, error } = await supabase
+    .from("pools")
+    .select(POOL_SELECT)
+    .eq("id", poolId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to load pool: ${error.message}`);
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  return mapPoolRow(data as Record<string, unknown>);
 }
 
 /**
@@ -108,9 +167,7 @@ export async function listPoolsForUser(params: {
 
   let poolsQuery = supabase
     .from("pools")
-    .select(
-      "bracket_deadline, id, max_players, name, scoring_system, show_brackets_before_lock, tournament_id",
-    )
+    .select(POOL_SELECT)
     .order("created_at", { ascending: false });
 
   if (!isCommissioner) {
@@ -151,6 +208,54 @@ export async function listPoolsForUser(params: {
   }
 
   return summaries;
+}
+
+/**
+ * Update pool settings.
+ */
+export async function updatePool(
+  poolId: string,
+  input: UpdatePoolInput,
+): Promise<CreatedPool> {
+  const supabase = getServiceSupabase();
+
+  const patch: Record<string, boolean | null | number | string> = {
+    bracket_deadline: input.bracketDeadline ?? null,
+    max_players: input.maxPlayers,
+    name: input.name,
+    tournament_id: input.tournamentId,
+  };
+
+  if (input.scoringSystem !== undefined) {
+    patch.scoring_system = input.scoringSystem;
+  }
+
+  if (input.showBracketsBeforeLock !== undefined) {
+    patch.show_brackets_before_lock = input.showBracketsBeforeLock;
+  }
+
+  const { data, error } = await supabase
+    .from("pools")
+    .update(patch)
+    .eq("id", poolId)
+    .select(POOL_SELECT)
+    .maybeSingle();
+
+  if (error) {
+    const message = error.message;
+
+    if (message.includes("tournament_id") || message.includes("foreign key")) {
+      throw new Error("unknown_tournament");
+    }
+
+    throw new Error(`Failed to update pool: ${message}`);
+  }
+
+  if (!data) {
+    throw new Error("not_found");
+  }
+
+  return mapPoolRow(data as Record<string, unknown>);
 }
 
 /**

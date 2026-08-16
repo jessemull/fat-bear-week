@@ -4,7 +4,9 @@ import {
   createPoolBodySchema,
   joinBodySchema,
   mintInviteBodySchema,
+  mintInvitesBodySchema,
   signInBodySchema,
+  updateInviteBodySchema,
 } from "@/lib/auth-schemas";
 
 describe("auth-schemas", () => {
@@ -75,6 +77,33 @@ describe("auth-schemas", () => {
         nameHint: "Friend",
       }).email,
     ).toBe("friend@example.com");
+  });
+
+  it("should accept bulk invite emails", () => {
+    expect(
+      mintInvitesBodySchema.parse({
+        invites: [
+          { email: "a@example.com", nameHint: "A" },
+          { email: "b@example.com" },
+        ],
+      }).invites,
+    ).toEqual([
+      { email: "a@example.com", nameHint: "A" },
+      { email: "b@example.com" },
+    ]);
+
+    expect(mintInvitesBodySchema.safeParse({ invites: [] }).success).toBe(
+      false,
+    );
+  });
+
+  it("should accept invite updates", () => {
+    expect(
+      updateInviteBodySchema.parse({
+        email: "friend@example.com",
+        nameHint: null,
+      }),
+    ).toMatchObject({ email: "friend@example.com", nameHint: null });
   });
 
   it("should default pool create fields", () => {

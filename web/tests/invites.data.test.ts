@@ -418,4 +418,133 @@ describe("invites.server data access", () => {
       }),
     ).rejects.toThrow("email_invited");
   });
+
+  it("should get and update invites for a pool", async () => {
+    fromMock.mockReturnValueOnce({
+      select: () => ({
+        eq: () => ({
+          eq: () => ({
+            maybeSingle: () =>
+              Promise.resolve({
+                data: {
+                  email: "a@example.com",
+                  expires_at: null,
+                  id: "inv-1",
+                  name_hint: "Alex",
+                  used_at: null,
+                },
+                error: null,
+              }),
+          }),
+        }),
+      }),
+    });
+
+    const { getInviteForPool, updateInvite } = await import(
+      "@/lib/invites.server"
+    );
+
+    await expect(
+      getInviteForPool({ inviteId: "inv-1", poolId: "pool-1" }),
+    ).resolves.toMatchObject({
+      email: "a@example.com",
+      status: "unused",
+    });
+
+    fromMock.mockReturnValueOnce({
+      select: () => ({
+        eq: () => ({
+          eq: () => ({
+            maybeSingle: () =>
+              Promise.resolve({
+                data: {
+                  email: "a@example.com",
+                  expires_at: null,
+                  id: "inv-1",
+                  name_hint: "Alex",
+                  used_at: "2026-08-01T00:00:00.000Z",
+                },
+                error: null,
+              }),
+          }),
+        }),
+      }),
+    });
+
+    await expect(
+      updateInvite({
+        email: "b@example.com",
+        inviteId: "inv-1",
+        poolId: "pool-1",
+      }),
+    ).rejects.toThrow("invite_used");
+
+    fromMock
+      .mockReturnValueOnce({
+        select: () => ({
+          eq: () => ({
+            eq: () => ({
+              maybeSingle: () =>
+                Promise.resolve({
+                  data: {
+                    email: "a@example.com",
+                    expires_at: null,
+                    id: "inv-1",
+                    name_hint: "Alex",
+                    used_at: null,
+                  },
+                  error: null,
+                }),
+            }),
+          }),
+        }),
+      })
+      .mockReturnValueOnce({
+        select: () => ({
+          eq: () => ({
+            is: () => ({
+              ilike: () => ({
+                neq: () => ({
+                  maybeSingle: () =>
+                    Promise.resolve({ data: null, error: null }),
+                }),
+              }),
+            }),
+          }),
+        }),
+      })
+      .mockReturnValueOnce({
+        update: () => ({
+          eq: () => ({
+            eq: () => ({
+              select: () => ({
+                maybeSingle: () =>
+                  Promise.resolve({
+                    data: {
+                      email: "b@example.com",
+                      expires_at: null,
+                      id: "inv-1",
+                      name_hint: "Bea",
+                      used_at: null,
+                    },
+                    error: null,
+                  }),
+              }),
+            }),
+          }),
+        }),
+      });
+
+    await expect(
+      updateInvite({
+        email: "b@example.com",
+        inviteId: "inv-1",
+        nameHint: "Bea",
+        poolId: "pool-1",
+      }),
+    ).resolves.toMatchObject({
+      email: "b@example.com",
+      nameHint: "Bea",
+    });
+  });
 });

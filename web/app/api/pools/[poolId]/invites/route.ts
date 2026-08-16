@@ -4,7 +4,7 @@ import {
   jsonError,
   parseJsonBody,
 } from "@/lib/api.server";
-import { mintInviteBodySchema } from "@/lib/auth-schemas";
+import { mintInvitesBodySchema } from "@/lib/auth-schemas";
 import { buildInviteUrl, sendInviteEmail } from "@/lib/email.server";
 import { listInvitesForPool, mintInvite } from "@/lib/invites.server";
 import { userCanManagePool } from "@/lib/pools.server";
@@ -67,55 +67,87 @@ export async function POST(request: Request, context: RouteContext) {
     return auth.error;
   }
 
-  const parsed = await parseJsonBody(request, mintInviteBodySchema);
+  const parsed = await parseJsonBody(request, mintInvitesBodySchema);
 
   if ("error" in parsed) {
     return parsed.error;
   }
 
-  try {
-    const invite = await mintInvite({
-      email: parsed.data.email,
-      expiresAt: parsed.data.expiresAt,
-      nameHint: parsed.data.nameHint ?? null,
-      poolId,
-    });
+  const supabase = getServiceSupabase();
+  const { data: pool } = await supabase
+    .from("pools")
+    .select("name")
+    .eq("id", poolId)
+    .maybeSingle();
+  const poolName = (pool?.name as string | undefined) ?? "Fat Bear Week pool";
 
-    const supabase = getServiceSupabase();
-    const { data: pool } = await supabase
-      .from("pools")
-      .select("name")
-      .eq("id", poolId)
-      .maybeSingle();
+  const uniqueInvites = new Map<
+    string,
+    { email: string; nameHint: null | string }
+  >();
 
-    const inviteUrl = buildInviteUrl(invite.token);
-    const sendResult = await sendInviteEmail({
-      expiresAt: invite.expiresAt,
-      inviteUrl,
-      nameHint: invite.nameHint,
-      poolName: (pool?.name as string | undefined) ?? "Fat Bear Week pool",
-      to: invite.email,
-    });
+  for (const invite of parsed.data.invites) {
+    const email = invite.email.toLowerCase();
 
-    return jsonData(
-      {
-        emailSent: sendResult.emailSent,
-        expiresAt: invite.expiresAt,
-        inviteId: invite.id,
-        inviteUrl,
-        nameHint: invite.nameHint,
-      },
-      { status: 201 },
-    );
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "";
-
-    if (message === "email_invited") {
-      return jsonError("An unused invite already exists for that email.", {
-        status: 409,
+    if (!uniqueInvites.has(email)) {
+      uniqueInvites.set(email, {
+        email,
+        nameHint: invite.nameHint?.trim() ? invite.nameHint.trim() : null,
       });
     }
-
-    return jsonError("Unable to mint invite.", { status: 500 });
   }
+
+  const results: {
+    email: string;
+    emailSent?: boolean;
+    error?: string;
+    inviteId?: string;
+    inviteUrl?: string;
+  }[] = [];
+
+  for (const entry of uniqueInvites.values()) {
+    try {
+      const invite = await mintInvite({
+        email: entry.email,
+        nameHint: entry.nameHint,
+        poolId,
+      });
+      const inviteUrl = buildInviteUrl(invite.token);
+      const sendResult = await sendInviteEmail({
+        expiresAt: invite.expiresAt,
+        inviteUrl,
+        nameHint: invite.nameHint,
+        poolName,
+        to: invite.email,
+      });
+
+      results.push({
+        email: invite.email,
+        emailSent: sendResult.emailSent,
+        inviteId: invite.id,
+        inviteUrl,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+
+      results.push({
+        email: entry.email,
+        error:
+          message === "email_invited"
+            ? "An unused invite already exists for that email."
+            : "Unable to mint invite.",
+      });
+    }
+  }
+
+  const created = results.filter((result) => result.inviteId).length;
+
+  return jsonData(
+    {
+      created,
+      failed: results.length - created,
+      results,
+    },
+    { status: created > 0 ? 201 : 400 },
+  );
 }

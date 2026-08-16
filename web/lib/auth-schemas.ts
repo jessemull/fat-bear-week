@@ -43,6 +43,17 @@ export const createPoolBodySchema = z
   })
   .strict();
 
+export const updatePoolBodySchema = z
+  .object({
+    bracketDeadline: z.string().datetime().nullable().optional(),
+    maxPlayers: z.number().int().positive().max(500),
+    name: z.string().trim().min(1).max(120),
+    scoringSystem: z.string().trim().min(1).max(64).optional(),
+    showBracketsBeforeLock: z.boolean().optional(),
+    tournamentId: z.string().uuid(),
+  })
+  .strict();
+
 export const mintInviteBodySchema = z
   .object({
     email: z.string().trim().email().max(254),
@@ -51,7 +62,33 @@ export const mintInviteBodySchema = z
   })
   .strict();
 
+export const mintInvitesBodySchema = z
+  .object({
+    invites: z
+      .array(
+        z
+          .object({
+            email: z.string().trim().email().max(254),
+            nameHint: z.string().trim().max(80).nullable().optional(),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(100),
+  })
+  .strict();
+
+export const updateInviteBodySchema = z
+  .object({
+    email: z.string().trim().email().max(254),
+    nameHint: z.string().trim().max(80).nullable().optional(),
+  })
+  .strict();
+
+export type CreatePoolBody = z.infer<typeof createPoolBodySchema>;
 export type JoinBody = z.infer<typeof joinBodySchema>;
 export type MintInviteBody = z.infer<typeof mintInviteBodySchema>;
-export type CreatePoolBody = z.infer<typeof createPoolBodySchema>;
+export type MintInvitesBody = z.infer<typeof mintInvitesBodySchema>;
 export type SignInBody = z.infer<typeof signInBodySchema>;
+export type UpdateInviteBody = z.infer<typeof updateInviteBodySchema>;
+export type UpdatePoolBody = z.infer<typeof updatePoolBodySchema>;

@@ -11,20 +11,19 @@ export default async function AdminTournamentsPage() {
   const tournaments = await listTournaments();
 
   return (
-    <div className="flex flex-col gap-4">
-      <AdminPageHeader
-        action={
-          <Link
-            className={formButtonPrimaryCompactClassName}
-            href="/admin/tournaments/new"
-          >
-            Create Tournament
-          </Link>
-        }
-        description="One draft or live tournament per year. Open a year to manage bears."
-        title="Tournaments"
-      />
+    <AdminPageHeader
+      action={
+        <Link
+          className={formButtonPrimaryCompactClassName}
+          href="/admin/tournaments/new"
+        >
+          Create Tournament
+        </Link>
+      }
+      description="One draft or live tournament per year. Open a year to manage bears."
+      title="Tournaments"
+    >
       <TournamentList tournaments={tournaments} />
-    </div>
+    </AdminPageHeader>
   );
 }

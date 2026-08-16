@@ -233,4 +233,190 @@ describe("pools.server", () => {
       }),
     ).rejects.toThrow(/Failed to create pool/);
   });
+
+  it("should get update and delete pools", async () => {
+    const poolRow = {
+      bracket_deadline: null,
+      id: "pool-1",
+      max_players: 50,
+      name: "Friends",
+      scoring_system: "standard_1_2_4_8",
+      show_brackets_before_lock: false,
+      tournament_id: "tour-1",
+    };
+
+    fromMock.mockReturnValueOnce({
+      select: () => ({
+        eq: () => ({
+          maybeSingle: () =>
+            Promise.resolve({
+              data: poolRow,
+              error: null,
+            }),
+        }),
+      }),
+    });
+
+    const { deletePool, getPool, updatePool } = await import(
+      "@/lib/pools.server"
+    );
+
+    await expect(getPool("pool-1")).resolves.toMatchObject({
+      id: "pool-1",
+      name: "Friends",
+    });
+
+    fromMock.mockReturnValueOnce({
+      update: () => ({
+        eq: () => ({
+          select: () => ({
+            maybeSingle: () =>
+              Promise.resolve({
+                data: { ...poolRow, name: "Renamed" },
+                error: null,
+              }),
+          }),
+        }),
+      }),
+    });
+
+    await expect(
+      updatePool("pool-1", {
+        maxPlayers: 50,
+        name: "Renamed",
+        tournamentId: "tour-1",
+      }),
+    ).resolves.toMatchObject({ name: "Renamed" });
+
+    fromMock.mockReturnValueOnce({
+      delete: () => ({
+        eq: () => ({
+          select: () => ({
+            maybeSingle: () =>
+              Promise.resolve({
+                data: { id: "pool-1" },
+                error: null,
+              }),
+          }),
+        }),
+      }),
+    });
+
+    await expect(deletePool("pool-1")).resolves.toBeUndefined();
+  });
+
+  it("should cover update and delete edge cases", async () => {
+    fromMock.mockReturnValueOnce({
+      select: () => ({
+        eq: () => ({
+          maybeSingle: () =>
+            Promise.resolve({
+              data: null,
+              error: null,
+            }),
+        }),
+      }),
+    });
+
+    const { deletePool, getPool, updatePool } = await import(
+      "@/lib/pools.server"
+    );
+
+    await expect(getPool("missing")).resolves.toBeNull();
+
+    fromMock.mockReturnValueOnce({
+      update: () => ({
+        eq: () => ({
+          select: () => ({
+            maybeSingle: () =>
+              Promise.resolve({
+                data: {
+                  bracket_deadline: null,
+                  id: "pool-1",
+                  max_players: 10,
+                  name: "X",
+                  scoring_system: "custom",
+                  show_brackets_before_lock: true,
+                  tournament_id: "tour-1",
+                },
+                error: null,
+              }),
+          }),
+        }),
+      }),
+    });
+
+    await expect(
+      updatePool("pool-1", {
+        maxPlayers: 10,
+        name: "X",
+        scoringSystem: "custom",
+        showBracketsBeforeLock: true,
+        tournamentId: "tour-1",
+      }),
+    ).resolves.toMatchObject({
+      scoringSystem: "custom",
+      showBracketsBeforeLock: true,
+    });
+
+    fromMock.mockReturnValueOnce({
+      update: () => ({
+        eq: () => ({
+          select: () => ({
+            maybeSingle: () =>
+              Promise.resolve({
+                data: null,
+                error: { message: "foreign key on tournament_id" },
+              }),
+          }),
+        }),
+      }),
+    });
+
+    await expect(
+      updatePool("pool-1", {
+        maxPlayers: 10,
+        name: "X",
+        tournamentId: "missing",
+      }),
+    ).rejects.toThrow("unknown_tournament");
+
+    fromMock.mockReturnValueOnce({
+      update: () => ({
+        eq: () => ({
+          select: () => ({
+            maybeSingle: () =>
+              Promise.resolve({
+                data: null,
+                error: null,
+              }),
+          }),
+        }),
+      }),
+    });
+
+    await expect(
+      updatePool("missing", {
+        maxPlayers: 10,
+        name: "X",
+        tournamentId: "11111111-1111-4111-8111-111111111111",
+      }),
+    ).rejects.toThrow("not_found");
+
+    fromMock.mockReturnValueOnce({
+      delete: () => ({
+        eq: () => ({
+          select: () => ({
+            maybeSingle: () =>
+              Promise.resolve({
+                data: null,
+                error: null,
+              }),
+          }),
+        }),
+      }),
+    });
+
+    await expect(deletePool("missing")).rejects.toThrow("not_found");
+  });
 });

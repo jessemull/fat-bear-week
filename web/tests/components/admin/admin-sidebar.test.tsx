@@ -39,7 +39,7 @@ describe("AdminSidebar", () => {
     expect(
       within(desktopNav).getByRole("link", { name: "Create Tournament" }),
     ).toHaveAttribute("href", "/admin/tournaments/new");
-    expect(within(desktopNav).getByText("2026 · live")).toBeInTheDocument();
+    expect(within(desktopNav).getByText("2026 · Live")).toBeInTheDocument();
     expect(
       within(desktopNav).getAllByRole("link", { name: "Overview" })[0],
     ).toHaveAttribute("href", "/admin/tournaments/t-2026");
@@ -53,6 +53,11 @@ describe("AdminSidebar", () => {
       within(desktopNav).getByRole("link", { name: "Create Pool" }),
     ).toHaveAttribute("href", "/admin/pools/new");
     expect(within(desktopNav).getByText("My Pool")).toBeInTheDocument();
+    expect(
+      within(desktopNav)
+        .getAllByRole("link", { name: "Overview" })
+        .some((link) => link.getAttribute("href") === "/admin/pools/pool-1"),
+    ).toBe(true);
     expect(
       within(desktopNav).getAllByRole("link", { name: "Invites" })[0],
     ).toHaveAttribute("href", "/admin/pools/pool-1/invites");
@@ -90,6 +95,15 @@ describe("AdminSidebar", () => {
 
     expect(
       screen.getAllByRole("link", { name: "Overview" })[0],
+    ).toHaveClass("text-amber-800");
+
+    usePathname.mockReturnValue("/admin/pools/pool-2");
+    rerender(<AdminSidebar pools={pools} tournaments={tournaments} />);
+
+    expect(
+      screen
+        .getAllByRole("link", { name: "Overview" })
+        .find((link) => link.getAttribute("href") === "/admin/pools/pool-2"),
     ).toHaveClass("text-amber-800");
 
     usePathname.mockReturnValue("/admin/pools/pool-2/invites");
