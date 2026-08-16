@@ -265,7 +265,7 @@ export function PoolForm({ mode, pool }: PoolFormProps) {
           Bracket deadline
         </label>
         <input
-          className={formInputClassName}
+          className={`${formInputClassName} dark:[color-scheme:dark]`}
           id={deadlineId}
           name="bracketDeadline"
           type="datetime-local"

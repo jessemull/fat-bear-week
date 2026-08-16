@@ -37,6 +37,9 @@ describe("AdminSidebar", () => {
       within(desktopNav).getByRole("link", { name: "Tournaments" }),
     ).toHaveAttribute("href", "/admin/tournaments");
     expect(
+      within(desktopNav).getByRole("link", { name: "All Tournaments" }),
+    ).toHaveAttribute("href", "/admin/tournaments");
+    expect(
       within(desktopNav).getByRole("link", { name: "Create Tournament" }),
     ).toHaveAttribute("href", "/admin/tournaments/new");
     expect(within(desktopNav).getByText("2026 · Live")).toBeInTheDocument();
@@ -48,6 +51,9 @@ describe("AdminSidebar", () => {
     ).toHaveAttribute("href", "/admin/tournaments/t-2026/bears");
     expect(
       within(desktopNav).getByRole("link", { name: "Pools" }),
+    ).toHaveAttribute("href", "/admin/pools");
+    expect(
+      within(desktopNav).getByRole("link", { name: "All Pools" }),
     ).toHaveAttribute("href", "/admin/pools");
     expect(
       within(desktopNav).getByRole("link", { name: "Create Pool" }),

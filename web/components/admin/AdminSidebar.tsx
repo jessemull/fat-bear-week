@@ -36,9 +36,9 @@ const nestedLinkClassName =
   "block rounded-md px-2 py-1 text-sm text-zinc-500 transition-colors hover:bg-zinc-900 hover:text-zinc-200";
 const nestedLinkInactiveClassName = "font-normal";
 
-const sectionLinkActiveClassName = "text-amber-800";
+const sectionLinkActiveClassName = "text-amber-400";
 const sectionLinkClassName =
-  "block px-2 text-xs font-semibold tracking-[0.14em] text-zinc-500 uppercase transition-colors hover:text-zinc-300";
+  "block px-2 text-xs font-semibold tracking-[0.14em] text-zinc-50 uppercase transition-colors hover:text-white";
 const sectionLinkInactiveClassName = "";
 
 function linkClassName(
@@ -79,7 +79,21 @@ function NavBody({
         >
           Tournaments
         </Link>
-        <ul className="mt-2 space-y-0.5 border-l border-zinc-800 pl-3">
+        <ul className="mt-2 space-y-0.5 pl-3">
+          <li>
+            <Link
+              className={linkClassName(
+                pathname === "/admin/tournaments",
+                childLinkClassName,
+                childLinkActiveClassName,
+                childLinkInactiveClassName,
+              )}
+              href="/admin/tournaments"
+              onClick={onNavigate}
+            >
+              All Tournaments
+            </Link>
+          </li>
           <li>
             <Link
               className={linkClassName(
@@ -106,7 +120,7 @@ function NavBody({
                 <p className="px-2 py-1 text-sm font-medium text-zinc-200">
                   {tournament.year} · {formatTournamentStatus(tournament.status)}
                 </p>
-                <ul className="mt-0.5 space-y-0.5 border-l border-zinc-800 pl-3">
+                <ul className="mt-0.5 space-y-0.5 pl-3">
                   <li>
                     <Link
                       className={linkClassName(
@@ -158,7 +172,21 @@ function NavBody({
         >
           Pools
         </Link>
-        <ul className="mt-2 space-y-0.5 border-l border-zinc-800 pl-3">
+        <ul className="mt-2 space-y-0.5 pl-3">
+          <li>
+            <Link
+              className={linkClassName(
+                pathname === "/admin/pools",
+                childLinkClassName,
+                childLinkActiveClassName,
+                childLinkInactiveClassName,
+              )}
+              href="/admin/pools"
+              onClick={onNavigate}
+            >
+              All Pools
+            </Link>
+          </li>
           <li>
             <Link
               className={linkClassName(
@@ -185,7 +213,7 @@ function NavBody({
                 <p className="px-2 py-1 text-sm font-medium text-zinc-200">
                   {pool.name}
                 </p>
-                <ul className="mt-0.5 space-y-0.5 border-l border-zinc-800 pl-3">
+                <ul className="mt-0.5 space-y-0.5 pl-3">
                   <li>
                     <Link
                       className={linkClassName(
