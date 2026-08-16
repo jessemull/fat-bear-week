@@ -2,7 +2,7 @@
 
 import { Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { type FormEvent, useId, useState } from "react";
+import { type FormEvent, useId, useRef, useState } from "react";
 
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
@@ -12,6 +12,7 @@ import {
 import { useToast } from "@/components/Toast";
 import {
   formButtonPrimaryClassName,
+  formButtonPrimaryCompactClassName,
   formButtonSecondaryClassName,
   formButtonSecondaryCompactClassName,
   formErrorClassName,
@@ -30,23 +31,29 @@ interface SendInvitesPanelProps {
 }
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-function createRow(email = "", nameHint = ""): InviteRow {
-  return {
-    email,
-    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    nameHint,
-  };
-}
+const INITIAL_ROW: InviteRow = { email: "", id: "row-0", nameHint: "" };
 
 export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
   const router = useRouter();
   const { toast } = useToast();
   const baseId = useId();
+  const nextRowId = useRef(1);
   const [error, setError] = useState<null | string>(null);
   const [pending, setPending] = useState(false);
-  const [rows, setRows] = useState<InviteRow[]>([createRow()]);
+  const [rows, setRows] = useState<InviteRow[]>([INITIAL_ROW]);
   const [uploadOpen, setUploadOpen] = useState(false);
+
+  function createRow(email = "", nameHint = ""): InviteRow {
+    const id = `row-${nextRowId.current}`;
+
+    nextRowId.current += 1;
+
+    return {
+      email,
+      id,
+      nameHint,
+    };
+  }
 
   async function submitInvites(
     invites: { email: string; nameHint: null | string }[],
@@ -190,7 +197,7 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
       <AdminPageHeader
         action={
           <button
-            className={formButtonSecondaryCompactClassName}
+            className={formButtonPrimaryCompactClassName}
             disabled={pending}
             type="button"
             onClick={() => setUploadOpen(true)}
@@ -224,7 +231,7 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
           {rows.map((row, index) => (
             <div
               key={row.id}
-              className="flex flex-col gap-2 rounded-sm border border-zinc-300 bg-white/60 p-3 dark:border-zinc-600 dark:bg-white/5 sm:flex-row sm:items-end"
+              className="flex flex-col gap-2 rounded-sm border border-zinc-300 p-3 dark:border-zinc-600 sm:flex-row sm:items-end"
             >
               <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:gap-3">
                 <div className="flex min-w-0 flex-1 flex-col gap-1.5">
