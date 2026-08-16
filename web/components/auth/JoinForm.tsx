@@ -66,7 +66,7 @@ export function JoinForm({
         return;
       }
 
-      router.push("/pools");
+      router.push("/");
       router.refresh();
     } catch {
       setError("Unable to join right now.");
@@ -76,7 +76,7 @@ export function JoinForm({
   }
 
   return (
-    <form className="mx-auto flex w-full max-w-md flex-col gap-4" onSubmit={onSubmit}>
+    <form className="flex w-full flex-col gap-4" onSubmit={onSubmit}>
       {email ? (
         <div className="flex flex-col gap-2">
           <label className={formLabelClassName} htmlFor="join-email">

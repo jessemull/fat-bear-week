@@ -104,7 +104,7 @@ describe("auth forms", () => {
       "/api/auth/join",
       expect.objectContaining({ method: "POST" }),
     );
-    expect(push).toHaveBeenCalledWith("/pools");
+    expect(push).toHaveBeenCalledWith("/");
   });
 
   it("should reject mismatched passwords on join", async () => {

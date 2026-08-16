@@ -8,6 +8,7 @@ import {
   formMutedClassName,
   formPageClassName,
 } from "@/lib/form-styles";
+import { listPoolsForUser } from "@/lib/pools.server";
 import { getSession } from "@/lib/sessions.server";
 import { listTournaments } from "@/lib/tournament.server";
 
@@ -35,11 +36,21 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
     );
   }
 
-  const tournaments = await listTournaments();
+  const [pools, tournaments] = await Promise.all([
+    listPoolsForUser({
+      isCommissioner: true,
+      userId: session.id,
+    }),
+    listTournaments(),
+  ]);
 
   return (
     <div className="flex flex-1 flex-col md:flex-row">
       <AdminSidebar
+        pools={pools.map((pool) => ({
+          id: pool.id,
+          name: pool.name,
+        }))}
         tournaments={tournaments.map((tournament) => ({
           id: tournament.id,
           status: tournament.status,

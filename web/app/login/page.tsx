@@ -10,11 +10,11 @@ export default async function LoginPage() {
   const session = await getSession();
 
   if (session) {
-    redirect("/pools");
+    redirect("/");
   }
 
   return (
-    <main className={`${formPageClassName} max-w-lg justify-center`}>
+    <main className={`${formPageClassName} max-w-sm justify-center pb-24`}>
       <LoginPanel />
     </main>
   );

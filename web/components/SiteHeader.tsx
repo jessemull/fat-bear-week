@@ -18,7 +18,6 @@ interface NavItem {
 
 const PRIMARY_NAV: NavItem[] = [
   { href: "/", label: "Home" },
-  { href: "/pools", label: "Pools" },
   { disabled: true, label: "Bracket" },
   { disabled: true, label: "Leaderboard" },
   { disabled: true, label: "Bears" },
@@ -32,7 +31,7 @@ const disabledClassName =
   "cursor-not-allowed text-base font-medium text-zinc-400 dark:text-zinc-600";
 
 const authLinkClassName =
-  "text-base font-medium text-amber-800 underline dark:text-amber-400";
+  "cursor-pointer text-base font-medium text-amber-800 underline transition-colors hover:text-amber-950 dark:text-amber-400 dark:hover:text-amber-300";
 
 function NavItems({
   isCommissioner,
@@ -42,7 +41,7 @@ function NavItems({
   onNavigate?: () => void;
 }) {
   const items: NavItem[] = isCommissioner
-    ? [...PRIMARY_NAV, { href: "/admin/tournaments", label: "Tournaments" }]
+    ? [...PRIMARY_NAV, { href: "/admin/tournaments", label: "Admin" }]
     : PRIMARY_NAV;
 
   return (
@@ -108,7 +107,7 @@ export function SiteHeader({
           aria-controls={menuId}
           aria-expanded={menuOpen}
           aria-label={menuOpen ? "Close menu" : "Open menu"}
-          className="inline-flex items-center justify-center rounded p-1 text-zinc-800 md:hidden dark:text-zinc-100"
+          className="inline-flex cursor-pointer items-center justify-center rounded p-1 text-zinc-800 transition-colors hover:bg-zinc-200 md:hidden dark:text-zinc-100 dark:hover:bg-zinc-800"
           type="button"
           onClick={() => setMenuOpen((open) => !open)}
         >

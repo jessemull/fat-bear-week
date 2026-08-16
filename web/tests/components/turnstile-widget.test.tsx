@@ -56,6 +56,10 @@ describe("TurnstileWidget", () => {
       expect(renderMock).toHaveBeenCalled();
       expect(onToken).toHaveBeenCalledWith("tok");
     });
+    expect(renderMock).toHaveBeenCalledWith(
+      expect.any(HTMLElement),
+      expect.objectContaining({ theme: "auto" }),
+    );
   });
 
   it("should clear the token on error and expired callbacks", async () => {

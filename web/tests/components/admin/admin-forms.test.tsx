@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -343,8 +343,6 @@ describe("admin forms", () => {
   it("should delete a bear after confirm", async () => {
     const user = userEvent.setup();
 
-    vi.stubGlobal("confirm", vi.fn().mockReturnValue(true));
-
     render(
       <DeleteBearButton
         bearId={bearAId}
@@ -354,6 +352,11 @@ describe("admin forms", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "Delete Bear" }));
+    await user.click(
+      within(screen.getByRole("dialog")).getByRole("button", {
+        name: "Delete Bear",
+      }),
+    );
 
     expect(fetch).toHaveBeenCalledWith(
       `/api/admin/bears/${bearAId}`,
@@ -367,7 +370,6 @@ describe("admin forms", () => {
   it("should show DeleteBearButton API errors", async () => {
     const user = userEvent.setup();
 
-    vi.stubGlobal("confirm", vi.fn().mockReturnValue(true));
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -385,6 +387,11 @@ describe("admin forms", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "Delete Bear" }));
+    await user.click(
+      within(screen.getByRole("dialog")).getByRole("button", {
+        name: "Delete Bear",
+      }),
+    );
 
     expect(screen.getByRole("alert")).toHaveTextContent(
       "Bear is used in a matchup.",
@@ -442,17 +449,17 @@ describe("admin forms", () => {
   it("should delete a tournament after confirm", async () => {
     const user = userEvent.setup();
 
-    vi.stubGlobal(
-      "confirm",
-      vi.fn().mockReturnValue(true),
-    );
-
     const { container } = render(
       <DeleteTournamentButton tournamentId={tournamentId} year={2026} />,
     );
 
     await user.click(
       screen.getByRole("button", { name: "Delete Tournament" }),
+    );
+    await user.click(
+      within(screen.getByRole("dialog")).getByRole("button", {
+        name: "Delete Tournament",
+      }),
     );
 
     await waitFor(() => {
@@ -468,16 +475,19 @@ describe("admin forms", () => {
   it("should show delete errors and cancel without calling API", async () => {
     const user = userEvent.setup();
 
-    vi.stubGlobal("confirm", vi.fn().mockReturnValue(false));
-
     render(<DeleteTournamentButton tournamentId={tournamentId} year={2026} />);
     await user.click(
       screen.getByRole("button", { name: "Delete Tournament" }),
     );
+    await user.click(
+      within(screen.getByRole("dialog")).getByRole("button", {
+        name: "Cancel",
+      }),
+    );
 
     expect(fetch).not.toHaveBeenCalled();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 
-    vi.stubGlobal("confirm", vi.fn().mockReturnValue(true));
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -488,6 +498,11 @@ describe("admin forms", () => {
 
     await user.click(
       screen.getByRole("button", { name: "Delete Tournament" }),
+    );
+    await user.click(
+      within(screen.getByRole("dialog")).getByRole("button", {
+        name: "Delete Tournament",
+      }),
     );
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Still in use.");

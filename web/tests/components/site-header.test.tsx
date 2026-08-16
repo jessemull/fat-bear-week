@@ -41,8 +41,8 @@ describe("SiteHeader", () => {
       "/",
     );
     expect(
-      within(desktopNav).getByRole("link", { name: "Pools" }),
-    ).toHaveAttribute("href", "/pools");
+      within(desktopNav).queryByRole("link", { name: "Pools" }),
+    ).toBeNull();
     expect(within(desktopNav).getByText("Bracket")).toHaveAttribute(
       "aria-disabled",
       "true",
@@ -76,16 +76,16 @@ describe("SiteHeader", () => {
     expect(refresh).toHaveBeenCalled();
   });
 
-  it("should show Tournaments link only for commissioners", () => {
+  it("should show Admin link only for commissioners", () => {
     const { rerender } = render(
       <SiteHeader isCommissioner={false} isSignedIn={true} />,
     );
 
-    expect(screen.queryByRole("link", { name: "Tournaments" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Admin" })).toBeNull();
 
     rerender(<SiteHeader isCommissioner={true} isSignedIn={true} />);
 
-    expect(screen.getByRole("link", { name: "Tournaments" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Admin" })).toHaveAttribute(
       "href",
       "/admin/tournaments",
     );
@@ -101,9 +101,9 @@ describe("SiteHeader", () => {
     const mobileNav = screen.getByRole("navigation", { name: "Mobile" });
 
     expect(within(mobileNav).getByRole("link", { name: "Home" })).toBeInTheDocument();
-    expect(within(mobileNav).getByRole("link", { name: "Pools" })).toBeInTheDocument();
+    expect(within(mobileNav).queryByRole("link", { name: "Pools" })).toBeNull();
     expect(
-      within(mobileNav).getByRole("link", { name: "Tournaments" }),
+      within(mobileNav).getByRole("link", { name: "Admin" }),
     ).toHaveAttribute("href", "/admin/tournaments");
     expect(within(mobileNav).getByText("About")).toHaveAttribute(
       "aria-disabled",

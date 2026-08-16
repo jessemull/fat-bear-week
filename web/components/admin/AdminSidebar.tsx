@@ -7,6 +7,11 @@ import { useId, useState } from "react";
 
 import type { TournamentStatus } from "@/lib/tournament-types";
 
+export interface AdminSidebarPool {
+  id: string;
+  name: string;
+}
+
 export interface AdminSidebarTournament {
   id: string;
   status: TournamentStatus;
@@ -14,6 +19,7 @@ export interface AdminSidebarTournament {
 }
 
 interface AdminSidebarProps {
+  pools: AdminSidebarPool[];
   tournaments: AdminSidebarTournament[];
 }
 
@@ -45,13 +51,27 @@ function isTournamentBears(pathname: string, tournamentId: string): boolean {
   return pathname.startsWith(`/admin/tournaments/${tournamentId}/bears`);
 }
 
+function isPoolsIndex(pathname: string): boolean {
+  return pathname === "/admin/pools";
+}
+
+function isCreatePool(pathname: string): boolean {
+  return pathname === "/admin/pools/new";
+}
+
+function isPoolInvites(pathname: string, poolId: string): boolean {
+  return pathname.startsWith(`/admin/pools/${poolId}/invites`);
+}
+
 function AdminNav({
   onNavigate,
   pathname,
+  pools,
   tournaments,
 }: {
   onNavigate?: () => void;
   pathname: string;
+  pools: AdminSidebarPool[];
   tournaments: AdminSidebarTournament[];
 }) {
   return (
@@ -109,11 +129,49 @@ function AdminNav({
           </Link>
         </div>
       ))}
+      <div className="flex flex-col gap-1">
+        <Link
+          className={
+            isPoolsIndex(pathname) ? navLinkActiveClassName : navLinkClassName
+          }
+          href="/admin/pools"
+          onClick={onNavigate}
+        >
+          Pools
+        </Link>
+        <Link
+          className={
+            isCreatePool(pathname) ? navLinkActiveClassName : navLinkClassName
+          }
+          href="/admin/pools/new"
+          onClick={onNavigate}
+        >
+          Create Pool
+        </Link>
+      </div>
+      {pools.map((pool) => (
+        <div key={pool.id} className="flex flex-col gap-0.5">
+          <p className="px-2 pb-1 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+            {pool.name}
+          </p>
+          <Link
+            className={
+              isPoolInvites(pathname, pool.id)
+                ? nestedLinkActiveClassName
+                : nestedLinkClassName
+            }
+            href={`/admin/pools/${pool.id}/invites`}
+            onClick={onNavigate}
+          >
+            Invites
+          </Link>
+        </div>
+      ))}
     </nav>
   );
 }
 
-export function AdminSidebar({ tournaments }: AdminSidebarProps) {
+export function AdminSidebar({ pools, tournaments }: AdminSidebarProps) {
   const pathname = usePathname();
   const menuId = useId();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -128,7 +186,7 @@ export function AdminSidebar({ tournaments }: AdminSidebarProps) {
         <button
           aria-controls={menuId}
           aria-expanded={menuOpen}
-          className="inline-flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm font-medium text-zinc-800 dark:text-zinc-100"
+          className="inline-flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm font-medium text-zinc-800 transition-colors hover:bg-zinc-200 dark:text-zinc-100 dark:hover:bg-zinc-800"
           type="button"
           onClick={() => setMenuOpen((open) => !open)}
         >
@@ -155,6 +213,7 @@ export function AdminSidebar({ tournaments }: AdminSidebarProps) {
           >
             <AdminNav
               pathname={pathname}
+              pools={pools}
               tournaments={tournaments}
               onNavigate={closeMenu}
             />
@@ -163,7 +222,11 @@ export function AdminSidebar({ tournaments }: AdminSidebarProps) {
       ) : null}
 
       <div className="hidden px-3 py-6 md:block">
-        <AdminNav pathname={pathname} tournaments={tournaments} />
+        <AdminNav
+          pathname={pathname}
+          pools={pools}
+          tournaments={tournaments}
+        />
       </div>
     </div>
   );

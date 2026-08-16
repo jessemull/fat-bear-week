@@ -3,8 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import {
-  formButtonSecondaryClassName,
+  formButtonDangerClassName,
   formErrorClassName,
 } from "@/lib/form-styles";
 
@@ -18,18 +19,11 @@ export function DeleteTournamentButton({
   year,
 }: DeleteTournamentButtonProps) {
   const router = useRouter();
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [error, setError] = useState<null | string>(null);
   const [pending, setPending] = useState(false);
 
-  async function onDelete() {
-    const confirmed = window.confirm(
-      `Delete tournament ${year}? This cannot be undone. Pools must be removed first.`,
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
+  async function onConfirmDelete() {
     setError(null);
     setPending(true);
 
@@ -41,13 +35,16 @@ export function DeleteTournamentButton({
 
       if (!response.ok) {
         setError(json.error ?? "Unable to delete tournament.");
+        setConfirmOpen(false);
         return;
       }
 
+      setConfirmOpen(false);
       router.push("/admin/tournaments");
       router.refresh();
     } catch {
       setError("Unable to delete tournament right now.");
+      setConfirmOpen(false);
     } finally {
       setPending(false);
     }
@@ -56,10 +53,10 @@ export function DeleteTournamentButton({
   return (
     <div className="flex w-fit flex-col gap-2">
       <button
-        className={`${formButtonSecondaryClassName} border-red-300 text-red-800 dark:border-red-800 dark:text-red-300`}
+        className={formButtonDangerClassName}
         disabled={pending}
         type="button"
-        onClick={() => void onDelete()}
+        onClick={() => setConfirmOpen(true)}
       >
         {pending ? "Deleting…" : "Delete Tournament"}
       </button>
@@ -68,6 +65,16 @@ export function DeleteTournamentButton({
           {error}
         </p>
       ) : null}
+      <ConfirmDialog
+        confirmLabel="Delete Tournament"
+        description={`Delete tournament ${year}? This cannot be undone. Pools must be removed first.`}
+        open={confirmOpen}
+        pending={pending}
+        title="Delete tournament"
+        tone="danger"
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={() => void onConfirmDelete()}
+      />
     </div>
   );
 }

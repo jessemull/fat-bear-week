@@ -43,7 +43,7 @@ export function PoolList({ pools }: PoolListProps) {
           {pool.role === "commissioner" ? (
             <Link
               className={`text-sm ${formLinkClassName}`}
-              href={`/pools/${pool.id}/invites`}
+              href={`/admin/pools/${pool.id}/invites`}
             >
               Manage invites
             </Link>

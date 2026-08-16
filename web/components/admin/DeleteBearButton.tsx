@@ -3,8 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import {
-  formButtonSecondaryClassName,
+  formButtonDangerClassName,
   formErrorClassName,
 } from "@/lib/form-styles";
 
@@ -20,18 +21,11 @@ export function DeleteBearButton({
   tournamentId,
 }: DeleteBearButtonProps) {
   const router = useRouter();
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [error, setError] = useState<null | string>(null);
   const [pending, setPending] = useState(false);
 
-  async function onDelete() {
-    const confirmed = window.confirm(
-      `Delete bear ${name}? This cannot be undone. Bears used in matchups cannot be deleted.`,
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
+  async function onConfirmDelete() {
     setError(null);
     setPending(true);
 
@@ -43,13 +37,16 @@ export function DeleteBearButton({
 
       if (!response.ok) {
         setError(json.error ?? "Unable to delete bear.");
+        setConfirmOpen(false);
         return;
       }
 
+      setConfirmOpen(false);
       router.push(`/admin/tournaments/${tournamentId}/bears`);
       router.refresh();
     } catch {
       setError("Unable to delete bear right now.");
+      setConfirmOpen(false);
     } finally {
       setPending(false);
     }
@@ -58,10 +55,10 @@ export function DeleteBearButton({
   return (
     <div className="flex w-fit flex-col gap-2">
       <button
-        className={`${formButtonSecondaryClassName} border-red-300 text-red-800 dark:border-red-800 dark:text-red-300`}
+        className={formButtonDangerClassName}
         disabled={pending}
         type="button"
-        onClick={() => void onDelete()}
+        onClick={() => setConfirmOpen(true)}
       >
         {pending ? "Deleting…" : "Delete Bear"}
       </button>
@@ -70,6 +67,16 @@ export function DeleteBearButton({
           {error}
         </p>
       ) : null}
+      <ConfirmDialog
+        confirmLabel="Delete Bear"
+        description={`Delete bear ${name}? This cannot be undone. Bears used in matchups cannot be deleted.`}
+        open={confirmOpen}
+        pending={pending}
+        title="Delete bear"
+        tone="danger"
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={() => void onConfirmDelete()}
+      />
     </div>
   );
 }

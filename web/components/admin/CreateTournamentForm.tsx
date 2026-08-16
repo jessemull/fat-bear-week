@@ -24,16 +24,24 @@ export function CreateTournamentForm() {
   const router = useRouter();
   const [error, setError] = useState<null | string>(null);
   const [pending, setPending] = useState(false);
-  const [year, setYear] = useState(new Date().getFullYear());
+  const [year, setYear] = useState(String(new Date().getFullYear()));
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+
+    const parsedYear = Number(year);
+
+    if (!Number.isInteger(parsedYear) || parsedYear < 2000 || parsedYear > 2100) {
+      setError("Enter a year between 2000 and 2100.");
+      return;
+    }
+
     setPending(true);
 
     try {
       const response = await fetch("/api/admin/tournaments", {
-        body: JSON.stringify({ year }),
+        body: JSON.stringify({ year: parsedYear }),
         headers: { "content-type": "application/json" },
         method: "POST",
       });
@@ -69,13 +77,14 @@ export function CreateTournamentForm() {
         <input
           className={formInputClassName}
           id="tournament-year"
+          inputMode="numeric"
           max={2100}
           min={2000}
           name="year"
           required
           type="number"
           value={year}
-          onChange={(event) => setYear(Number(event.target.value))}
+          onChange={(event) => setYear(event.target.value)}
         />
       </div>
       {error ? (

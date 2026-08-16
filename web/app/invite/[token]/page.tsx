@@ -23,7 +23,7 @@ export default async function InvitePage({ params }: InvitePageProps) {
 
   if (!invite) {
     return (
-      <main className={`${formPageClassName} max-w-lg justify-center`}>
+      <main className={`${formPageClassName} max-w-sm justify-center`}>
         <h1 className={`text-2xl ${formHeadingClassName}`}>Invite not found</h1>
         <p className={formMutedClassName}>
           This invite link is invalid. If you already joined,{" "}
@@ -38,7 +38,7 @@ export default async function InvitePage({ params }: InvitePageProps) {
 
   if (invite.status === "used") {
     return (
-      <main className={`${formPageClassName} max-w-lg justify-center`}>
+      <main className={`${formPageClassName} max-w-sm justify-center`}>
         <h1 className={`text-2xl ${formHeadingClassName}`}>
           Invite already used
         </h1>
@@ -55,7 +55,7 @@ export default async function InvitePage({ params }: InvitePageProps) {
 
   if (invite.status === "expired") {
     return (
-      <main className={`${formPageClassName} max-w-lg justify-center`}>
+      <main className={`${formPageClassName} max-w-sm justify-center`}>
         <h1 className={`text-2xl ${formHeadingClassName}`}>Invite expired</h1>
         <p className={formMutedClassName}>
           Ask the commissioner for a new invite, or{" "}
@@ -69,7 +69,7 @@ export default async function InvitePage({ params }: InvitePageProps) {
   }
 
   return (
-    <main className={`${formPageClassName} max-w-lg justify-center`}>
+    <main className={`${formPageClassName} max-w-sm justify-center`}>
       <JoinPanel
         email={invite.email}
         nameHint={invite.nameHint}

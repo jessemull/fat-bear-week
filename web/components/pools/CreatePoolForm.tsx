@@ -23,7 +23,7 @@ export function CreatePoolForm() {
   const [bracketDeadline, setBracketDeadline] = useState("");
   const [error, setError] = useState<null | string>(null);
   const [loadError, setLoadError] = useState<null | string>(null);
-  const [maxPlayers, setMaxPlayers] = useState(100);
+  const [maxPlayers, setMaxPlayers] = useState("100");
   const [name, setName] = useState("");
   const [pending, setPending] = useState(false);
   const [tournamentId, setTournamentId] = useState("");
@@ -75,6 +75,18 @@ export function CreatePoolForm() {
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+
+    const parsedMaxPlayers = Number(maxPlayers);
+
+    if (
+      !Number.isInteger(parsedMaxPlayers) ||
+      parsedMaxPlayers < 1 ||
+      parsedMaxPlayers > 500
+    ) {
+      setError("Enter a max players value between 1 and 500.");
+      return;
+    }
+
     setPending(true);
 
     try {
@@ -83,22 +95,32 @@ export function CreatePoolForm() {
           bracketDeadline: bracketDeadline
             ? new Date(bracketDeadline).toISOString()
             : null,
-          maxPlayers,
+          maxPlayers: parsedMaxPlayers,
           name,
           tournamentId,
         }),
         headers: { "content-type": "application/json" },
         method: "POST",
       });
-      const json = (await response.json()) as { data?: unknown; error?: string };
+      const json = (await response.json()) as {
+        data?: { id?: string };
+        error?: string;
+      };
 
       if (!response.ok) {
         setError(json.error ?? "Unable to create pool.");
         return;
       }
 
-      setName("");
-      setBracketDeadline("");
+      const poolId = json.data?.id;
+
+      if (poolId) {
+        router.push(`/admin/pools/${poolId}/invites`);
+        router.refresh();
+        return;
+      }
+
+      router.push("/admin/pools");
       router.refresh();
     } catch {
       setError("Unable to create pool right now.");
@@ -166,7 +188,7 @@ export function CreatePoolForm() {
           required
           type="number"
           value={maxPlayers}
-          onChange={(event) => setMaxPlayers(Number(event.target.value))}
+          onChange={(event) => setMaxPlayers(event.target.value)}
         />
       </div>
       <div className="flex flex-col gap-2">

@@ -190,7 +190,7 @@ describe("pool components", () => {
 
     expect(
       screen.getByRole("link", { name: "Manage invites" }),
-    ).toHaveAttribute("href", "/pools/pool-1/invites");
+    ).toHaveAttribute("href", "/admin/pools/pool-1/invites");
   });
 
   it("should render InviteList without a11y violations", async () => {
