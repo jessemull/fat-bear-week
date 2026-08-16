@@ -11,6 +11,7 @@ import {
 } from "@/components/pools/InviteCsvUploadDialog";
 import { useToast } from "@/components/Toast";
 import {
+  formActionsClassName,
   formButtonPrimaryClassName,
   formButtonPrimaryCompactClassName,
   formButtonSecondaryClassName,
@@ -304,7 +305,7 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
             {error}
           </p>
         ) : null}
-        <div className="grid w-full grid-cols-2 gap-2">
+        <div className={formActionsClassName}>
           <button
             className={`${formButtonSecondaryClassName} w-full justify-center`}
             disabled={pending}

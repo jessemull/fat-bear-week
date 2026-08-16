@@ -5,6 +5,7 @@ import { type FormEvent, useState } from "react";
 
 import { useToast } from "@/components/Toast";
 import {
+  formActionsClassName,
   formButtonPrimaryClassName,
   formButtonSecondaryClassName,
   formErrorClassName,
@@ -130,7 +131,7 @@ export function InviteForm({ invite, poolId }: InviteFormProps) {
           {error}
         </p>
       ) : null}
-      <div className="grid w-full grid-cols-2 gap-2">
+      <div className={formActionsClassName}>
         <button
           className={`${formButtonSecondaryClassName} w-full justify-center`}
           disabled={pending}

@@ -17,6 +17,9 @@ export const formHeadingClassName =
 
 export const formMutedClassName = "text-zinc-600 dark:text-zinc-400";
 
+export const formActionsClassName =
+  "mt-2 grid w-full grid-cols-2 gap-2";
+
 export const formButtonPrimaryClassName =
   "inline-flex h-8 cursor-pointer items-center justify-center rounded-md bg-amber-700 px-3 text-sm font-medium text-white transition-colors hover:bg-amber-800 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-500 dark:disabled:hover:bg-amber-600";
 
