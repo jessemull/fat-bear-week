@@ -1,13 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { BearList } from "@/components/admin/BearList";
 import { listBearsForTournament } from "@/lib/bears.server";
-import {
-  formHeadingClassName,
-  formLinkClassName,
-  formMutedClassName,
-} from "@/lib/form-styles";
+import { formButtonPrimaryCompactClassName } from "@/lib/form-styles";
 import { getTournament } from "@/lib/tournament.server";
 
 export const dynamic = "force-dynamic";
@@ -31,21 +28,19 @@ export default async function TournamentBearsPage({
   const bears = await listBearsForTournament(tournamentId);
 
   return (
-    <div className="flex flex-col gap-8">
-      <header className="flex flex-col gap-2">
-        <h1 className={`text-3xl ${formHeadingClassName}`}>
-          Bears · {tournament.year}
-        </h1>
-        <p className={formMutedClassName}>
-          Shared catalog of bears for this tournament year.
-        </p>
-        <Link
-          className={`text-sm ${formLinkClassName}`}
-          href={`/admin/tournaments/${tournament.id}/bears/new`}
-        >
-          Create Bear
-        </Link>
-      </header>
+    <div className="flex flex-col gap-4">
+      <AdminPageHeader
+        action={
+          <Link
+            className={formButtonPrimaryCompactClassName}
+            href={`/admin/tournaments/${tournament.id}/bears/new`}
+          >
+            Create Bear
+          </Link>
+        }
+        description="Shared catalog of bears for this tournament year."
+        title={`Bears · ${tournament.year}`}
+      />
       <BearList bears={bears} tournamentId={tournament.id} />
     </div>
   );

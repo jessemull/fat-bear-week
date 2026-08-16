@@ -1,10 +1,7 @@
 import { notFound } from "next/navigation";
 
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { BearForm } from "@/components/admin/BearForm";
-import {
-  formHeadingClassName,
-  formMutedClassName,
-} from "@/lib/form-styles";
 import { getTournament } from "@/lib/tournament.server";
 
 export const dynamic = "force-dynamic";
@@ -24,13 +21,11 @@ export default async function NewBearPage({ params }: NewBearPageProps) {
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      <header className="flex flex-col gap-2">
-        <h1 className={`text-3xl ${formHeadingClassName}`}>Create Bear</h1>
-        <p className={formMutedClassName}>
-          Add a bear to the shared catalog for {tournament.year}.
-        </p>
-      </header>
+    <div className="flex flex-col gap-4">
+      <AdminPageHeader
+        description={`Add a bear to the shared catalog for ${tournament.year}.`}
+        title="Create Bear"
+      />
       <BearForm mode="create" tournamentId={tournament.id} />
     </div>
   );

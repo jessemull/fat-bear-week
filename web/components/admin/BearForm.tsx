@@ -5,6 +5,7 @@ import { type FormEvent, useState } from "react";
 
 import {
   formButtonPrimaryClassName,
+  formButtonSecondaryClassName,
   formErrorClassName,
   formInputClassName,
   formLabelClassName,
@@ -117,7 +118,7 @@ export function BearForm({ bear, mode, tournamentId }: BearFormProps) {
           className={formInputClassName}
           id="bear-name"
           name="name"
-          placeholder="e.g. 99 or 480 Otis"
+          placeholder="Enter a name..."
           required
           value={name}
           onChange={(event) => setName(event.target.value)}
@@ -131,7 +132,7 @@ export function BearForm({ bear, mode, tournamentId }: BearFormProps) {
           className={formInputClassName}
           id="bear-nickname"
           name="nickname"
-          placeholder="e.g. The Boss"
+          placeholder="Enter a nickname..."
           value={nickname}
           onChange={(event) => setNickname(event.target.value)}
         />
@@ -167,19 +168,29 @@ export function BearForm({ bear, mode, tournamentId }: BearFormProps) {
           {error}
         </p>
       ) : null}
-      <button
-        className={`${formButtonPrimaryClassName} mt-4`}
-        disabled={pending}
-        type="submit"
-      >
-        {pending
-          ? mode === "create"
-            ? "Creating…"
-            : "Saving…"
-          : mode === "create"
-            ? "Create Bear"
-            : "Save Bear"}
-      </button>
+      <div className="grid w-full grid-cols-2 gap-2">
+        <button
+          className={`${formButtonSecondaryClassName} w-full justify-center`}
+          disabled={pending}
+          type="button"
+          onClick={() => router.back()}
+        >
+          Cancel
+        </button>
+        <button
+          className={`${formButtonPrimaryClassName} w-full justify-center`}
+          disabled={pending}
+          type="submit"
+        >
+          {pending
+            ? mode === "create"
+              ? "Creating…"
+              : "Saving…"
+            : mode === "create"
+              ? "Create Bear"
+              : "Save Bear"}
+        </button>
+      </div>
     </form>
   );
 }

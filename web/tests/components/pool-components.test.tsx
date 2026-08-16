@@ -65,7 +65,7 @@ describe("pool components", () => {
     const { rerender } = render(<CreatePoolForm />);
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Tournament")).toHaveValue(tournamentId);
+      expect(screen.getByLabelText("Tournament")).toHaveTextContent("2026");
     });
 
     await user.type(screen.getByLabelText("Pool name"), "Friends");
@@ -151,7 +151,7 @@ describe("pool components", () => {
     const { container } = render(<CreatePoolForm />);
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Tournament")).toHaveValue(tournamentId);
+      expect(screen.getByLabelText("Tournament")).toHaveTextContent("2026");
     });
     expect(screen.getByLabelText("Pool name")).toBeInTheDocument();
     expect(await axe(container)).toHaveNoViolations();
@@ -233,7 +233,7 @@ describe("pool components", () => {
     render(<CreatePoolForm />);
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Tournament")).toHaveValue(tournamentId);
+      expect(screen.getByLabelText("Tournament")).toHaveTextContent("2026");
     });
 
     await user.type(screen.getByLabelText("Pool name"), "Friends");
@@ -285,7 +285,7 @@ describe("pool components", () => {
     render(<CreatePoolForm />);
 
     await waitFor(() => {
-      expect(screen.getByLabelText("Tournament")).toHaveValue(tournamentId);
+      expect(screen.getByLabelText("Tournament")).toHaveTextContent("2026");
     });
 
     await user.type(screen.getByLabelText("Pool name"), "Friends");

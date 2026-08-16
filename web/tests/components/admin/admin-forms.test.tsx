@@ -5,9 +5,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const push = vi.fn();
 const refresh = vi.fn();
+const back = vi.fn();
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
+    back,
     push,
     refresh,
     replace: vi.fn(),
@@ -27,6 +29,7 @@ const bearAId = "22222222-2222-4222-8222-222222222222";
 
 describe("admin forms", () => {
   beforeEach(() => {
+    back.mockReset();
     push.mockReset();
     refresh.mockReset();
     vi.stubGlobal(
@@ -167,6 +170,16 @@ describe("admin forms", () => {
     expect(screen.getByLabelText("Name")).toBeInTheDocument();
     expect(screen.getByLabelText("Identification")).toBeInTheDocument();
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it("should go back when Cancel is clicked on BearForm", async () => {
+    const user = userEvent.setup();
+
+    render(<BearForm mode="create" tournamentId={tournamentId} />);
+
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(back).toHaveBeenCalled();
   });
 
   it("should submit BearForm create and redirect", async () => {
@@ -388,9 +401,10 @@ describe("admin forms", () => {
     );
 
     expect(await axe(container)).toHaveNoViolations();
-    expect(screen.getByLabelText("Status")).toHaveValue("draft");
+    expect(screen.getByLabelText("Status")).toHaveTextContent("draft");
 
-    await user.selectOptions(screen.getByLabelText("Status"), "live");
+    await user.click(screen.getByLabelText("Status"));
+    await user.click(screen.getByRole("option", { name: "live" }));
 
     expect(fetch).toHaveBeenCalledWith(
       `/api/admin/tournaments/${tournamentId}/status`,
@@ -417,7 +431,8 @@ describe("admin forms", () => {
       />,
     );
 
-    await user.selectOptions(screen.getByLabelText("Status"), "locked");
+    await user.click(screen.getByLabelText("Status"));
+    await user.click(screen.getByRole("option", { name: "locked" }));
 
     expect(screen.getByRole("alert")).toHaveTextContent(
       "That status transition is not allowed.",

@@ -1,15 +1,12 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import type { TournamentStatus } from "@/lib/tournament-types";
 
-import {
-  formErrorClassName,
-  formSelectClassName,
-} from "@/lib/form-styles";
+import { FormSelect } from "@/components/FormSelect";
+import { formErrorClassName } from "@/lib/form-styles";
 
 const TOURNAMENT_STATUSES: TournamentStatus[] = [
   "complete",
@@ -65,29 +62,20 @@ export function TournamentStatusControls({
 
   return (
     <div className="flex max-w-xs flex-col gap-3">
-      <div className="relative">
-        <select
-          aria-label="Status"
-          className={`${formSelectClassName} capitalize`}
-          disabled={pending}
-          id="tournament-status"
-          value={status}
-          onChange={(event) =>
-            void onChange(event.target.value as TournamentStatus)
-          }
-        >
-          {TOURNAMENT_STATUSES.map((option) => (
-            <option key={option} className="capitalize" value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-        <ChevronDown
-          aria-hidden="true"
-          className="pointer-events-none absolute top-1/2 right-2 size-3.5 -translate-y-1/2 text-zinc-700 dark:text-zinc-300"
-          strokeWidth={1.75}
-        />
-      </div>
+      <FormSelect
+        disabled={pending}
+        id="tournament-status"
+        label="Status"
+        options={TOURNAMENT_STATUSES.map((option) => ({
+          label: option,
+          value: option,
+        }))}
+        value={status}
+        valueClassName="capitalize"
+        onChange={(nextStatus) =>
+          void onChange(nextStatus as TournamentStatus)
+        }
+      />
       {error ? (
         <p className={formErrorClassName} role="alert">
           {error}

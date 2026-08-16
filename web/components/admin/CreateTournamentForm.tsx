@@ -5,6 +5,7 @@ import { type FormEvent, useState } from "react";
 
 import {
   formButtonPrimaryClassName,
+  formButtonSecondaryClassName,
   formErrorClassName,
   formInputClassName,
   formLabelClassName,
@@ -82,13 +83,23 @@ export function CreateTournamentForm() {
           {error}
         </p>
       ) : null}
-      <button
-        className={formButtonPrimaryClassName}
-        disabled={pending}
-        type="submit"
-      >
-        {pending ? "Creating…" : "Create Tournament"}
-      </button>
+      <div className="grid w-full grid-cols-2 gap-2">
+        <button
+          className={`${formButtonSecondaryClassName} w-full justify-center`}
+          disabled={pending}
+          type="button"
+          onClick={() => router.back()}
+        >
+          Cancel
+        </button>
+        <button
+          className={`${formButtonPrimaryClassName} w-full justify-center`}
+          disabled={pending}
+          type="submit"
+        >
+          {pending ? "Creating…" : "Create Tournament"}
+        </button>
+      </div>
     </form>
   );
 }

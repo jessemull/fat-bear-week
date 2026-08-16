@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useState } from "react";
 
+import { FormSelect } from "@/components/FormSelect";
 import {
   formButtonPrimaryClassName,
   formErrorClassName,
@@ -106,6 +107,14 @@ export function CreatePoolForm() {
     }
   }
 
+  const tournamentOptions =
+    tournaments.length === 0
+      ? [{ label: "No tournaments available", value: "" }]
+      : tournaments.map((tournament) => ({
+          label: `${tournament.year} (${tournament.status})`,
+          value: tournament.id,
+        }));
+
   return (
     <form className="flex w-full max-w-lg flex-col gap-4" onSubmit={onSubmit}>
       <div className="flex flex-col gap-2">
@@ -125,24 +134,14 @@ export function CreatePoolForm() {
         <label className={formLabelClassName} htmlFor="pool-tournament-id">
           Tournament
         </label>
-        <select
-          className={formInputClassName}
+        <FormSelect
+          disabled={pending || tournaments.length === 0}
           id="pool-tournament-id"
-          name="tournamentId"
-          required
+          label="Tournament"
+          options={tournamentOptions}
           value={tournamentId}
-          onChange={(event) => setTournamentId(event.target.value)}
-        >
-          {tournaments.length === 0 ? (
-            <option value="">No tournaments available</option>
-          ) : (
-            tournaments.map((tournament) => (
-              <option key={tournament.id} value={tournament.id}>
-                {tournament.year} ({tournament.status})
-              </option>
-            ))
-          )}
-        </select>
+          onChange={setTournamentId}
+        />
         {loadError ? (
           <p className={formErrorClassName} role="alert">
             {loadError}
