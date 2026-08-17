@@ -8,12 +8,19 @@ import {
 interface PageStatusProps {
   description: string;
   icon: LucideIcon;
+  iconTone?: "amber" | "danger";
   title: string;
 }
+
+const iconToneClassName = {
+  amber: "text-amber-600 dark:text-amber-500",
+  danger: "text-red-600/80 dark:text-red-600/80",
+} as const;
 
 export function PageStatus({
   description,
   icon: Icon,
+  iconTone = "danger",
   title,
 }: PageStatusProps) {
   return (
@@ -21,7 +28,7 @@ export function PageStatus({
       <div className="flex max-w-sm flex-col items-center gap-3">
         <Icon
           aria-hidden="true"
-          className="size-24 text-red-600/80 dark:text-red-600/80"
+          className={`size-24 ${iconToneClassName[iconTone]}`}
           strokeWidth={1.5}
         />
         <h1 className={`text-2xl ${formHeadingClassName}`}>{title}</h1>

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { ShieldOff } from "lucide-react";
+import { PawPrint } from "lucide-react";
 import { redirect } from "next/navigation";
 
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
@@ -25,9 +25,9 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
   if (!session.isCommissioner) {
     return (
       <PageStatus
-        description="Commissioner role required for administrative access."
-        icon={ShieldOff}
-        title="Forbidden"
+        description="Commissioner role required. This den is for rangers only."
+        icon={PawPrint}
+        title="Closed Den"
       />
     );
   }

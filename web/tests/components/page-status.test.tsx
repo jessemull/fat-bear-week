@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { axe } from "jest-axe";
-import { ShieldOff } from "lucide-react";
+import { PawPrint } from "lucide-react";
 import { describe, expect, it } from "vitest";
 
 import { PageStatus } from "@/components/PageStatus";
@@ -9,17 +9,19 @@ describe("PageStatus", () => {
   it("should render title, description, and stay accessible", async () => {
     const { container } = render(
       <PageStatus
-        description="Commissioner role required for administrative access."
-        icon={ShieldOff}
-        title="Forbidden"
+        description="Commissioner role required. This den is for rangers only."
+        icon={PawPrint}
+        title="Closed Den"
       />,
     );
 
     expect(
-      screen.getByRole("heading", { name: "Forbidden" }),
+      screen.getByRole("heading", { name: "Closed Den" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Commissioner role required for administrative access."),
+      screen.getByText(
+        "Commissioner role required. This den is for rangers only.",
+      ),
     ).toBeInTheDocument();
     expect(await axe(container)).toHaveNoViolations();
   });
