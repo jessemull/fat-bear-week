@@ -7,8 +7,9 @@ interface RateBucket {
 const buckets = new Map<string, RateBucket>();
 
 /**
- * Sliding-window rate limit (in-memory per instance).
- * Returns true when the call is allowed.
+ * Sliding-window rate limit (in-memory per Node process / Vercel isolate).
+ * Not shared across instances — use as a soft companion to Turnstile, not a
+ * durable global limiter. Returns true when the call is allowed.
  */
 export function consumeRateLimit(params: {
   key: string;

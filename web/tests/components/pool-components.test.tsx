@@ -195,6 +195,7 @@ describe("pool components", () => {
             nameHint: "Bea",
             status: "unused",
           },
+          tokenRotated: true,
         },
       }),
       ok: true,
@@ -224,6 +225,46 @@ describe("pool components", () => {
       "/api/pools/pool-1/invites/inv-1",
       expect.objectContaining({ method: "PATCH" }),
     );
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Invite saved. The old link is invalid — use Resend Invite for the new address.",
+    );
+  });
+
+  it("should toast a simple save message when the token is not rotated", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.fn().mockResolvedValue({
+      json: async () => ({
+        data: {
+          invite: {
+            email: "a@example.com",
+            id: "inv-1",
+            nameHint: "Alexandra",
+            status: "unused",
+          },
+          tokenRotated: false,
+        },
+      }),
+      ok: true,
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    renderWithToast(
+      <InviteForm
+        invite={{
+          email: "a@example.com",
+          id: "inv-1",
+          nameHint: "Alex",
+          status: "unused",
+        }}
+        poolId="pool-1"
+      />,
+    );
+
+    await user.clear(screen.getByLabelText("Name Hint"));
+    await user.type(screen.getByLabelText("Name Hint"), "Alexandra");
+    await user.click(screen.getByRole("button", { name: "Save Invite" }));
+
     expect(screen.getByRole("status")).toHaveTextContent("Invite saved.");
   });
 
@@ -325,6 +366,22 @@ describe("pool components", () => {
       "http://localhost:3000/invite/abc",
     );
     expect(screen.getAllByRole("status").length).toBeGreaterThan(0);
+
+    const writeText = vi.fn().mockResolvedValue(undefined);
+
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText },
+    });
+
+    await user.click(screen.getByRole("button", { name: "Copy link" }));
+
+    expect(writeText).toHaveBeenCalledWith("http://localhost:3000/invite/abc");
+    expect(screen.getByRole("button", { name: "Copied" })).toBeInTheDocument();
+
+    writeText.mockRejectedValueOnce(new Error("denied"));
+    await user.click(screen.getByRole("button", { name: "Copied" }));
+    expect(screen.getByRole("button", { name: "Copy link" })).toBeInTheDocument();
   });
 
   it("should show an error for an empty CSV", async () => {
@@ -403,6 +460,13 @@ describe("pool components", () => {
       { email: "b@example.com", nameHint: null },
       { email: "c@example.com", nameHint: null },
     ]);
+
+    const many = Array.from(
+      { length: 101 },
+      (_, index) => `user${index}@example.com`,
+    ).join("\n");
+
+    expect(parseInviteCsv(many)).toHaveLength(101);
   });
 
   it("should reject TextEdit RTF uploads with a plain-text hint", async () => {
@@ -426,6 +490,30 @@ describe("pool components", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       /Make Plain Text/i,
+    );
+  });
+
+  it("should reject CSV imports over the bulk invite cap", async () => {
+    const user = userEvent.setup();
+
+    renderWithToast(<SendInvitesPanel poolId="pool-1" />);
+    await user.click(screen.getByRole("button", { name: "Upload" }));
+
+    const body = Array.from(
+      { length: 101 },
+      (_, index) => `user${index}@example.com`,
+    ).join("\n");
+    const file = new File([body], "invites.csv", { type: "text/csv" });
+
+    await user.upload(screen.getByLabelText("Email list file"), file);
+    await user.click(
+      within(screen.getByRole("dialog")).getByRole("button", {
+        name: "Upload",
+      }),
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "You can send at most 100 invites at once.",
     );
   });
 

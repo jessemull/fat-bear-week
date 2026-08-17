@@ -26,6 +26,8 @@ export interface MintedInvite {
   token: string;
 }
 
+const rotateInFlight = new Map<string, Promise<MintedInvite | null>>();
+
 interface InvitationRow {
   email: null | string;
   expires_at: null | string;
@@ -178,7 +180,7 @@ export async function mintInvite(params: {
     .select("id")
     .eq("pool_id", poolId)
     .is("used_at", null)
-    .ilike("email", email)
+    .eq("email", email)
     .maybeSingle();
 
   if (existingError) {
@@ -222,19 +224,47 @@ export async function mintInvite(params: {
 
 /**
  * Replace the invite token hash and return a fresh raw token (email/resend).
+ * Concurrent calls for the same invite share one in-flight rotation.
  */
 export async function rotateInviteToken(params: {
   inviteId: string;
   poolId: string;
+  refreshExpiry?: boolean;
 }): Promise<MintedInvite | null> {
-  const { inviteId, poolId } = params;
+  const key = `${params.poolId}:${params.inviteId}`;
+  const inFlight = rotateInFlight.get(key);
+
+  if (inFlight) {
+    return inFlight;
+  }
+
+  const promise = rotateInviteTokenOnce(params).finally(() => {
+    rotateInFlight.delete(key);
+  });
+
+  rotateInFlight.set(key, promise);
+
+  return promise;
+}
+
+async function rotateInviteTokenOnce(params: {
+  inviteId: string;
+  poolId: string;
+  refreshExpiry?: boolean;
+}): Promise<MintedInvite | null> {
+  const { inviteId, poolId, refreshExpiry = false } = params;
   const token = createInviteToken();
   const tokenHash = hashInviteToken(token);
   const supabase = getServiceSupabase();
+  const patch: Record<string, string> = { token_hash: tokenHash };
+
+  if (refreshExpiry) {
+    patch.expires_at = defaultInviteExpiresAt();
+  }
 
   const { data, error } = await supabase
     .from("invitations")
-    .update({ token_hash: tokenHash })
+    .update(patch)
     .eq("id", inviteId)
     .eq("pool_id", poolId)
     .is("used_at", null)
@@ -250,7 +280,8 @@ export async function rotateInviteToken(params: {
     usedAt: (data.used_at as null | string) ?? null,
   });
 
-  if (status !== "unused") {
+  // After refreshExpiry, status should be unused; otherwise reject used/expired.
+  if (status === "used" || (!refreshExpiry && status === "expired")) {
     return null;
   }
 
@@ -269,6 +300,10 @@ export interface ListedInvite {
   id: string;
   nameHint: null | string;
   status: InviteStatus;
+}
+
+export interface UpdatedInvite extends ListedInvite {
+  tokenRotated: boolean;
 }
 
 /**
@@ -347,7 +382,7 @@ export async function updateInvite(params: {
   inviteId: string;
   nameHint?: null | string;
   poolId: string;
-}): Promise<ListedInvite> {
+}): Promise<UpdatedInvite> {
   const email = params.email.trim().toLowerCase();
   const { inviteId, nameHint = null, poolId } = params;
   const supabase = getServiceSupabase();
@@ -367,7 +402,7 @@ export async function updateInvite(params: {
     .select("id")
     .eq("pool_id", poolId)
     .is("used_at", null)
-    .ilike("email", email)
+    .eq("email", email)
     .neq("id", inviteId)
     .maybeSingle();
 
@@ -421,11 +456,13 @@ export async function updateInvite(params: {
       expiresAt: (data.expires_at as null | string) ?? null,
       usedAt: (data.used_at as null | string) ?? null,
     }),
+    tokenRotated: emailChanged,
   };
 }
 
 /**
- * Load an unused, non-expired invite and rotate its token for resend.
+ * Load an unused or expired invite and rotate its token for resend.
+ * Expired invites get a refreshed expiry window.
  */
 export async function getResendableInvite(params: {
   inviteId: string;
@@ -433,9 +470,12 @@ export async function getResendableInvite(params: {
 }): Promise<MintedInvite | null> {
   const existing = await getInviteForPool(params);
 
-  if (!existing || existing.status !== "unused" || !existing.email) {
+  if (!existing || existing.status === "used" || !existing.email) {
     return null;
   }
 
-  return rotateInviteToken(params);
+  return rotateInviteToken({
+    ...params,
+    refreshExpiry: true,
+  });
 }

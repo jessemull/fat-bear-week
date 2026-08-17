@@ -131,7 +131,7 @@ export function PoolForm({ mode, pool, tournaments }: PoolFormProps) {
               method: "PATCH",
             });
       const json = (await response.json()) as {
-        data?: { id?: string; pool?: { id?: string } };
+        data?: { pool?: { id?: string } };
         error?: string;
       };
 
@@ -146,7 +146,7 @@ export function PoolForm({ mode, pool, tournaments }: PoolFormProps) {
       }
 
       if (mode === "create") {
-        const poolId = json.data?.id;
+        const poolId = json.data?.pool?.id;
 
         if (poolId) {
           toast("Pool created.");

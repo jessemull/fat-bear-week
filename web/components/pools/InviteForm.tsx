@@ -58,7 +58,10 @@ export function InviteForm({ invite, poolId }: InviteFormProps) {
           method: "PATCH",
         },
       );
-      const json = (await response.json()) as { error?: string };
+      const json = (await response.json()) as {
+        data?: { invite?: InviteFormValues; tokenRotated?: boolean };
+        error?: string;
+      };
 
       if (!response.ok) {
         setError(json.error ?? "Unable to save invite.");
@@ -66,7 +69,14 @@ export function InviteForm({ invite, poolId }: InviteFormProps) {
       }
 
       router.refresh();
-      toast("Invite saved.");
+
+      if (json.data?.tokenRotated) {
+        toast(
+          "Invite saved. The old link is invalid — use Resend Invite for the new address.",
+        );
+      } else {
+        toast("Invite saved.");
+      }
     } catch {
       setError("Unable to save invite right now.");
     } finally {

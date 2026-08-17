@@ -67,6 +67,26 @@ describe("email.server", () => {
     expect(buildInviteUrl("abc")).toContain("/invite/abc");
   });
 
+  it("should strip CR/LF from pool names in email subjects", async () => {
+    vi.stubEnv("RESEND_API_KEY", "re_test");
+    vi.stubEnv("EMAIL_FROM", "invites@fatbearweek.net");
+    sendMock.mockResolvedValue({ data: { id: "msg_1" }, error: null });
+
+    const { sendInviteEmail } = await import("@/lib/email.server");
+
+    await sendInviteEmail({
+      expiresAt: "2026-08-25T00:00:00.000Z",
+      inviteUrl: "http://localhost:3000/invite/abc",
+      poolName: "Friends\r\nBcc: evil@example.com",
+      to: "friend@example.com",
+    });
+
+    expect(sendMock.mock.calls[0][0].subject).toBe(
+      "You're invited to Friends Bcc: evil@example.com — Fat Bear Week Fantasy Bracket",
+    );
+    expect(sendMock.mock.calls[0][0].subject).not.toMatch(/[\r\n]/);
+  });
+
   it("should fail buildInviteUrl without NEXT_PUBLIC_SITE_URL", async () => {
     vi.stubEnv("NEXT_PUBLIC_SITE_URL", "");
 

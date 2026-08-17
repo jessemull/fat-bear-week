@@ -2,6 +2,7 @@ import { assertSameOrigin, jsonData, jsonError } from "@/lib/api.server";
 import { buildInviteUrl, sendInviteEmail } from "@/lib/email.server";
 import { getResendableInvite } from "@/lib/invites.server";
 import { requirePoolCommissioner } from "@/lib/pools.server";
+import { requireSiteUrl } from "@/lib/site-url";
 import { getServiceSupabase } from "@/lib/supabase.server";
 
 interface RouteContext {
@@ -23,17 +24,17 @@ export async function POST(request: Request, context: RouteContext) {
     return auth.error;
   }
 
+  try {
+    requireSiteUrl();
+  } catch {
+    return jsonError("Site URL is not configured.", { status: 500 });
+  }
+
   let invite;
 
   try {
     invite = await getResendableInvite({ inviteId, poolId });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "";
-
-    if (message === "NEXT_PUBLIC_SITE_URL is not configured.") {
-      return jsonError("Site URL is not configured.", { status: 500 });
-    }
-
+  } catch {
     return jsonError("Unable to resend invite.", { status: 500 });
   }
 
@@ -48,14 +49,7 @@ export async function POST(request: Request, context: RouteContext) {
     .eq("id", poolId)
     .maybeSingle();
 
-  let inviteUrl: string;
-
-  try {
-    inviteUrl = buildInviteUrl(invite.token);
-  } catch {
-    return jsonError("Site URL is not configured.", { status: 500 });
-  }
-
+  const inviteUrl = buildInviteUrl(invite.token);
   const sendResult = await sendInviteEmail({
     expiresAt: invite.expiresAt,
     inviteUrl,

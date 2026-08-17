@@ -85,10 +85,10 @@ describe("auth.server join/sign-in helpers", () => {
       error: null,
     });
 
-    // Chain: from().select().ilike().maybeSingle()
+    // Chain: from().select().eq("name_lower").maybeSingle()
     fromMock.mockImplementation(() => ({
       select: () => ({
-        ilike: () => ({
+        eq: () => ({
           maybeSingle,
         }),
       }),
@@ -107,7 +107,7 @@ describe("auth.server join/sign-in helpers", () => {
   it("should find users by email via login identifier", async () => {
     fromMock.mockImplementation(() => ({
       select: () => ({
-        ilike: () => ({
+        eq: () => ({
           maybeSingle: vi.fn().mockResolvedValue({
             data: {
               email: "otis@example.com",
@@ -131,16 +131,12 @@ describe("auth.server join/sign-in helpers", () => {
     });
   });
 
-  it("should reject name mismatches from ilike", async () => {
+  it("should return null when name_lower lookup misses", async () => {
     fromMock.mockImplementation(() => ({
       select: () => ({
-        ilike: () => ({
+        eq: () => ({
           maybeSingle: vi.fn().mockResolvedValue({
-            data: {
-              id: "u1",
-              name: "Otter",
-              password_hash: "hash",
-            },
+            data: null,
             error: null,
           }),
         }),

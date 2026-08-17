@@ -44,6 +44,8 @@
   fail closed when both headers are missing).
 - Turnstile: verify `turnstileToken` server-side via Cloudflare siteverify before join/sign-in.
 - Rate limit join and sign-in by IP (and sign-in identifier) in addition to Turnstile.
+  Limits are in-memory per Node process / Vercel isolate (not durable across
+  instances) — a soft companion to Turnstile, not a shared global limiter.
 - `NEXT_PUBLIC_SITE_URL` is required for minting invite links (no silent production fallback).
 
 ---

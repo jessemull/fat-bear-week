@@ -78,7 +78,7 @@ describe("invites.server data access", () => {
       select: () => ({
         eq: () => ({
           is: () => ({
-            ilike: () => ({
+            eq: () => ({
               maybeSingle: () => Promise.resolve({ data: null, error: null }),
             }),
           }),
@@ -103,7 +103,7 @@ describe("invites.server data access", () => {
       select: () => ({
         eq: () => ({
           is: () => ({
-            ilike: () => ({
+            eq: () => ({
               maybeSingle: () =>
                 Promise.resolve({ data: { id: "existing" }, error: null }),
             }),
@@ -277,6 +277,67 @@ describe("invites.server data access", () => {
     expect(invite?.token.length).toBeGreaterThan(20);
   });
 
+  it("should resend expired unused invites with refreshed expiry", async () => {
+    const refreshedExpiry = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+
+    fromMock
+      .mockReturnValueOnce({
+        select: () => ({
+          eq: () => ({
+            eq: () => ({
+              maybeSingle: () =>
+                Promise.resolve({
+                  data: {
+                    email: "a@example.com",
+                    expires_at: new Date(Date.now() - 60_000).toISOString(),
+                    id: "inv-1",
+                    name_hint: "Alex",
+                    used_at: null,
+                  },
+                  error: null,
+                }),
+            }),
+          }),
+        }),
+      })
+      .mockReturnValueOnce({
+        update: (patch: Record<string, unknown>) => {
+          expect(patch.expires_at).toEqual(expect.any(String));
+          expect(patch.token_hash).toEqual(expect.any(String));
+
+          return {
+            eq: () => ({
+              eq: () => ({
+                is: () => ({
+                  select: () => ({
+                    maybeSingle: () =>
+                      Promise.resolve({
+                        data: {
+                          email: "a@example.com",
+                          expires_at: refreshedExpiry,
+                          id: "inv-1",
+                          name_hint: "Alex",
+                          used_at: null,
+                        },
+                        error: null,
+                      }),
+                  }),
+                }),
+              }),
+            }),
+          };
+        },
+      });
+
+    const { getResendableInvite } = await import("@/lib/invites.server");
+    const invite = await getResendableInvite({
+      inviteId: "inv-1",
+      poolId: "pool-1",
+    });
+
+    expect(invite?.expiresAt).toBe(refreshedExpiry);
+  });
+
   it("should unwrap pool arrays from joins", async () => {
     fromMock.mockReturnValue({
       select: () => ({
@@ -364,7 +425,7 @@ describe("invites.server data access", () => {
       select: () => ({
         eq: () => ({
           is: () => ({
-            ilike: () => ({
+            eq: () => ({
               maybeSingle: () => Promise.resolve({ data: null, error: null }),
             }),
           }),
@@ -396,7 +457,7 @@ describe("invites.server data access", () => {
       select: () => ({
         eq: () => ({
           is: () => ({
-            ilike: () => ({
+            eq: () => ({
               maybeSingle: () => Promise.resolve({ data: null, error: null }),
             }),
           }),
@@ -498,7 +559,7 @@ describe("invites.server data access", () => {
         select: () => ({
           eq: () => ({
             is: () => ({
-              ilike: () => ({
+              eq: () => ({
                 neq: () => ({
                   maybeSingle: () =>
                     Promise.resolve({ data: null, error: null }),
@@ -509,25 +570,30 @@ describe("invites.server data access", () => {
         }),
       })
       .mockReturnValueOnce({
-        update: () => ({
-          eq: () => ({
+        update: (patch: Record<string, unknown>) => {
+          expect(patch.token_hash).toEqual(expect.any(String));
+          expect(patch.email).toBe("b@example.com");
+
+          return {
             eq: () => ({
-              select: () => ({
-                maybeSingle: () =>
-                  Promise.resolve({
-                    data: {
-                      email: "b@example.com",
-                      expires_at: null,
-                      id: "inv-1",
-                      name_hint: "Bea",
-                      used_at: null,
-                    },
-                    error: null,
-                  }),
+              eq: () => ({
+                select: () => ({
+                  maybeSingle: () =>
+                    Promise.resolve({
+                      data: {
+                        email: "b@example.com",
+                        expires_at: null,
+                        id: "inv-1",
+                        name_hint: "Bea",
+                        used_at: null,
+                      },
+                      error: null,
+                    }),
+                }),
               }),
             }),
-          }),
-        }),
+          };
+        },
       });
 
     await expect(
@@ -540,6 +606,81 @@ describe("invites.server data access", () => {
     ).resolves.toMatchObject({
       email: "b@example.com",
       nameHint: "Bea",
+      tokenRotated: true,
+    });
+
+    fromMock
+      .mockReturnValueOnce({
+        select: () => ({
+          eq: () => ({
+            eq: () => ({
+              maybeSingle: () =>
+                Promise.resolve({
+                  data: {
+                    email: "a@example.com",
+                    expires_at: null,
+                    id: "inv-1",
+                    name_hint: "Alex",
+                    used_at: null,
+                  },
+                  error: null,
+                }),
+            }),
+          }),
+        }),
+      })
+      .mockReturnValueOnce({
+        select: () => ({
+          eq: () => ({
+            is: () => ({
+              eq: () => ({
+                neq: () => ({
+                  maybeSingle: () =>
+                    Promise.resolve({ data: null, error: null }),
+                }),
+              }),
+            }),
+          }),
+        }),
+      })
+      .mockReturnValueOnce({
+        update: (patch: Record<string, unknown>) => {
+          expect(patch.token_hash).toBeUndefined();
+          expect(patch.name_hint).toBe("Alexandra");
+
+          return {
+            eq: () => ({
+              eq: () => ({
+                select: () => ({
+                  maybeSingle: () =>
+                    Promise.resolve({
+                      data: {
+                        email: "a@example.com",
+                        expires_at: null,
+                        id: "inv-1",
+                        name_hint: "Alexandra",
+                        used_at: null,
+                      },
+                      error: null,
+                    }),
+                }),
+              }),
+            }),
+          };
+        },
+      });
+
+    await expect(
+      updateInvite({
+        email: "a@example.com",
+        inviteId: "inv-1",
+        nameHint: "Alexandra",
+        poolId: "pool-1",
+      }),
+    ).resolves.toMatchObject({
+      email: "a@example.com",
+      nameHint: "Alexandra",
+      tokenRotated: false,
     });
   });
 });

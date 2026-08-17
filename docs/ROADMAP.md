@@ -56,7 +56,7 @@ features in phases below; check items off as they ship.
 
 - [x] Create tournament year + status (`draft` / `locked` / `live` /
       `complete`)
-- [x] Import / edit bears (number, name, nickname, description, photos,
+- [x] Import / edit bears (name, nickname, identification, biography, photos,
       profile URL, age/sex if available)
 - [ ] Build generic bracket: rounds → matchups → bear A / bear B / byes
 - [ ] Do **not** hardcode 64-team NCAA structure (support ~8–20 bears,

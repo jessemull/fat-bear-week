@@ -103,18 +103,17 @@ export async function findUserByName(name: string): Promise<{
   const supabase = getServiceSupabase();
   const trimmed = name.trim();
 
-  const { data, error } = await supabase
-    .from("users")
-    .select("id, name, password_hash")
-    .ilike("name", trimmed)
-    .maybeSingle();
-
-  if (error || !data) {
+  if (!trimmed) {
     return null;
   }
 
-  // ilike can match substrings depending on pattern; require exact ignore-case.
-  if (data.name.toLowerCase() !== trimmed.toLowerCase()) {
+  const { data, error } = await supabase
+    .from("users")
+    .select("id, name, password_hash")
+    .eq("name_lower", trimmed.toLowerCase())
+    .maybeSingle();
+
+  if (error || !data) {
     return null;
   }
 
@@ -145,14 +144,10 @@ export async function findUserByLoginIdentifier(identifier: string): Promise<{
     const { data, error } = await supabase
       .from("users")
       .select("id, name, password_hash, email")
-      .ilike("email", trimmed)
+      .eq("email", trimmed.toLowerCase())
       .maybeSingle();
 
     if (error || !data?.email) {
-      return null;
-    }
-
-    if (data.email.toLowerCase() !== trimmed.toLowerCase()) {
       return null;
     }
 

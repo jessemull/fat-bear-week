@@ -76,6 +76,25 @@ describe("SiteHeader", () => {
     expect(refresh).toHaveBeenCalled();
   });
 
+  it("should not redirect when sign-out fails", async () => {
+    const user = userEvent.setup();
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        json: async () => ({ error: "Invalid request origin." }),
+        ok: false,
+      }),
+    );
+
+    render(<SiteHeader isSignedIn={true} />);
+
+    await user.click(screen.getByRole("button", { name: "Sign out" }));
+
+    expect(push).not.toHaveBeenCalled();
+    expect(refresh).not.toHaveBeenCalled();
+  });
+
   it("should show Admin link only for commissioners", () => {
     const { rerender } = render(
       <SiteHeader isCommissioner={false} isSignedIn={true} />,

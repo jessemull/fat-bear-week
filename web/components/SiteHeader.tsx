@@ -89,7 +89,12 @@ export function SiteHeader({
     setSignOutPending(true);
 
     try {
-      await fetch("/api/auth/sign-out", { method: "POST" });
+      const response = await fetch("/api/auth/sign-out", { method: "POST" });
+
+      if (!response.ok) {
+        return;
+      }
+
       setMenuOpen(false);
       router.push("/login");
       router.refresh();

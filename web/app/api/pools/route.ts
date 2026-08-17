@@ -58,7 +58,7 @@ export async function POST(request: Request) {
       tournamentId: parsed.data.tournamentId,
     });
 
-    return jsonData(pool, { status: 201 });
+    return jsonData({ pool }, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
 

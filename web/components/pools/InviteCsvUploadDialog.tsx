@@ -187,7 +187,7 @@ export function parseInviteCsv(text: string): ParsedInviteRow[] {
     }
   }
 
-  return [...byEmail.values()].slice(0, MAX_BULK_INVITES);
+  return [...byEmail.values()];
 }
 
 function looksLikeRtf(fileName: string, text: string): boolean {
@@ -278,6 +278,11 @@ export function InviteCsvUploadDialog({
         setError(
           "No email addresses found. Use a CSV with email,name columns or a plain list of emails.",
         );
+        return;
+      }
+
+      if (invites.length > MAX_BULK_INVITES) {
+        setError(`You can send at most ${MAX_BULK_INVITES} invites at once.`);
         return;
       }
 

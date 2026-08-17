@@ -39,12 +39,13 @@ function buildInviteEmailBody(input: SendInviteEmailInput): {
     timeStyle: "short",
   });
 
-  const subject = `You're invited to ${input.poolName} — Fat Bear Week Fantasy Bracket`;
+  const safePoolName = input.poolName.replace(/[\r\n]+/g, " ").trim();
+  const subject = `You're invited to ${safePoolName} — Fat Bear Week Fantasy Bracket`;
 
   const text = [
     textGreeting,
     "",
-    `You've been invited to the private pool "${input.poolName}".`,
+    `You've been invited to the private pool "${safePoolName}".`,
     "",
     `Join here: ${input.inviteUrl}`,
     "",
@@ -55,7 +56,7 @@ function buildInviteEmailBody(input: SendInviteEmailInput): {
 
   const html = `
     <p>${greeting}</p>
-    <p>You've been invited to the private pool <strong>${escapeHtml(input.poolName)}</strong>.</p>
+    <p>You've been invited to the private pool <strong>${escapeHtml(safePoolName)}</strong>.</p>
     <p><a href="${escapeHtml(input.inviteUrl)}">Join your pool</a></p>
     <p>This invite expires on ${escapeHtml(expiresLabel)}.</p>
     <p style="color:#666;font-size:14px;">This is a private prediction pool around official Fat Bear Week — not official voting.</p>

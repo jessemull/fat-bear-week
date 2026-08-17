@@ -13,6 +13,7 @@ import {
   mintInvite,
 } from "@/lib/invites.server";
 import { requirePoolCommissioner } from "@/lib/pools.server";
+import { requireSiteUrl } from "@/lib/site-url";
 import { getServiceSupabase } from "@/lib/supabase.server";
 
 interface RouteContext {
@@ -82,6 +83,12 @@ export async function POST(request: Request, context: RouteContext) {
 
   const entries = [...uniqueInvites.values()];
 
+  try {
+    requireSiteUrl();
+  } catch {
+    return jsonError("Site URL is not configured.", { status: 500 });
+  }
+
   interface MintResult {
     email: string;
     emailSent?: boolean;
@@ -123,9 +130,7 @@ export async function POST(request: Request, context: RouteContext) {
           error:
             message === "email_invited"
               ? "An unused invite already exists for that email."
-              : message === "NEXT_PUBLIC_SITE_URL is not configured."
-                ? "Site URL is not configured."
-                : "Unable to mint invite.",
+              : "Unable to mint invite.",
         };
       }
     },

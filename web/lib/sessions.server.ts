@@ -97,13 +97,22 @@ export async function createSession(userId: string): Promise<void> {
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
-  if (!listError && existingSessions && existingSessions.length > MAX_SESSIONS_PER_USER) {
+  if (listError) {
+    console.error("Failed to list sessions for prune:", listError.message);
+  } else if (existingSessions && existingSessions.length > MAX_SESSIONS_PER_USER) {
     const toDelete = existingSessions
       .slice(MAX_SESSIONS_PER_USER)
       .map((row) => row.id as string);
 
     if (toDelete.length > 0) {
-      await supabase.from("sessions").delete().in("id", toDelete);
+      const { error: deleteError } = await supabase
+        .from("sessions")
+        .delete()
+        .in("id", toDelete);
+
+      if (deleteError) {
+        console.error("Failed to prune sessions:", deleteError.message);
+      }
     }
   }
 

@@ -62,7 +62,10 @@ export async function PATCH(request: Request, context: RouteContext) {
       poolId,
     });
 
-    return jsonData({ invite });
+    return jsonData({
+      invite,
+      tokenRotated: invite.tokenRotated,
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
 

@@ -227,4 +227,74 @@ describe("sessions.server cookie flow", () => {
 
     await expect(createSession("user-1")).rejects.toThrow(/Failed to create session/);
   });
+
+  it("should still set the cookie when session prune listing fails", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    fromMock.mockReturnValue({
+      insert: () => Promise.resolve({ error: null }),
+      select: () => ({
+        eq: () => ({
+          order: () =>
+            Promise.resolve({
+              data: null,
+              error: { message: "list failed" },
+            }),
+        }),
+      }),
+    });
+
+    const { createSession, SESSION_COOKIE_NAME } = await import(
+      "@/lib/sessions.server"
+    );
+
+    await createSession("user-1");
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      "Failed to list sessions for prune:",
+      "list failed",
+    );
+    expect(cookieStore.set).toHaveBeenCalledWith(
+      SESSION_COOKIE_NAME,
+      expect.any(String),
+      expect.any(Object),
+    );
+
+    errorSpy.mockRestore();
+  });
+
+  it("should log when session prune delete fails", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const sessions = Array.from({ length: 12 }, (_, index) => ({
+      created_at: `2026-01-${String(index + 1).padStart(2, "0")}`,
+      id: `sess-${index}`,
+    }));
+
+    fromMock.mockReturnValue({
+      delete: () => ({
+        in: () => Promise.resolve({ error: { message: "delete failed" } }),
+      }),
+      insert: () => Promise.resolve({ error: null }),
+      select: () => ({
+        eq: () => ({
+          order: () =>
+            Promise.resolve({
+              data: sessions,
+              error: null,
+            }),
+        }),
+      }),
+    });
+
+    const { createSession } = await import("@/lib/sessions.server");
+
+    await createSession("user-1");
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      "Failed to prune sessions:",
+      "delete failed",
+    );
+
+    errorSpy.mockRestore();
+  });
 });

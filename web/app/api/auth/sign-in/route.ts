@@ -30,6 +30,19 @@ export async function POST(request: Request) {
   }
 
   const clientIp = getClientIp(request) ?? "unknown";
+
+  if (
+    !consumeRateLimit({
+      key: `auth:sign-in:ip:${clientIp}`,
+      limit: SIGN_IN_LIMIT,
+      windowMs: SIGN_IN_WINDOW_MS,
+    })
+  ) {
+    return jsonError("Too many sign-in attempts. Try again shortly.", {
+      status: 429,
+    });
+  }
+
   const parsed = await parseJsonBody(request, signInBodySchema);
 
   if ("error" in parsed) {
@@ -39,11 +52,6 @@ export async function POST(request: Request) {
   const identifierKey = parsed.data.identifier.trim().toLowerCase();
 
   if (
-    !consumeRateLimit({
-      key: `auth:sign-in:ip:${clientIp}`,
-      limit: SIGN_IN_LIMIT,
-      windowMs: SIGN_IN_WINDOW_MS,
-    }) ||
     !consumeRateLimit({
       key: `auth:sign-in:id:${identifierKey}`,
       limit: 10,

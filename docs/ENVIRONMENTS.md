@@ -42,7 +42,11 @@ to Preview, Production, or both.
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Cloudflare Turnstile site key | Prod Turnstile site key |
 | `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile secret | Prod Turnstile secret |
 
-`NEXT_PUBLIC_SITE_URL` is the canonical origin for `robots.ts` / `sitemap.ts` (and future absolute links). When unset or invalid, the app falls back to `https://www.fatbearweek.net`. Locally you may use `http://localhost:3000`.
+`NEXT_PUBLIC_SITE_URL` is the canonical origin for invite email links and must be
+set correctly per environment (`requireSiteUrl` — no production fallback). SEO
+routes (`robots.ts` / `sitemap.ts`) use `getSiteUrl`, which falls back to
+`https://www.fatbearweek.net` only when unset. Locally you may use
+`http://localhost:3000`.
 
 ### Local development
 
