@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { PageStatus } from "@/components/PageStatus";
-import { listPoolsForUser } from "@/lib/pools.server";
+import { listPoolsForSidebar } from "@/lib/pools.server";
 import { getSession } from "@/lib/sessions.server";
 import { listTournaments } from "@/lib/tournament.server";
 
@@ -33,20 +33,14 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
   }
 
   const [pools, tournaments] = await Promise.all([
-    listPoolsForUser({
-      isCommissioner: true,
-      userId: session.id,
-    }),
+    listPoolsForSidebar(),
     listTournaments(),
   ]);
 
   return (
     <div className="flex flex-1 flex-col md:flex-row">
       <AdminSidebar
-        pools={pools.map((pool) => ({
-          id: pool.id,
-          name: pool.name,
-        }))}
+        pools={pools}
         tournaments={tournaments.map((tournament) => ({
           id: tournament.id,
           status: tournament.status,

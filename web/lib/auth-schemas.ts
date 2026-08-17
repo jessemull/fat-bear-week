@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export const MAX_BULK_INVITES = 100;
+
 export const joinBodySchema = z
   .object({
     name: z.string().trim().min(1).max(80),
@@ -74,7 +76,7 @@ export const mintInvitesBodySchema = z
           .strict(),
       )
       .min(1)
-      .max(100),
+      .max(MAX_BULK_INVITES),
   })
   .strict();
 

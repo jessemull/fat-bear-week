@@ -23,4 +23,10 @@ describe("passwords.server", () => {
       verifyPassword("x", "scrypt$16384$8$1$YQ==$"),
     ).resolves.toBe(false);
   });
+
+  it("should reject tampered scrypt params above the hash ceiling", async () => {
+    await expect(
+      verifyPassword("x", "scrypt$32768$8$1$YQ==$YWJj"),
+    ).resolves.toBe(false);
+  });
 });

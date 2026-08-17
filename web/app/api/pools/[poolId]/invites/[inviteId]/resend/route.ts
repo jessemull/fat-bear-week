@@ -1,8 +1,7 @@
 import { assertSameOrigin, jsonData, jsonError } from "@/lib/api.server";
 import { buildInviteUrl, sendInviteEmail } from "@/lib/email.server";
 import { getResendableInvite } from "@/lib/invites.server";
-import { userCanManagePool } from "@/lib/pools.server";
-import { getSession } from "@/lib/sessions.server";
+import { requirePoolCommissioner } from "@/lib/pools.server";
 import { getServiceSupabase } from "@/lib/supabase.server";
 
 interface RouteContext {
@@ -18,22 +17,25 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   const { inviteId, poolId } = await context.params;
-  const session = await getSession();
+  const auth = await requirePoolCommissioner(poolId);
 
-  if (!session) {
-    return jsonError("Not signed in.", { status: 401 });
+  if ("error" in auth) {
+    return auth.error;
   }
 
-  if (
-    !(await userCanManagePool({
-      isCommissioner: session.isCommissioner,
-      poolId,
-    }))
-  ) {
-    return jsonError("Commissioner access required.", { status: 403 });
-  }
+  let invite;
 
-  const invite = await getResendableInvite({ inviteId, poolId });
+  try {
+    invite = await getResendableInvite({ inviteId, poolId });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+
+    if (message === "NEXT_PUBLIC_SITE_URL is not configured.") {
+      return jsonError("Site URL is not configured.", { status: 500 });
+    }
+
+    return jsonError("Unable to resend invite.", { status: 500 });
+  }
 
   if (!invite) {
     return jsonError("Invite cannot be resent.", { status: 400 });
@@ -46,7 +48,14 @@ export async function POST(request: Request, context: RouteContext) {
     .eq("id", poolId)
     .maybeSingle();
 
-  const inviteUrl = buildInviteUrl(invite.token);
+  let inviteUrl: string;
+
+  try {
+    inviteUrl = buildInviteUrl(invite.token);
+  } catch {
+    return jsonError("Site URL is not configured.", { status: 500 });
+  }
+
   const sendResult = await sendInviteEmail({
     expiresAt: invite.expiresAt,
     inviteUrl,
@@ -57,6 +66,6 @@ export async function POST(request: Request, context: RouteContext) {
 
   return jsonData({
     emailSent: sendResult.emailSent,
-    inviteUrl,
+    ...(sendResult.emailSent ? {} : { inviteUrl }),
   });
 }

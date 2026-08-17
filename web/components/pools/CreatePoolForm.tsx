@@ -1,7 +1,14 @@
 "use client";
 
-import { PoolForm } from "@/components/pools/PoolForm";
+import {
+  PoolForm,
+  type PoolFormTournamentOption,
+} from "@/components/pools/PoolForm";
 
-export function CreatePoolForm() {
-  return <PoolForm mode="create" />;
+interface CreatePoolFormProps {
+  tournaments: PoolFormTournamentOption[];
+}
+
+export function CreatePoolForm({ tournaments }: CreatePoolFormProps) {
+  return <PoolForm mode="create" tournaments={tournaments} />;
 }

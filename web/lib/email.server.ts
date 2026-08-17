@@ -1,7 +1,7 @@
 import "server-only";
 import { Resend } from "resend";
 
-import { getSiteUrl } from "@/lib/site-url";
+import { requireSiteUrl } from "@/lib/site-url";
 
 export interface SendInviteEmailInput {
   expiresAt: string;
@@ -31,9 +31,9 @@ function buildInviteEmailBody(input: SendInviteEmailInput): {
   subject: string;
   text: string;
 } {
-  const greeting = input.nameHint
-    ? `Hi ${input.nameHint},`
-    : "Hi,";
+  const safeNameHint = input.nameHint ? escapeHtml(input.nameHint) : null;
+  const greeting = safeNameHint ? `Hi ${safeNameHint},` : "Hi,";
+  const textGreeting = input.nameHint ? `Hi ${input.nameHint},` : "Hi,";
   const expiresLabel = new Date(input.expiresAt).toLocaleString("en-US", {
     dateStyle: "medium",
     timeStyle: "short",
@@ -42,7 +42,7 @@ function buildInviteEmailBody(input: SendInviteEmailInput): {
   const subject = `You're invited to ${input.poolName} — Fat Bear Week Fantasy Bracket`;
 
   const text = [
-    greeting,
+    textGreeting,
     "",
     `You've been invited to the private pool "${input.poolName}".`,
     "",
@@ -121,9 +121,10 @@ export async function sendInviteEmail(
 
 /**
  * Build an absolute invite URL for email / copy fallback.
+ * Fails when NEXT_PUBLIC_SITE_URL is missing so we never mint prod links locally.
  */
 export function buildInviteUrl(token: string): string {
-  const base = getSiteUrl().replace(/\/$/, "");
+  const base = requireSiteUrl().replace(/\/$/, "");
 
   return `${base}/invite/${token}`;
 }

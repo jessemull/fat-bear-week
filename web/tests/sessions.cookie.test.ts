@@ -28,7 +28,19 @@ describe("sessions.server cookie flow", () => {
 
   it("should create a session and set the cookie", async () => {
     fromMock.mockReturnValue({
+      delete: () => ({
+        in: () => Promise.resolve({ error: null }),
+      }),
       insert: () => Promise.resolve({ error: null }),
+      select: () => ({
+        eq: () => ({
+          order: () =>
+            Promise.resolve({
+              data: [{ created_at: "2026-01-01", id: "sess-1" }],
+              error: null,
+            }),
+        }),
+      }),
     });
 
     const { createSession, SESSION_COOKIE_NAME } = await import(

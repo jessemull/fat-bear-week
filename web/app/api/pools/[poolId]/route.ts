@@ -8,36 +8,14 @@ import { updatePoolBodySchema } from "@/lib/auth-schemas";
 import {
   deletePool,
   getPool,
+  requirePoolCommissioner,
   updatePool,
-  userCanManagePool,
 } from "@/lib/pools.server";
-import { getSession } from "@/lib/sessions.server";
 
 interface RouteContext {
   params: Promise<{
     poolId: string;
   }>;
-}
-
-async function requirePoolCommissioner(poolId: string) {
-  const session = await getSession();
-
-  if (!session) {
-    return { error: jsonError("Not signed in.", { status: 401 }) } as const;
-  }
-
-  if (
-    !(await userCanManagePool({
-      isCommissioner: session.isCommissioner,
-      poolId,
-    }))
-  ) {
-    return {
-      error: jsonError("Commissioner access required.", { status: 403 }),
-    } as const;
-  }
-
-  return { session } as const;
 }
 
 export async function GET(_request: Request, context: RouteContext) {
@@ -84,6 +62,8 @@ export async function PATCH(request: Request, context: RouteContext) {
       bracketDeadline: parsed.data.bracketDeadline ?? null,
       maxPlayers: parsed.data.maxPlayers,
       name: parsed.data.name,
+      scoringSystem: parsed.data.scoringSystem,
+      showBracketsBeforeLock: parsed.data.showBracketsBeforeLock,
       tournamentId: parsed.data.tournamentId,
     });
 

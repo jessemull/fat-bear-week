@@ -11,6 +11,11 @@ const SCRYPT_N = 16384;
 const SCRYPT_P = 1;
 const SCRYPT_R = 8;
 
+/** Reject verify params above our hash settings to avoid DoS from tampered rows. */
+const MAX_SCRYPT_N = SCRYPT_N;
+const MAX_SCRYPT_P = SCRYPT_P;
+const MAX_SCRYPT_R = SCRYPT_R;
+
 function scryptAsync(
   password: string,
   salt: Buffer,
@@ -75,7 +80,14 @@ export async function verifyPassword(
     !Number.isFinite(n) ||
     !Number.isFinite(p) ||
     !Number.isFinite(r) ||
+    n < 2 ||
+    n > MAX_SCRYPT_N ||
+    r < 1 ||
+    r > MAX_SCRYPT_R ||
+    p < 1 ||
+    p > MAX_SCRYPT_P ||
     expected.length === 0 ||
+    expected.length > KEY_LENGTH ||
     salt.length === 0
   ) {
     return false;

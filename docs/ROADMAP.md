@@ -82,17 +82,16 @@ features in phases below; check items off as they ship.
 - [ ] Automatic scoring when admin publishes a winner
 - [ ] Live leaderboard (rank, score)
 - [ ] Correct / incorrect pick indicators on brackets
-- [x] Advance winners into later matchups automatically (never hand-build
-      next round) — admin set-winner advances bracket only; scoring deferred
+- [ ] Advance winners into later matchups automatically (never hand-build
+      next round) — deferred with bracket admin UI redesign
 
 ### Admin result entry
 
-- [x] “Set winner” UI per matchup (required)
-- [x] Optional official vote totals A/B
+- [ ] “Set winner” UI per matchup (required) — deferred with bracket admin UI
+- [ ] Optional official vote totals A/B — deferred with bracket admin UI
 - [ ] Publish result → score entries → update leaderboard → mark picks
-      (scoring / leaderboard deferred)
-- [x] Enter results in batches (e.g. a day’s matchups at once)
-- [x] Expect ~6 admin sessions / ~11 matchups per year (based on 2025 shape)
+- [ ] Enter results in batches (e.g. a day’s matchups at once)
+- [ ] Expect ~6 admin sessions / ~11 matchups per year (based on 2025 shape)
 
 ### Links & hygiene
 

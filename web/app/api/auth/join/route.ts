@@ -6,12 +6,30 @@ import {
 } from "@/lib/api.server";
 import { joinBodySchema } from "@/lib/auth-schemas";
 import { joinWithInvite, parseJoinErrorMessage } from "@/lib/auth.server";
+import { consumeRateLimit } from "@/lib/rate-limit.server";
 import { createSession } from "@/lib/sessions.server";
 import { getClientIp, verifyTurnstileToken } from "@/lib/turnstile.server";
+
+const JOIN_LIMIT = 10;
+const JOIN_WINDOW_MS = 60_000;
 
 export async function POST(request: Request) {
   if (!assertSameOrigin(request)) {
     return jsonError("Invalid request origin.", { status: 403 });
+  }
+
+  const clientIp = getClientIp(request) ?? "unknown";
+
+  if (
+    !consumeRateLimit({
+      key: `auth:join:ip:${clientIp}`,
+      limit: JOIN_LIMIT,
+      windowMs: JOIN_WINDOW_MS,
+    })
+  ) {
+    return jsonError("Too many join attempts. Try again shortly.", {
+      status: 429,
+    });
   }
 
   const parsed = await parseJsonBody(request, joinBodySchema);
@@ -22,7 +40,7 @@ export async function POST(request: Request) {
 
   const turnstileOk = await verifyTurnstileToken(
     parsed.data.turnstileToken,
-    getClientIp(request),
+    clientIp === "unknown" ? null : clientIp,
   );
 
   if (!turnstileOk) {

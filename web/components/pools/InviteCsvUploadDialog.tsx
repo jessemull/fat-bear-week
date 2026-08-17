@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 
 import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
+import { MAX_BULK_INVITES } from "@/lib/auth-schemas";
 import {
   formButtonPrimaryClassName,
   formButtonSecondaryClassName,
@@ -186,7 +187,7 @@ export function parseInviteCsv(text: string): ParsedInviteRow[] {
     }
   }
 
-  return [...byEmail.values()];
+  return [...byEmail.values()].slice(0, MAX_BULK_INVITES);
 }
 
 function looksLikeRtf(fileName: string, text: string): boolean {

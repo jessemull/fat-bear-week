@@ -35,11 +35,16 @@
 - Join requires a valid invite token + display name + password (with confirm) +
   Turnstile token. Invite email is copied onto the user and shown read-only.
 - Sessions via HTTP-only cookies (or equivalent); validate server-side on protected routes and mutations.
-- Invite tokens must be unguessable; prefer single-use / limited-use personal invites.
-- One unused invite per email per pool; `users.email` unique when set.
+- Sign-out revokes **only the current session cookie** (not every device).
+- Invite tokens must be unguessable; store SHA-256 hashes at rest (raw token only in email/URL).
+- One unused invite per email per pool; `users.email` unique case-insensitively when set.
 - Invite consumption is `invitations.used_at IS NOT NULL` (do not treat a null `used_by` as unused).
-- CSRF: treat cookie-session mutations carefully (SameSite cookies; validate origin/referrer or tokens when implementing mutations).
+- Changing an unused invite’s email rotates the token so the prior link cannot join.
+- CSRF: cookie-session mutations require matching Origin or Referer (SameSite=Lax cookies;
+  fail closed when both headers are missing).
 - Turnstile: verify `turnstileToken` server-side via Cloudflare siteverify before join/sign-in.
+- Rate limit join and sign-in by IP (and sign-in identifier) in addition to Turnstile.
+- `NEXT_PUBLIC_SITE_URL` is required for minting invite links (no silent production fallback).
 
 ---
 

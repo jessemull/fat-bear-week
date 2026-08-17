@@ -5,39 +5,14 @@ import {
   parseJsonBody,
 } from "@/lib/api.server";
 import { updateInviteBodySchema } from "@/lib/auth-schemas";
-import {
-  getInviteForPool,
-  updateInvite,
-} from "@/lib/invites.server";
-import { userCanManagePool } from "@/lib/pools.server";
-import { getSession } from "@/lib/sessions.server";
+import { getInviteForPool, updateInvite } from "@/lib/invites.server";
+import { requirePoolCommissioner } from "@/lib/pools.server";
 
 interface RouteContext {
   params: Promise<{
     inviteId: string;
     poolId: string;
   }>;
-}
-
-async function requirePoolCommissioner(poolId: string) {
-  const session = await getSession();
-
-  if (!session) {
-    return { error: jsonError("Not signed in.", { status: 401 }) } as const;
-  }
-
-  if (
-    !(await userCanManagePool({
-      isCommissioner: session.isCommissioner,
-      poolId,
-    }))
-  ) {
-    return {
-      error: jsonError("Commissioner access required.", { status: 403 }),
-    } as const;
-  }
-
-  return { session } as const;
 }
 
 export async function GET(_request: Request, context: RouteContext) {

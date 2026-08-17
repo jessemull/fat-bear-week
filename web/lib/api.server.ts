@@ -36,8 +36,18 @@ export function jsonError(
 /**
  * CSRF defense for cookie-session mutations: Origin/Referer host must match
  * the request host (or NEXT_PUBLIC_SITE_URL host when set).
+ *
+ * Fail closed when both Origin and Referer are missing. Vitest may send
+ * `x-fbw-test-origin-bypass: 1` when NODE_ENV=test.
  */
 export function assertSameOrigin(request: Request): boolean {
+  if (
+    process.env.NODE_ENV === "test" &&
+    request.headers.get("x-fbw-test-origin-bypass") === "1"
+  ) {
+    return true;
+  }
+
   const requestUrl = new URL(request.url);
   const allowedHosts = new Set<string>([requestUrl.host]);
 
@@ -71,9 +81,7 @@ export function assertSameOrigin(request: Request): boolean {
     }
   }
 
-  // Non-browser clients (tests, curl) may omit Origin/Referer.
-  // SameSite=Lax still protects browser cookie POSTs from other sites.
-  return true;
+  return false;
 }
 
 /**

@@ -1,9 +1,10 @@
 import "server-only";
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 
 import { getServiceSupabase } from "@/lib/supabase.server";
 
 export const DEFAULT_INVITE_TTL_MS = 1000 * 60 * 60 * 24 * 14;
+export const INVITE_MINT_CONCURRENCY = 5;
 
 export type InviteStatus = "expired" | "unused" | "used";
 
@@ -32,7 +33,7 @@ interface InvitationRow {
   name_hint: null | string;
   pool_id: string;
   pools: { id: string; name: string } | { id: string; name: string }[] | null;
-  token: string;
+  token_hash: string;
   used_at: null | string;
 }
 
@@ -52,6 +53,10 @@ function unwrapPool(
 
 export function createInviteToken(): string {
   return randomBytes(32).toString("base64url");
+}
+
+export function hashInviteToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
 }
 
 export function resolveInviteStatus(params: {
@@ -77,19 +82,53 @@ export function defaultInviteExpiresAt(now: Date = new Date()): string {
 }
 
 /**
- * Look up an invite by token for the public validate endpoint.
+ * Run async work over items with a fixed concurrency limit.
+ */
+export async function mapWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  mapper: (item: T) => Promise<R>,
+): Promise<R[]> {
+  if (items.length === 0) {
+    return [];
+  }
+
+  const results: R[] = new Array(items.length);
+  let nextIndex = 0;
+
+  async function worker() {
+    while (nextIndex < items.length) {
+      const index = nextIndex;
+      nextIndex += 1;
+      results[index] = await mapper(items[index]!);
+    }
+  }
+
+  const workers = Array.from(
+    { length: Math.min(concurrency, items.length) },
+    () => worker(),
+  );
+
+  await Promise.all(workers);
+
+  return results;
+}
+
+/**
+ * Look up an invite by raw token for the public validate / join page.
  */
 export async function getInviteByToken(
   token: string,
 ): Promise<InviteValidation | null> {
+  const tokenHash = hashInviteToken(token);
   const supabase = getServiceSupabase();
 
   const { data, error } = await supabase
     .from("invitations")
     .select(
-      "email, expires_at, id, name_hint, pool_id, token, used_at, pools ( id, name )",
+      "email, expires_at, id, name_hint, pool_id, token_hash, used_at, pools ( id, name )",
     )
-    .eq("token", token)
+    .eq("token_hash", tokenHash)
     .maybeSingle();
 
   if (error || !data) {
@@ -113,12 +152,13 @@ export async function getInviteByToken(
       expiresAt: row.expires_at,
       usedAt: row.used_at,
     }),
-    token: row.token,
+    token,
   };
 }
 
 /**
  * Create an individual invite for a pool (does not send email).
+ * Stores only token_hash; returns the raw token once for the invite URL.
  */
 export async function mintInvite(params: {
   email: string;
@@ -130,6 +170,7 @@ export async function mintInvite(params: {
   const { nameHint = null, poolId } = params;
   const expiresAt = params.expiresAt ?? defaultInviteExpiresAt();
   const token = createInviteToken();
+  const tokenHash = hashInviteToken(token);
   const supabase = getServiceSupabase();
 
   const { data: existing, error: existingError } = await supabase
@@ -155,9 +196,9 @@ export async function mintInvite(params: {
       expires_at: expiresAt,
       name_hint: nameHint,
       pool_id: poolId,
-      token,
+      token_hash: tokenHash,
     })
-    .select("email, expires_at, id, name_hint, token")
+    .select("email, expires_at, id, name_hint")
     .single();
 
   if (error || !data) {
@@ -175,7 +216,50 @@ export async function mintInvite(params: {
     expiresAt: data.expires_at as string,
     id: data.id as string,
     nameHint: (data.name_hint as null | string) ?? null,
-    token: data.token as string,
+    token,
+  };
+}
+
+/**
+ * Replace the invite token hash and return a fresh raw token (email/resend).
+ */
+export async function rotateInviteToken(params: {
+  inviteId: string;
+  poolId: string;
+}): Promise<MintedInvite | null> {
+  const { inviteId, poolId } = params;
+  const token = createInviteToken();
+  const tokenHash = hashInviteToken(token);
+  const supabase = getServiceSupabase();
+
+  const { data, error } = await supabase
+    .from("invitations")
+    .update({ token_hash: tokenHash })
+    .eq("id", inviteId)
+    .eq("pool_id", poolId)
+    .is("used_at", null)
+    .select("email, expires_at, id, name_hint, used_at")
+    .maybeSingle();
+
+  if (error || !data || !data.email) {
+    return null;
+  }
+
+  const status = resolveInviteStatus({
+    expiresAt: (data.expires_at as null | string) ?? null,
+    usedAt: (data.used_at as null | string) ?? null,
+  });
+
+  if (status !== "unused") {
+    return null;
+  }
+
+  return {
+    email: data.email as string,
+    expiresAt: data.expires_at as string,
+    id: data.id as string,
+    nameHint: (data.name_hint as null | string) ?? null,
+    token,
   };
 }
 
@@ -256,6 +340,7 @@ export async function getInviteForPool(params: {
 
 /**
  * Update invitee email / name hint for an unused invite.
+ * Rotates the token when the email changes so the prior link cannot join.
  */
 export async function updateInvite(params: {
   email: string;
@@ -294,12 +379,20 @@ export async function updateInvite(params: {
     throw new Error("email_invited");
   }
 
+  const emailChanged =
+    (existing.email ?? "").toLowerCase() !== email;
+  const patch: Record<string, unknown> = {
+    email,
+    name_hint: nameHint,
+  };
+
+  if (emailChanged) {
+    patch.token_hash = hashInviteToken(createInviteToken());
+  }
+
   const { data, error } = await supabase
     .from("invitations")
-    .update({
-      email,
-      name_hint: nameHint,
-    })
+    .update(patch)
     .eq("id", inviteId)
     .eq("pool_id", poolId)
     .select("email, expires_at, id, name_hint, used_at")
@@ -332,40 +425,17 @@ export async function updateInvite(params: {
 }
 
 /**
- * Load an unused, non-expired invite owned by a pool (for resend).
+ * Load an unused, non-expired invite and rotate its token for resend.
  */
 export async function getResendableInvite(params: {
   inviteId: string;
   poolId: string;
 }): Promise<MintedInvite | null> {
-  const { inviteId, poolId } = params;
-  const supabase = getServiceSupabase();
+  const existing = await getInviteForPool(params);
 
-  const { data, error } = await supabase
-    .from("invitations")
-    .select("email, expires_at, id, name_hint, token, used_at")
-    .eq("id", inviteId)
-    .eq("pool_id", poolId)
-    .maybeSingle();
-
-  if (error || !data) {
+  if (!existing || existing.status !== "unused" || !existing.email) {
     return null;
   }
 
-  const status = resolveInviteStatus({
-    expiresAt: (data.expires_at as null | string) ?? null,
-    usedAt: (data.used_at as null | string) ?? null,
-  });
-
-  if (status !== "unused" || !data.email) {
-    return null;
-  }
-
-  return {
-    email: data.email as string,
-    expiresAt: data.expires_at as string,
-    id: data.id as string,
-    nameHint: (data.name_hint as null | string) ?? null,
-    token: data.token as string,
-  };
+  return rotateInviteToken(params);
 }

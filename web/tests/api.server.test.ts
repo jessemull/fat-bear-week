@@ -97,8 +97,17 @@ describe("api.server", () => {
     expect("error" in parsed).toBe(true);
   });
 
-  it("should allow requests with neither Origin nor Referer", () => {
+  it("should reject requests with neither Origin nor Referer", () => {
     const request = new Request("http://localhost:3000/api/auth/sign-in", {
+      method: "POST",
+    });
+
+    expect(assertSameOrigin(request)).toBe(false);
+  });
+
+  it("should allow the test origin bypass header in NODE_ENV=test", () => {
+    const request = new Request("http://localhost:3000/api/auth/sign-in", {
+      headers: { "x-fbw-test-origin-bypass": "1" },
       method: "POST",
     });
 

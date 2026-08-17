@@ -6,6 +6,7 @@ import { getServiceSupabase } from "@/lib/supabase.server";
 
 export const SESSION_COOKIE_NAME = "fbw_session";
 export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
+export const MAX_SESSIONS_PER_USER = 10;
 
 export interface SessionUser {
   id: string;
@@ -88,6 +89,22 @@ export async function createSession(userId: string): Promise<void> {
 
   if (error) {
     throw new Error(`Failed to create session: ${error.message}`);
+  }
+
+  const { data: existingSessions, error: listError } = await supabase
+    .from("sessions")
+    .select("id, created_at")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (!listError && existingSessions && existingSessions.length > MAX_SESSIONS_PER_USER) {
+    const toDelete = existingSessions
+      .slice(MAX_SESSIONS_PER_USER)
+      .map((row) => row.id as string);
+
+    if (toDelete.length > 0) {
+      await supabase.from("sessions").delete().in("id", toDelete);
+    }
   }
 
   const cookieStore = await cookies();

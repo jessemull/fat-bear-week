@@ -26,7 +26,7 @@ describe("invites.server data access", () => {
               name_hint: "Alex",
               pool_id: "pool-1",
               pools: { id: "pool-1", name: "Friends" },
-              token: "t".repeat(32),
+              token_hash: "hashed",
               used_at: null,
             },
             error: null,
@@ -43,7 +43,7 @@ describe("invites.server data access", () => {
                 name_hint: "Alex",
                 pool_id: "pool-1",
                 pools: { id: "pool-1", name: "Friends" },
-                token: "t".repeat(32),
+                token_hash: "hashed",
                 used_at: null,
               },
               error: null,
@@ -70,7 +70,6 @@ describe("invites.server data access", () => {
                 expires_at: "2026-08-25T00:00:00.000Z",
                 id: "inv-1",
                 name_hint: "Alex",
-                token: "tok",
               },
               error: null,
             }),
@@ -96,6 +95,7 @@ describe("invites.server data access", () => {
 
     expect(invite.id).toBe("inv-1");
     expect(invite.email).toBe("a@example.com");
+    expect(invite.token.length).toBeGreaterThan(20);
   });
 
   it("should reject a duplicate unused invite email", async () => {
@@ -135,7 +135,7 @@ describe("invites.server data access", () => {
                 name_hint: "Alex",
                 pool_id: "pool-1",
                 pools: { id: "pool-1", name: "Friends" },
-                token: "t".repeat(32),
+                token_hash: "hashed",
                 used_at: null,
               },
               error: null,
@@ -194,34 +194,6 @@ describe("invites.server data access", () => {
 
   it("should return null for non-resendable invites", async () => {
     fromMock.mockReturnValue({
-      eq: () => ({
-        eq: () => ({
-          maybeSingle: () =>
-            Promise.resolve({
-              data: {
-                email: "a@example.com",
-                expires_at: null,
-                id: "inv-1",
-                name_hint: null,
-                token: "tok",
-                used_at: "2026-08-01T00:00:00.000Z",
-              },
-              error: null,
-            }),
-        }),
-        maybeSingle: () =>
-          Promise.resolve({
-            data: {
-              email: "a@example.com",
-              expires_at: null,
-              id: "inv-1",
-              name_hint: null,
-              token: "tok",
-              used_at: "2026-08-01T00:00:00.000Z",
-            },
-            error: null,
-          }),
-      }),
       select: () => ({
         eq: () => ({
           eq: () => ({
@@ -232,7 +204,6 @@ describe("invites.server data access", () => {
                   expires_at: null,
                   id: "inv-1",
                   name_hint: null,
-                  token: "tok",
                   used_at: "2026-08-01T00:00:00.000Z",
                 },
                 error: null,
@@ -252,26 +223,49 @@ describe("invites.server data access", () => {
   });
 
   it("should return resendable unused invites", async () => {
-    fromMock.mockReturnValue({
-      select: () => ({
-        eq: () => ({
+    fromMock
+      .mockReturnValueOnce({
+        select: () => ({
           eq: () => ({
-            maybeSingle: () =>
-              Promise.resolve({
-                data: {
-                  email: "a@example.com",
-                  expires_at: new Date(Date.now() + 60_000).toISOString(),
-                  id: "inv-1",
-                  name_hint: "Alex",
-                  token: "tok",
-                  used_at: null,
-                },
-                error: null,
-              }),
+            eq: () => ({
+              maybeSingle: () =>
+                Promise.resolve({
+                  data: {
+                    email: "a@example.com",
+                    expires_at: new Date(Date.now() + 60_000).toISOString(),
+                    id: "inv-1",
+                    name_hint: "Alex",
+                    used_at: null,
+                  },
+                  error: null,
+                }),
+            }),
           }),
         }),
-      }),
-    });
+      })
+      .mockReturnValueOnce({
+        update: () => ({
+          eq: () => ({
+            eq: () => ({
+              is: () => ({
+                select: () => ({
+                  maybeSingle: () =>
+                    Promise.resolve({
+                      data: {
+                        email: "a@example.com",
+                        expires_at: new Date(Date.now() + 60_000).toISOString(),
+                        id: "inv-1",
+                        name_hint: "Alex",
+                        used_at: null,
+                      },
+                      error: null,
+                    }),
+                }),
+              }),
+            }),
+          }),
+        }),
+      });
 
     const { getResendableInvite } = await import("@/lib/invites.server");
     const invite = await getResendableInvite({
@@ -279,7 +273,8 @@ describe("invites.server data access", () => {
       poolId: "pool-1",
     });
 
-    expect(invite?.token).toBe("tok");
+    expect(invite?.email).toBe("a@example.com");
+    expect(invite?.token.length).toBeGreaterThan(20);
   });
 
   it("should unwrap pool arrays from joins", async () => {
@@ -295,7 +290,7 @@ describe("invites.server data access", () => {
                 name_hint: null,
                 pool_id: "pool-1",
                 pools: [{ id: "pool-1", name: "Friends" }],
-                token: "t".repeat(32),
+                token_hash: "hashed",
                 used_at: null,
               },
               error: null,
@@ -341,7 +336,7 @@ describe("invites.server data access", () => {
                 name_hint: null,
                 pool_id: "pool-1",
                 pools: null,
-                token: "t".repeat(32),
+                token_hash: "hashed",
                 used_at: null,
               },
               error: null,

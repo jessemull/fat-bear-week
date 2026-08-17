@@ -1,5 +1,6 @@
 import "server-only";
 
+import { hashInviteToken } from "@/lib/invites.server";
 import { hashPassword } from "@/lib/passwords.server";
 import { getServiceSupabase } from "@/lib/supabase.server";
 
@@ -64,7 +65,7 @@ export async function joinWithInvite(params: {
   const { data, error } = await supabase.rpc("join_pool_with_invite", {
     p_name: params.name,
     p_password_hash: passwordHash,
-    p_token: params.token,
+    p_token_hash: hashInviteToken(params.token),
   });
 
   if (error) {

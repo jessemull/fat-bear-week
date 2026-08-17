@@ -4,6 +4,7 @@ import {
   createInviteToken,
   DEFAULT_INVITE_TTL_MS,
   defaultInviteExpiresAt,
+  hashInviteToken,
   resolveInviteStatus,
 } from "@/lib/invites.server";
 
@@ -13,6 +14,13 @@ describe("invites.server", () => {
 
     expect(token.length).toBeGreaterThanOrEqual(40);
     expect(token).toMatch(/^[A-Za-z0-9_-]+$/);
+  });
+
+  it("should hash invite tokens stably", () => {
+    const token = "t".repeat(32);
+
+    expect(hashInviteToken(token)).toMatch(/^[a-f0-9]{64}$/);
+    expect(hashInviteToken(token)).toBe(hashInviteToken(token));
   });
 
   it("should treat used_at as consumed even when not expired", () => {

@@ -48,6 +48,14 @@ describe("auth.server join/sign-in helpers", () => {
       userId: "u1",
       userName: "Otis",
     });
+    expect(rpcMock).toHaveBeenCalledWith(
+      "join_pool_with_invite",
+      expect.objectContaining({
+        p_name: "Otis",
+        p_password_hash: "scrypt$hashed",
+        p_token_hash: expect.any(String),
+      }),
+    );
   });
 
   it("should map RPC error codes", async () => {

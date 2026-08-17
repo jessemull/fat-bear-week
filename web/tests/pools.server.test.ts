@@ -75,28 +75,25 @@ describe("pools.server", () => {
   });
 
   it("should list member pools and mark commissioner role", async () => {
+    let entriesCalls = 0;
+
     fromMock.mockImplementation((table: string) => {
       if (table === "entries") {
-        return {
-          select: (_cols: string, opts?: { count?: string; head?: boolean }) => {
-            if (opts?.head) {
-              return {
-                eq: () =>
-                  Promise.resolve({
-                    count: 2,
-                    error: null,
-                  }),
-              };
-            }
+        entriesCalls += 1;
 
-            return {
-              eq: () =>
-                Promise.resolve({
-                  data: [{ pool_id: "pool-1" }],
-                  error: null,
-                }),
-            };
-          },
+        return {
+          select: () => ({
+            eq: () =>
+              Promise.resolve({
+                data: [{ pool_id: "pool-1" }],
+                error: null,
+              }),
+            in: () =>
+              Promise.resolve({
+                data: [{ pool_id: "pool-1" }, { pool_id: "pool-1" }],
+                error: null,
+              }),
+          }),
         };
       }
 
@@ -132,6 +129,7 @@ describe("pools.server", () => {
     expect(result).toHaveLength(1);
     expect(result[0]?.role).toBe("commissioner");
     expect(result[0]?.entryCount).toBe(2);
+    expect(entriesCalls).toBeGreaterThanOrEqual(1);
   });
 
   it("should allow commissioner manage checks", async () => {

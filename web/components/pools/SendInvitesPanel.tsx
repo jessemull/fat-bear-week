@@ -17,7 +17,9 @@ import {
   InviteCsvUploadDialog,
   type ParsedInviteRow,
 } from "@/components/pools/InviteCsvUploadDialog";
+import { InviteLinkFallback } from "@/components/pools/InviteLinkFallback";
 import { useToast } from "@/components/Toast";
+import { MAX_BULK_INVITES } from "@/lib/auth-schemas";
 import {
   formActionsClassName,
   formButtonPrimaryClassName,
@@ -50,6 +52,7 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
   const listRef = useRef<HTMLDivElement>(null);
   const nextRowId = useRef(1);
   const [error, setError] = useState<null | string>(null);
+  const [failedInviteUrls, setFailedInviteUrls] = useState<string[]>([]);
   const [pending, setPending] = useState(false);
   const [rows, setRows] = useState<InviteRow[]>([INITIAL_ROW]);
   const [uploadKey, setUploadKey] = useState(0);
@@ -127,6 +130,7 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
     invites: { email: string; nameHint: null | string }[],
   ) {
     setError(null);
+    setFailedInviteUrls([]);
     setPending(true);
 
     try {
@@ -144,6 +148,7 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
             emailSent?: boolean;
             error?: string;
             inviteId?: string;
+            inviteUrl?: string;
           }[];
         };
         error?: string;
@@ -184,6 +189,11 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
         }
 
         toast(parts.join(" "), "error");
+        setFailedInviteUrls(
+          sendFailures
+            .map((result) => result.inviteUrl)
+            .filter((url): url is string => Boolean(url)),
+        );
         setRows(
           createFailures.length > 0
             ? createFailures.map((result) => {
@@ -201,6 +211,7 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
         return;
       }
 
+      setFailedInviteUrls([]);
       toast(
         json.data.created === 1
           ? "Invite sent."
@@ -236,6 +247,11 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
 
     if (uniqueInvites.length === 0) {
       setError("Enter at least one email address.");
+      return;
+    }
+
+    if (uniqueInvites.length > MAX_BULK_INVITES) {
+      setError(`You can send at most ${MAX_BULK_INVITES} invites at once.`);
       return;
     }
 
@@ -379,6 +395,13 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
           <p className={formErrorClassName} role="alert">
             {error}
           </p>
+        ) : null}
+        {failedInviteUrls.length > 0 ? (
+          <div className="flex flex-col gap-3">
+            {failedInviteUrls.map((inviteUrl) => (
+              <InviteLinkFallback key={inviteUrl} inviteUrl={inviteUrl} />
+            ))}
+          </div>
         ) : null}
         <div className={formActionsClassName} ref={actionsRef}>
           <button

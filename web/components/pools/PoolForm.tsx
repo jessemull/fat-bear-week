@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useState } from "react";
 
 import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
 import { FormSelect } from "@/components/FormSelect";
@@ -17,24 +17,34 @@ import {
 } from "@/lib/form-styles";
 import { formatTournamentStatus } from "@/lib/tournament-types";
 
+export interface PoolFormTournamentOption {
+  id: string;
+  status: string;
+  year: number;
+}
+
 export interface PoolFormValues {
   bracketDeadline: null | string;
   id: string;
   maxPlayers: number;
   name: string;
+  scoringSystem: string;
+  showBracketsBeforeLock: boolean;
   tournamentId: string;
 }
 
 interface PoolFormProps {
   mode: "create" | "edit";
   pool?: PoolFormValues;
+  tournaments: PoolFormTournamentOption[];
 }
 
-interface TournamentOption {
-  id: string;
-  status: string;
-  year: number;
-}
+const SCORING_OPTIONS = [
+  {
+    label: "Standard (1 / 2 / 4 / 8)",
+    value: "standard_1_2_4_8",
+  },
+];
 
 function toDatetimeLocalValue(iso: null | string): string {
   if (!iso) {
@@ -52,69 +62,27 @@ function toDatetimeLocalValue(iso: null | string): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-export function PoolForm({ mode, pool }: PoolFormProps) {
+export function PoolForm({ mode, pool, tournaments }: PoolFormProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [bracketDeadline, setBracketDeadline] = useState(
     toDatetimeLocalValue(pool?.bracketDeadline ?? null),
   );
   const [error, setError] = useState<null | string>(null);
-  const [loadError, setLoadError] = useState<null | string>(null);
   const [maxPlayers, setMaxPlayers] = useState(
     String(pool?.maxPlayers ?? 100),
   );
   const [name, setName] = useState(pool?.name ?? "");
   const [pending, setPending] = useState(false);
-  const [tournamentId, setTournamentId] = useState(pool?.tournamentId ?? "");
-  const [tournaments, setTournaments] = useState<TournamentOption[]>([]);
-  const [tournamentsLoading, setTournamentsLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadTournaments() {
-      try {
-        const response = await fetch("/api/admin/tournaments");
-        const json = (await response.json()) as {
-          data?: { tournaments: TournamentOption[] };
-          error?: string;
-        };
-
-        if (!response.ok || !json.data) {
-          if (!cancelled) {
-            setLoadError(json.error ?? "Unable to load tournaments.");
-          }
-
-          return;
-        }
-
-        if (!cancelled) {
-          setTournaments(json.data.tournaments);
-          setTournamentId((current) => {
-            if (current) {
-              return current;
-            }
-
-            return json.data?.tournaments[0]?.id ?? "";
-          });
-        }
-      } catch {
-        if (!cancelled) {
-          setLoadError("Unable to load tournaments right now.");
-        }
-      } finally {
-        if (!cancelled) {
-          setTournamentsLoading(false);
-        }
-      }
-    }
-
-    void loadTournaments();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const [scoringSystem, setScoringSystem] = useState(
+    pool?.scoringSystem ?? "standard_1_2_4_8",
+  );
+  const [showBracketsBeforeLock, setShowBracketsBeforeLock] = useState(
+    pool?.showBracketsBeforeLock ?? false,
+  );
+  const [tournamentId, setTournamentId] = useState(
+    pool?.tournamentId ?? tournaments[0]?.id ?? "",
+  );
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -131,6 +99,11 @@ export function PoolForm({ mode, pool }: PoolFormProps) {
       return;
     }
 
+    if (!tournamentId) {
+      setError("Select a tournament.");
+      return;
+    }
+
     setPending(true);
 
     const body = {
@@ -139,6 +112,8 @@ export function PoolForm({ mode, pool }: PoolFormProps) {
         : null,
       maxPlayers: parsedMaxPlayers,
       name: name.trim(),
+      scoringSystem,
+      showBracketsBeforeLock,
       tournamentId,
     };
 
@@ -199,9 +174,8 @@ export function PoolForm({ mode, pool }: PoolFormProps) {
     }
   }
 
-  const tournamentOptions = tournamentsLoading
-    ? [{ label: "Loading tournaments…", value: "" }]
-    : tournaments.length === 0
+  const tournamentOptions =
+    tournaments.length === 0
       ? [{ label: "No tournaments available", value: "" }]
       : tournaments.map((tournament) => ({
           label: `${tournament.year} (${formatTournamentStatus(tournament.status)})`,
@@ -215,6 +189,10 @@ export function PoolForm({ mode, pool }: PoolFormProps) {
     mode === "create" ? "pool-max-players" : "edit-pool-max-players";
   const deadlineId =
     mode === "create" ? "pool-deadline" : "edit-pool-deadline";
+  const scoringId =
+    mode === "create" ? "pool-scoring" : "edit-pool-scoring";
+  const showBracketsId =
+    mode === "create" ? "pool-show-brackets" : "edit-pool-show-brackets";
 
   return (
     <form className="flex w-full max-w-lg flex-col gap-4" onSubmit={onSubmit}>
@@ -237,19 +215,14 @@ export function PoolForm({ mode, pool }: PoolFormProps) {
           Tournament
         </label>
         <FormSelect
-          disabled={pending || tournamentsLoading || tournaments.length === 0}
+          disabled={pending || tournaments.length === 0}
           id={tournamentFieldId}
           label="Tournament"
           options={tournamentOptions}
-          value={tournamentsLoading ? "" : tournamentId}
+          value={tournamentId}
           onChange={setTournamentId}
         />
-        {loadError ? (
-          <p className={formErrorClassName} role="alert">
-            {loadError}
-          </p>
-        ) : null}
-        {!loadError && !tournamentsLoading && tournaments.length === 0 ? (
+        {tournaments.length === 0 ? (
           <p className={`text-sm ${formMutedClassName}`} role="status">
             Create a tournament in admin before creating a pool.
           </p>
@@ -270,6 +243,35 @@ export function PoolForm({ mode, pool }: PoolFormProps) {
           type="number"
           value={maxPlayers}
           onChange={(event) => setMaxPlayers(event.target.value)}
+        />
+      </div>
+      <div className="flex flex-col gap-2">
+        <label className={formLabelClassName} htmlFor={scoringId}>
+          Scoring system
+        </label>
+        <FormSelect
+          disabled={pending}
+          id={scoringId}
+          label="Scoring system"
+          options={SCORING_OPTIONS}
+          value={scoringSystem}
+          onChange={setScoringSystem}
+        />
+      </div>
+      <div className="flex flex-col gap-2">
+        <label className={formLabelClassName} htmlFor={showBracketsId}>
+          Bracket visibility
+        </label>
+        <FormSelect
+          disabled={pending}
+          id={showBracketsId}
+          label="Bracket visibility"
+          options={[
+            { label: "Hide brackets until lock", value: "hide" },
+            { label: "Show brackets before lock", value: "show" },
+          ]}
+          value={showBracketsBeforeLock ? "show" : "hide"}
+          onChange={(value) => setShowBracketsBeforeLock(value === "show")}
         />
       </div>
       <div className="flex flex-col gap-2">

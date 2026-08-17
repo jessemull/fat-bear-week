@@ -10,6 +10,7 @@ import {
 } from "@/lib/form-styles";
 import { getPool, userCanManagePool } from "@/lib/pools.server";
 import { getSession } from "@/lib/sessions.server";
+import { listTournaments } from "@/lib/tournament.server";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,8 @@ export default async function AdminPoolPage({ params }: AdminPoolPageProps) {
     notFound();
   }
 
+  const tournaments = await listTournaments();
+
   return (
     <div className="flex flex-col gap-4">
       <AdminPageHeader
@@ -52,7 +55,7 @@ export default async function AdminPoolPage({ params }: AdminPoolPageProps) {
         <section className="flex flex-col gap-2">
           <h2 className={`text-xl ${formHeadingClassName}`}>Settings</h2>
           <p className={`text-sm ${formMutedClassName}`}>
-            Name, tournament year, capacity, and bracket deadline.
+            Name, tournament year, capacity, scoring, and bracket deadline.
           </p>
           <div className="mt-2">
             <PoolForm
@@ -62,8 +65,15 @@ export default async function AdminPoolPage({ params }: AdminPoolPageProps) {
                 id: pool.id,
                 maxPlayers: pool.maxPlayers,
                 name: pool.name,
+                scoringSystem: pool.scoringSystem,
+                showBracketsBeforeLock: pool.showBracketsBeforeLock,
                 tournamentId: pool.tournamentId,
               }}
+              tournaments={tournaments.map((tournament) => ({
+                id: tournament.id,
+                status: tournament.status,
+                year: tournament.year,
+              }))}
             />
           </div>
         </section>

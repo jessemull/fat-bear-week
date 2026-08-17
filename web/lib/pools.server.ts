@@ -1,5 +1,9 @@
 import "server-only";
 
+import type { NextResponse } from "next/server";
+
+import { jsonError } from "@/lib/api.server";
+import { getSession, type SessionUser } from "@/lib/sessions.server";
 import { getServiceSupabase } from "@/lib/supabase.server";
 
 export interface CreatePoolInput {
@@ -180,23 +184,33 @@ export async function listPoolsForUser(params: {
     throw new Error(`Failed to list pools: ${poolsError.message}`);
   }
 
-  const summaries: PoolSummary[] = [];
+  const poolIds = (pools ?? []).map((pool) => pool.id as string);
+  const entryCounts = new Map<string, number>();
 
-  for (const pool of pools ?? []) {
-    const poolId = pool.id as string;
-
-    const { count, error: countError } = await supabase
+  if (poolIds.length > 0) {
+    const { data: entryRows, error: countError } = await supabase
       .from("entries")
-      .select("id", { count: "exact", head: true })
-      .eq("pool_id", poolId);
+      .select("pool_id")
+      .in("pool_id", poolIds);
 
     if (countError) {
       throw new Error(`Failed to count entries: ${countError.message}`);
     }
 
+    for (const row of entryRows ?? []) {
+      const poolId = row.pool_id as string;
+      entryCounts.set(poolId, (entryCounts.get(poolId) ?? 0) + 1);
+    }
+  }
+
+  const summaries: PoolSummary[] = [];
+
+  for (const pool of pools ?? []) {
+    const poolId = pool.id as string;
+
     summaries.push({
       bracketDeadline: (pool.bracket_deadline as null | string) ?? null,
-      entryCount: count ?? 0,
+      entryCount: entryCounts.get(poolId) ?? 0,
       id: poolId,
       maxPlayers: pool.max_players as number,
       name: pool.name as string,
@@ -208,6 +222,32 @@ export async function listPoolsForUser(params: {
   }
 
   return summaries;
+}
+
+export interface PoolNavItem {
+  id: string;
+  name: string;
+}
+
+/**
+ * Lightweight pool list for admin sidebar (no per-pool entry counts).
+ */
+export async function listPoolsForSidebar(): Promise<PoolNavItem[]> {
+  const supabase = getServiceSupabase();
+
+  const { data, error } = await supabase
+    .from("pools")
+    .select("id, name")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(`Failed to list pools: ${error.message}`);
+  }
+
+  return (data ?? []).map((pool) => ({
+    id: pool.id as string,
+    name: pool.name as string,
+  }));
 }
 
 /**
@@ -282,4 +322,30 @@ export async function userCanManagePool(params: {
   }
 
   return true;
+}
+
+/**
+ * Require a signed-in commissioner who can manage the given pool.
+ */
+export async function requirePoolCommissioner(
+  poolId: string,
+): Promise<{ error: NextResponse } | { session: SessionUser }> {
+  const session = await getSession();
+
+  if (!session) {
+    return { error: jsonError("Not signed in.", { status: 401 }) };
+  }
+
+  if (
+    !(await userCanManagePool({
+      isCommissioner: session.isCommissioner,
+      poolId,
+    }))
+  ) {
+    return {
+      error: jsonError("Commissioner access required.", { status: 403 }),
+    };
+  }
+
+  return { session };
 }

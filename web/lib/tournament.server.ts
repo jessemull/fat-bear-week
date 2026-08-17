@@ -1,20 +1,14 @@
 import "server-only";
 
-import type { TournamentStatus } from "@/lib/tournament-types";
+import type { TournamentRecord, TournamentStatus } from "@/lib/tournament-types";
 
 import { getServiceSupabase } from "@/lib/supabase.server";
+
+export type { TournamentRecord } from "@/lib/tournament-types";
 
 export interface CreateTournamentInput {
   endsAt?: null | string;
   startsAt?: null | string;
-  year: number;
-}
-
-export interface TournamentRecord {
-  endsAt: null | string;
-  id: string;
-  startsAt: null | string;
-  status: TournamentStatus;
   year: number;
 }
 

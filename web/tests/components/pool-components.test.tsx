@@ -85,7 +85,7 @@ describe("pool components", () => {
     vi.stubGlobal("fetch", fetchMock);
     push.mockClear();
 
-    const { rerender } = renderWithToast(<CreatePoolForm />);
+    const { rerender } = renderWithToast(<CreatePoolForm tournaments={[{ id: tournamentId, status: "draft", year: 2026 }]} />);
 
     await waitFor(() => {
       expect(screen.getByLabelText("Tournament")).toHaveTextContent("2026");
@@ -227,6 +227,58 @@ describe("pool components", () => {
     expect(screen.getByRole("status")).toHaveTextContent("Invite saved.");
   });
 
+  it("should show InviteForm API errors", async () => {
+    const user = userEvent.setup();
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        json: async () => ({ error: "Unable to save invite." }),
+        ok: false,
+      }),
+    );
+
+    renderWithToast(
+      <InviteForm
+        invite={{
+          email: "a@example.com",
+          id: "inv-1",
+          nameHint: "Alex",
+          status: "unused",
+        }}
+        poolId="pool-1"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Save Invite" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Unable to save invite.");
+  });
+
+  it("should show InviteForm network errors", async () => {
+    const user = userEvent.setup();
+
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
+
+    renderWithToast(
+      <InviteForm
+        invite={{
+          email: "a@example.com",
+          id: "inv-1",
+          nameHint: "Alex",
+          status: "unused",
+        }}
+        poolId="pool-1"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Save Invite" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Unable to save invite right now.",
+    );
+  });
+
   it("should resend an invite from the header button", async () => {
     const user = userEvent.setup();
 
@@ -253,7 +305,12 @@ describe("pool components", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
-        json: async () => ({ data: { emailSent: false } }),
+        json: async () => ({
+          data: {
+            emailSent: false,
+            inviteUrl: "http://localhost:3000/invite/abc",
+          },
+        }),
         ok: true,
       }),
     );
@@ -264,9 +321,10 @@ describe("pool components", () => {
 
     await user.click(screen.getByRole("button", { name: "Resend Invite" }));
 
-    expect(screen.getByRole("status")).toHaveTextContent(
-      /email could not be sent/i,
+    expect(screen.getByLabelText("Invite link")).toHaveValue(
+      "http://localhost:3000/invite/abc",
     );
+    expect(screen.getAllByRole("status").length).toBeGreaterThan(0);
   });
 
   it("should show an error for an empty CSV", async () => {
@@ -488,7 +546,7 @@ describe("pool components", () => {
   it("should render CreatePoolForm without a11y violations", async () => {
     vi.stubGlobal("fetch", mockFetchWithTournaments());
 
-    const { container } = renderWithToast(<CreatePoolForm />);
+    const { container } = renderWithToast(<CreatePoolForm tournaments={[{ id: tournamentId, status: "draft", year: 2026 }]} />);
 
     await waitFor(() => {
       expect(screen.getByLabelText("Tournament")).toHaveTextContent("2026");
@@ -602,7 +660,7 @@ describe("pool components", () => {
       }),
     );
 
-    renderWithToast(<CreatePoolForm />);
+    renderWithToast(<CreatePoolForm tournaments={[{ id: tournamentId, status: "draft", year: 2026 }]} />);
 
     await waitFor(() => {
       expect(screen.getByLabelText("Tournament")).toHaveTextContent("2026");
@@ -614,38 +672,12 @@ describe("pool components", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("Unknown tournament.");
   });
 
-  it("should show tournament load errors", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({
-        json: async () => ({ error: "Forbidden." }),
-        ok: false,
-      }),
-    );
-
-    renderWithToast(<CreatePoolForm />);
-
-    await waitFor(() => {
-      expect(screen.getByRole("alert")).toHaveTextContent("Forbidden.");
-    });
-  });
-
   it("should show empty tournament status", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({
-        json: async () => ({ data: { tournaments: [] } }),
-        ok: true,
-      }),
+    renderWithToast(<CreatePoolForm tournaments={[]} />);
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Create a tournament in admin",
     );
-
-    renderWithToast(<CreatePoolForm />);
-
-    await waitFor(() => {
-      expect(screen.getByRole("status")).toHaveTextContent(
-        "Create a tournament in admin",
-      );
-    });
   });
 
   it("should submit with an optional bracket deadline", async () => {
@@ -654,7 +686,7 @@ describe("pool components", () => {
 
     vi.stubGlobal("fetch", fetchMock);
 
-    renderWithToast(<CreatePoolForm />);
+    renderWithToast(<CreatePoolForm tournaments={[{ id: tournamentId, status: "draft", year: 2026 }]} />);
 
     await waitFor(() => {
       expect(screen.getByLabelText("Tournament")).toHaveTextContent("2026");
@@ -793,8 +825,11 @@ describe("pool components", () => {
           id: "pool-1",
           maxPlayers: 50,
           name: "Friends",
+          scoringSystem: "standard_1_2_4_8",
+          showBracketsBeforeLock: false,
           tournamentId: tournamentId,
         }}
+        tournaments={[{ id: tournamentId, status: "draft", year: 2026 }]}
       />,
     );
 

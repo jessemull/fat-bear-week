@@ -21,7 +21,6 @@ export async function GET(_request: Request, context: RouteContext) {
   }
 
   return jsonData({
-    email: invite.email,
     expiresAt: invite.expiresAt,
     nameHint: invite.nameHint,
     poolName: invite.poolName,

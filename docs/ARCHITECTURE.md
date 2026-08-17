@@ -57,6 +57,11 @@ Browser → Vercel (Next.js App Router + API)
 - Invite/session checks before mutations
 - Generic tournament model (rounds/matchups), not hardcoded field size
 
+### Legacy `/pools` paths
+
+Commissioner pool management lives under `/admin/pools`. Thin redirects remain at
+`/pools` and `/pools/[poolId]/invites` for old bookmarks; prefer admin URLs in new links.
+
 ---
 
 ## Fail signals
