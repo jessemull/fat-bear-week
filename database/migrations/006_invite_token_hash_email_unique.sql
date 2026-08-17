@@ -37,6 +37,10 @@ CREATE UNIQUE INDEX users_email_lower_unique
 -- ---------------------------------------------------------------------------
 -- join_pool_with_invite looks up token_hash (app passes SHA-256 hex)
 -- ---------------------------------------------------------------------------
+-- Postgres forbids renaming input params via CREATE OR REPLACE (002 used
+-- p_token). Drop the old (TEXT, TEXT, TEXT) signature first.
+
+DROP FUNCTION IF EXISTS join_pool_with_invite(TEXT, TEXT, TEXT);
 
 CREATE OR REPLACE FUNCTION join_pool_with_invite(
   p_name TEXT,
@@ -149,6 +153,3 @@ $$;
 
 REVOKE ALL ON FUNCTION join_pool_with_invite(TEXT, TEXT, TEXT) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION join_pool_with_invite(TEXT, TEXT, TEXT) TO service_role;
-
--- Drop old overload signature if Postgres kept both (p_token vs p_token_hash names
--- share the same (TEXT, TEXT, TEXT) signature — REPLACE handles it).
