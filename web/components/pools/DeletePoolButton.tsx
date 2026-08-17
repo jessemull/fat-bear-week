@@ -49,7 +49,7 @@ export function DeletePoolButton({ name, poolId }: DeletePoolButtonProps) {
   }
 
   return (
-    <div className="flex w-fit flex-col gap-2">
+    <div className="flex w-fit flex-col gap-3">
       <button
         className={formButtonDangerClassName}
         disabled={pending}
