@@ -6,6 +6,7 @@ import { getServiceSupabase } from "@/lib/supabase.server";
 
 export type JoinWithInviteErrorCode =
   | "already_in_pool"
+  | "email_mismatch"
   | "email_taken"
   | "invalid_credentials"
   | "invalid_invite"
@@ -31,6 +32,7 @@ interface JoinRpcRow {
 
 const JOIN_ERROR_CODES = new Set<JoinWithInviteErrorCode>([
   "already_in_pool",
+  "email_mismatch",
   "email_taken",
   "invalid_credentials",
   "invalid_invite",
@@ -129,6 +131,10 @@ export async function joinWithInvite(params: {
     }
   }
 
+  if (params.name.includes("@")) {
+    throw new Error("invalid_name");
+  }
+
   const passwordHash = await hashPassword(params.password);
 
   const { data, error } = await supabase.rpc("join_pool_with_invite", {
@@ -184,7 +190,7 @@ export async function findUserByName(name: string): Promise<{
 
 /**
  * Find a user by email (case-insensitive) or display name for sign-in.
- * Identifiers with `@` try email first, then fall through to display name.
+ * Identifiers with `@` try email first (exact lowercased match), then name.
  */
 export async function findUserByLoginIdentifier(identifier: string): Promise<{
   id: string;
@@ -203,10 +209,14 @@ export async function findUserByLoginIdentifier(identifier: string): Promise<{
     const { data, error } = await supabase
       .from("users")
       .select("id, name, password_hash, email")
-      .ilike("email", trimmed.toLowerCase())
+      .eq("email", trimmed.toLowerCase())
       .maybeSingle();
 
-    if (!error && data?.email) {
+    if (error) {
+      return null;
+    }
+
+    if (data?.email) {
       return {
         id: data.id as string,
         name: data.name as string,

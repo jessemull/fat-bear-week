@@ -49,6 +49,11 @@ export function JoinForm({
       return;
     }
 
+    if (!existingAccount && name.includes("@")) {
+      setError("Display names cannot include @.");
+      return;
+    }
+
     if (!turnstileToken) {
       setError("Complete the bot check before joining.");
       return;

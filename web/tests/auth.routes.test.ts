@@ -6,7 +6,7 @@ const getClientIp = vi.fn();
 const joinWithInvite = vi.fn();
 const findUserByLoginIdentifier = vi.fn();
 const createSession = vi.fn();
-const revokeSession = vi.fn();
+const clearSessionCookie = vi.fn();
 const verifyPassword = vi.fn();
 const hashPassword = vi.fn();
 
@@ -37,8 +37,8 @@ vi.mock("@/lib/auth.server", () => ({
 }));
 
 vi.mock("@/lib/sessions.server", () => ({
+  clearSessionCookie: (...args: unknown[]) => clearSessionCookie(...args),
   createSession: (...args: unknown[]) => createSession(...args),
-  revokeSession: (...args: unknown[]) => revokeSession(...args),
 }));
 
 vi.mock("@/lib/passwords.server", () => ({
@@ -63,13 +63,13 @@ describe("auth route rate limits", () => {
     joinWithInvite.mockReset();
     findUserByLoginIdentifier.mockReset();
     createSession.mockReset();
-    revokeSession.mockReset();
+    clearSessionCookie.mockReset();
     verifyPassword.mockReset();
     hashPassword.mockReset();
     getClientIp.mockReturnValue("127.0.0.1");
     hashPassword.mockResolvedValue("scrypt$dummy");
     verifyTurnstileToken.mockResolvedValue(true);
-    revokeSession.mockResolvedValue(undefined);
+    clearSessionCookie.mockResolvedValue(undefined);
   });
 
   it("should return 429 when join IP rate limit denies", async () => {
@@ -173,7 +173,7 @@ describe("auth route rate limits", () => {
     );
 
     expect(response.status).toBe(201);
-    expect(revokeSession).toHaveBeenCalled();
+    expect(clearSessionCookie).toHaveBeenCalled();
     await expect(response.json()).resolves.toEqual({
       data: {
         entryId: "e1",

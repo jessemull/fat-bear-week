@@ -292,7 +292,7 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
             Upload
           </button>
         }
-        description="Add one or more people. Each person gets their own invite link."
+        description="Add one or more people. Each person gets their own invite link. Large lists (up to 100) may take up to about a minute to send."
         title="Send Invites"
       />
       <form className="flex w-full flex-col gap-4" onSubmit={onSubmit}>

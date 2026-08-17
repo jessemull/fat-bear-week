@@ -22,8 +22,8 @@ describe("auth-schemas", () => {
     expect(parsed.name).toBe("Otis");
   });
 
-  it("should reject display names that include @", () => {
-    const result = joinBodySchema.safeParse({
+  it("should allow @ in join name at the schema layer", () => {
+    const parsed = joinBodySchema.parse({
       name: "otis@friends",
       password: "password1",
       passwordConfirm: "password1",
@@ -31,7 +31,7 @@ describe("auth-schemas", () => {
       turnstileToken: "turnstile-ok",
     });
 
-    expect(result.success).toBe(false);
+    expect(parsed.name).toBe("otis@friends");
   });
 
   it("should reject short passwords on join", () => {

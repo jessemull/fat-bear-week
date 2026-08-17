@@ -132,6 +132,23 @@ describe("sessions.server cookie flow", () => {
     );
   });
 
+  it("should clear the session cookie without deleting sessions", async () => {
+    cookieStore.get.mockReturnValue({ value: "raw-token-value" });
+
+    const { clearSessionCookie, SESSION_COOKIE_NAME } = await import(
+      "@/lib/sessions.server"
+    );
+
+    await clearSessionCookie();
+
+    expect(fromMock).not.toHaveBeenCalled();
+    expect(cookieStore.set).toHaveBeenCalledWith(
+      SESSION_COOKIE_NAME,
+      "",
+      expect.objectContaining({ maxAge: 0 }),
+    );
+  });
+
   it("should clear expired sessions", async () => {
     cookieStore.get.mockReturnValue({ value: "raw-token-value" });
     fromMock.mockReturnValue({

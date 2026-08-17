@@ -7,7 +7,7 @@ import {
 import { joinBodySchema } from "@/lib/auth-schemas";
 import { joinWithInvite, parseJoinErrorMessage } from "@/lib/auth.server";
 import { consumeRateLimit } from "@/lib/rate-limit.server";
-import { createSession, revokeSession } from "@/lib/sessions.server";
+import { clearSessionCookie, createSession } from "@/lib/sessions.server";
 import { getClientIp, verifyTurnstileToken } from "@/lib/turnstile.server";
 
 const JOIN_LIMIT = 10;
@@ -59,9 +59,12 @@ export async function POST(request: Request) {
       console.error("join createSession failed", sessionError);
 
       try {
-        await revokeSession();
-      } catch (revokeError) {
-        console.error("join revokeSession after createSession failure", revokeError);
+        await clearSessionCookie();
+      } catch (cookieError) {
+        console.error(
+          "join clearSessionCookie after createSession failure",
+          cookieError,
+        );
       }
 
       return jsonData(
@@ -104,6 +107,12 @@ export async function POST(request: Request) {
 
     if (code === "invalid_credentials") {
       return jsonError("Incorrect password for this account.", { status: 401 });
+    }
+
+    if (code === "email_mismatch") {
+      return jsonError("This invite does not match that account.", {
+        status: 400,
+      });
     }
 
     if (code === "name_taken") {

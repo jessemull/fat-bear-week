@@ -45,6 +45,7 @@ features in phases below; check items off as they ship.
 - [x] Sign in / sign out for returning participants
 - [x] Enforce one bracket (entry) per person per pool
 - [x] Cap at `max_players`
+- [x] Multiple pools per person (invite-based join for an existing account)
 - [ ] Forgot password / reset via email (Resend + single-use token;
       Turnstile on request + reset forms)
 - [ ] Account settings / profile page (`/settings` or `/profile`): display
@@ -175,7 +176,6 @@ Prefer admin entry first. Investigate automation later:
 
 - [ ] ~~Public registration / open pool directory~~
 - [ ] ~~Multiple brackets per person~~
-- [x] Multiple pools per person (invite-based join for an existing account)
 - [ ] ~~Payments / entry fees~~
 - [ ] ~~Advertising~~
 - [ ] ~~Comments / chat / message boards~~

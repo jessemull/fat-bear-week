@@ -157,20 +157,18 @@ describe("auth forms", () => {
   it("should join with an existing account using current password", async () => {
     const user = userEvent.setup();
     const onBotCheckReset = vi.fn();
+    const fetchMock = vi.fn().mockResolvedValue({
+      json: async () => ({ error: "Incorrect password for this account." }),
+      ok: false,
+    });
 
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue({
-        json: async () => ({ error: "Incorrect password for this account." }),
-        ok: false,
-      }),
-    );
+    vi.stubGlobal("fetch", fetchMock);
 
     renderWithToast(
       <JoinForm
         email="otis@example.com"
         existingAccount
-        existingName="Otis"
+        existingName="otis@friends"
         token={"t".repeat(32)}
         turnstileToken="test-turnstile-token"
         onBotCheckReset={onBotCheckReset}
@@ -178,6 +176,7 @@ describe("auth forms", () => {
     );
 
     expect(screen.getByLabelText("Display name")).toHaveAttribute("readonly");
+    expect(screen.getByLabelText("Display name")).toHaveValue("otis@friends");
     expect(screen.queryByLabelText("Confirm password")).toBeNull();
     expect(
       screen.getByText(/existing display name will be used/i),
@@ -186,10 +185,44 @@ describe("auth forms", () => {
     await user.type(screen.getByLabelText("Password"), "password1");
     await user.click(screen.getByRole("button", { name: "Join pool" }));
 
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/auth/join",
+      expect.objectContaining({
+        body: expect.stringContaining('"passwordConfirm":"password1"'),
+        method: "POST",
+      }),
+    );
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body as string)).toMatchObject({
+      name: "otis@friends",
+      password: "password1",
+      passwordConfirm: "password1",
+    });
     expect(screen.getByRole("alert")).toHaveTextContent(
       "Incorrect password for this account.",
     );
     expect(onBotCheckReset).toHaveBeenCalled();
+  });
+
+  it("should reject @ in display names for new joins", async () => {
+    const user = userEvent.setup();
+
+    renderWithToast(
+      <JoinForm
+        email="otis@example.com"
+        token={"t".repeat(32)}
+        turnstileToken="test-turnstile-token"
+      />,
+    );
+
+    await user.type(screen.getByLabelText("Display name"), "otis@friends");
+    await user.type(screen.getByLabelText("Password"), "password1");
+    await user.type(screen.getByLabelText("Confirm password"), "password1");
+    await user.click(screen.getByRole("button", { name: "Join pool" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Display names cannot include @.",
+    );
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it("should reset Turnstile from JoinPanel after a failed submit", async () => {

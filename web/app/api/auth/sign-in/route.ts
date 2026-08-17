@@ -79,7 +79,13 @@ export async function POST(request: Request) {
     return jsonError("Invalid name, email, or password.", { status: 401 });
   }
 
-  await createSession(user.id);
+  try {
+    await createSession(user.id);
+  } catch (sessionError) {
+    console.error("sign-in createSession failed", sessionError);
+
+    return jsonError("Unable to sign in right now.", { status: 500 });
+  }
 
   return jsonData({
     userId: user.id,

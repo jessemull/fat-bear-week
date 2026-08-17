@@ -89,7 +89,7 @@ describe("auth.server join/sign-in helpers", () => {
     verifyPassword.mockResolvedValue(true);
     fromMock.mockImplementationOnce(() => ({
       select: () => ({
-        ilike: () => ({
+        eq: () => ({
           maybeSingle: () =>
             Promise.resolve({
               data: {
@@ -140,7 +140,7 @@ describe("auth.server join/sign-in helpers", () => {
     verifyPassword.mockResolvedValue(false);
     fromMock.mockImplementationOnce(() => ({
       select: () => ({
-        ilike: () => ({
+        eq: () => ({
           maybeSingle: () =>
             Promise.resolve({
               data: {
@@ -172,7 +172,7 @@ describe("auth.server join/sign-in helpers", () => {
     verifyPassword.mockResolvedValue(true);
     fromMock.mockImplementationOnce(() => ({
       select: () => ({
-        ilike: () => ({
+        eq: () => ({
           maybeSingle: () =>
             Promise.resolve({
               data: {
@@ -275,7 +275,7 @@ describe("auth.server join/sign-in helpers", () => {
   it("should find users by email via login identifier", async () => {
     fromMock.mockImplementation(() => ({
       select: () => ({
-        ilike: () => ({
+        eq: () => ({
           maybeSingle: vi.fn().mockResolvedValue({
             data: {
               email: "otis@example.com",
@@ -299,11 +299,44 @@ describe("auth.server join/sign-in helpers", () => {
     });
   });
 
+  it("should not treat ILIKE wildcards as email matches", async () => {
+    const maybeSingle = vi.fn().mockResolvedValue({
+      data: null,
+      error: null,
+    });
+    const eq = vi.fn(() => ({ maybeSingle }));
+
+    fromMock.mockImplementation(() => ({
+      select: () => ({ eq }),
+    }));
+
+    const { findUserByLoginIdentifier } = await import("@/lib/auth.server");
+    const user = await findUserByLoginIdentifier("a%@example.com");
+
+    expect(eq).toHaveBeenCalledWith("email", "a%@example.com");
+    expect(user).toBeNull();
+  });
+
+  it("should reject @ in display names for new-user joins", async () => {
+    mockUnusedInvite(null);
+
+    const { joinWithInvite } = await import("@/lib/auth.server");
+
+    await expect(
+      joinWithInvite({
+        name: "otis@friends",
+        password: "password1",
+        token: "t".repeat(32),
+      }),
+    ).rejects.toThrow("invalid_name");
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
   it("should fall through to display-name lookup when email miss has @", async () => {
     fromMock
       .mockImplementationOnce(() => ({
         select: () => ({
-          ilike: () => ({
+          eq: () => ({
             maybeSingle: () =>
               Promise.resolve({
                 data: null,

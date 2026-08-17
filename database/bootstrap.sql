@@ -731,7 +731,7 @@ BEGIN
   IF v_invitation.email IS NULL
      OR v_user.email IS NULL
      OR lower(v_user.email) <> lower(v_invitation.email) THEN
-    RAISE EXCEPTION 'email_taken' USING ERRCODE = 'P0001';
+    RAISE EXCEPTION 'email_mismatch' USING ERRCODE = 'P0001';
   END IF;
 
   SELECT *

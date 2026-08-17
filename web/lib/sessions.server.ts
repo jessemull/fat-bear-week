@@ -190,6 +190,17 @@ export async function revokeSession(): Promise<void> {
   cookieStore.set(SESSION_COOKIE_NAME, "", sessionCookieOptions(0));
 }
 
+/**
+ * Clear the session cookie without deleting DB sessions.
+ * Use when join succeeded but createSession failed — avoid wiping an
+ * unrelated prior session row while still forcing a fresh sign-in UX.
+ */
+export async function clearSessionCookie(): Promise<void> {
+  const cookieStore = await cookies();
+
+  cookieStore.set(SESSION_COOKIE_NAME, "", sessionCookieOptions(0));
+}
+
 /** Exported for unit tests — hash only, no cookie I/O. */
 export function hashSessionTokenForTests(token: string): string {
   return hashSessionToken(token);

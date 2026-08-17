@@ -13,17 +13,18 @@ interface LoginPageProps {
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const params = await searchParams;
+  const joined = params.joined === "1";
   const session = await getSession();
 
-  if (session) {
+  // After join-without-session, always show sign-in (even if a prior cookie remains).
+  if (session && !joined) {
     redirect("/");
   }
 
-  const params = await searchParams;
-
   return (
     <main className={`${formPageClassName} max-w-sm justify-center pb-24`}>
-      <LoginPanel joined={params.joined === "1"} />
+      <LoginPanel joined={joined} />
     </main>
   );
 }
