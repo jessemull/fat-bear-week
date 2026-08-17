@@ -52,7 +52,7 @@ export function DeleteTournamentButton({
   }
 
   return (
-    <div className="flex w-fit flex-col gap-3">
+    <div className="flex w-fit flex-col items-start gap-3">
       <button
         className={formButtonDangerClassName}
         disabled={pending}
