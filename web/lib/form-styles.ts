@@ -27,9 +27,10 @@ export const formButtonSecondaryClassName =
   "inline-flex h-8 cursor-pointer items-center justify-center rounded-md border border-zinc-300 px-2.5 text-sm text-zinc-900 transition-colors hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-transparent dark:border-zinc-600 dark:text-zinc-100 dark:hover:bg-zinc-800 dark:disabled:hover:bg-transparent";
 
 export const formButtonDangerClassName =
-  "inline-flex h-8 cursor-pointer items-center justify-center rounded-md border border-red-300 px-2.5 text-sm text-red-800 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-transparent dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/60 dark:disabled:hover:bg-transparent";
+  "inline-flex h-8 cursor-pointer items-center justify-center rounded-md border border-red-600/40 px-2.5 text-sm text-red-600 transition-colors hover:bg-red-600/10 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-transparent dark:border-red-600/50 dark:text-red-600 dark:hover:bg-red-600/10 dark:disabled:hover:bg-transparent";
 
-export const formErrorClassName = "text-sm text-red-700 dark:text-red-400";
+export const formErrorClassName =
+  "text-sm text-red-600/80 dark:text-red-600/80";
 
 export const formLinkClassName =
   "text-amber-800 underline dark:text-amber-400";

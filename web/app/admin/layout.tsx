@@ -1,13 +1,10 @@
 import type { ReactNode } from "react";
 
+import { ShieldOff } from "lucide-react";
 import { redirect } from "next/navigation";
 
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
-import {
-  formHeadingClassName,
-  formMutedClassName,
-  formPageClassName,
-} from "@/lib/form-styles";
+import { PageStatus } from "@/components/PageStatus";
 import { listPoolsForUser } from "@/lib/pools.server";
 import { getSession } from "@/lib/sessions.server";
 import { listTournaments } from "@/lib/tournament.server";
@@ -27,12 +24,11 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
 
   if (!session.isCommissioner) {
     return (
-      <main className={formPageClassName}>
-        <h1 className={`text-2xl ${formHeadingClassName}`}>Forbidden</h1>
-        <p className={formMutedClassName}>
-          Commissioner access is required for the admin area.
-        </p>
-      </main>
+      <PageStatus
+        description="Commissioner role required for administrative access."
+        icon={ShieldOff}
+        title="Forbidden"
+      />
     );
   }
 

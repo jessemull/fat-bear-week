@@ -53,7 +53,7 @@ export default async function TournamentDetailPage({
           >
             <TriangleAlert
               aria-hidden="true"
-              className="size-5 text-red-700 dark:text-red-400"
+              className="size-5 text-red-600/80 dark:text-red-600/80"
               strokeWidth={1.75}
             />
             Danger Zone
