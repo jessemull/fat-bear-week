@@ -54,11 +54,25 @@ export async function POST(request: Request) {
       token: parsed.data.token,
     });
 
-    await createSession(result.userId);
+    try {
+      await createSession(result.userId);
+    } catch {
+      return jsonData(
+        {
+          entryId: result.entryId,
+          needsSignIn: true,
+          poolId: result.poolId,
+          userId: result.userId,
+          userName: result.userName,
+        },
+        { status: 201 },
+      );
+    }
 
     return jsonData(
       {
         entryId: result.entryId,
+        needsSignIn: false,
         poolId: result.poolId,
         userId: result.userId,
         userName: result.userName,

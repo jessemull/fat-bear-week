@@ -1,6 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
+import { type ReactElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const push = vi.fn();
@@ -15,6 +16,11 @@ vi.mock("next/navigation", () => ({
 }));
 
 import { SiteHeader } from "@/components/SiteHeader";
+import { ToastProvider } from "@/components/Toast";
+
+function renderHeader(ui: ReactElement) {
+  return render(<ToastProvider>{ui}</ToastProvider>);
+}
 
 describe("SiteHeader", () => {
   beforeEach(() => {
@@ -30,7 +36,7 @@ describe("SiteHeader", () => {
   });
 
   it("should render enabled and disabled nav items when signed out", async () => {
-    const { container } = render(<SiteHeader isSignedIn={false} />);
+    const { container } = renderHeader(<SiteHeader isSignedIn={false} />);
 
     expect(container.querySelector("header")).toHaveClass("sticky", "top-0");
 
@@ -62,7 +68,7 @@ describe("SiteHeader", () => {
   it("should show Sign out when signed in", async () => {
     const user = userEvent.setup();
 
-    render(<SiteHeader isSignedIn={true} />);
+    renderHeader(<SiteHeader isSignedIn={true} />);
 
     const signOut = screen.getByRole("button", { name: "Sign out" });
 
@@ -87,22 +93,44 @@ describe("SiteHeader", () => {
       }),
     );
 
-    render(<SiteHeader isSignedIn={true} />);
+    renderHeader(<SiteHeader isSignedIn={true} />);
 
     await user.click(screen.getByRole("button", { name: "Sign out" }));
 
     expect(push).not.toHaveBeenCalled();
     expect(refresh).not.toHaveBeenCalled();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Unable to sign out. Try again.",
+    );
+  });
+
+  it("should toast when sign-out fetch throws", async () => {
+    const user = userEvent.setup();
+
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network")));
+
+    renderHeader(<SiteHeader isSignedIn={true} />);
+
+    await user.click(screen.getByRole("button", { name: "Sign out" }));
+
+    expect(push).not.toHaveBeenCalled();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Unable to sign out. Try again.",
+    );
   });
 
   it("should show Admin link only for commissioners", () => {
-    const { rerender } = render(
+    const { rerender } = renderHeader(
       <SiteHeader isCommissioner={false} isSignedIn={true} />,
     );
 
     expect(screen.queryByRole("link", { name: "Admin" })).toBeNull();
 
-    rerender(<SiteHeader isCommissioner={true} isSignedIn={true} />);
+    rerender(
+      <ToastProvider>
+        <SiteHeader isCommissioner={true} isSignedIn={true} />
+      </ToastProvider>,
+    );
 
     expect(screen.getByRole("link", { name: "Admin" })).toHaveAttribute(
       "href",
@@ -113,7 +141,7 @@ describe("SiteHeader", () => {
   it("should open the mobile menu with the same links", async () => {
     const user = userEvent.setup();
 
-    render(<SiteHeader isCommissioner={true} isSignedIn={false} />);
+    renderHeader(<SiteHeader isCommissioner={true} isSignedIn={false} />);
 
     await user.click(screen.getByRole("button", { name: "Open menu" }));
 

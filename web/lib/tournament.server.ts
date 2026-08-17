@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 
 import type { TournamentRecord, TournamentStatus } from "@/lib/tournament-types";
 
@@ -64,8 +65,9 @@ function mapTournament(row: TournamentRow): TournamentRecord {
 
 /**
  * List all tournaments, newest year first.
+ * Cached per request so admin layout + pages share one query.
  */
-export async function listTournaments(): Promise<TournamentRecord[]> {
+export const listTournaments = cache(async (): Promise<TournamentRecord[]> => {
   const supabase = getServiceSupabase();
 
   const { data, error } = await supabase
@@ -78,7 +80,7 @@ export async function listTournaments(): Promise<TournamentRecord[]> {
   }
 
   return (data as null | TournamentRow[])?.map(mapTournament) ?? [];
-}
+});
 
 /**
  * Create a draft tournament for a calendar year.

@@ -64,7 +64,6 @@ export async function PATCH(request: Request, context: RouteContext) {
 
     return jsonData({
       invite,
-      tokenRotated: invite.tokenRotated,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "";

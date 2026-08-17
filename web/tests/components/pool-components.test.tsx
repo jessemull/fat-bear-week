@@ -194,8 +194,8 @@ describe("pool components", () => {
             id: "inv-1",
             nameHint: "Bea",
             status: "unused",
+            tokenRotated: true,
           },
-          tokenRotated: true,
         },
       }),
       ok: true,
@@ -240,8 +240,8 @@ describe("pool components", () => {
             id: "inv-1",
             nameHint: "Alexandra",
             status: "unused",
+            tokenRotated: false,
           },
-          tokenRotated: false,
         },
       }),
       ok: true,
@@ -382,6 +382,7 @@ describe("pool components", () => {
     writeText.mockRejectedValueOnce(new Error("denied"));
     await user.click(screen.getByRole("button", { name: "Copied" }));
     expect(screen.getByRole("button", { name: "Copy link" })).toBeInTheDocument();
+    expect(screen.getByText(/Copy failed/)).toBeInTheDocument();
   });
 
   it("should show an error for an empty CSV", async () => {

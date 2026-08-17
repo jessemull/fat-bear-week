@@ -59,7 +59,9 @@ export function InviteForm({ invite, poolId }: InviteFormProps) {
         },
       );
       const json = (await response.json()) as {
-        data?: { invite?: InviteFormValues; tokenRotated?: boolean };
+        data?: {
+          invite?: InviteFormValues & { tokenRotated?: boolean };
+        };
         error?: string;
       };
 
@@ -70,7 +72,7 @@ export function InviteForm({ invite, poolId }: InviteFormProps) {
 
       router.refresh();
 
-      if (json.data?.tokenRotated) {
+      if (json.data?.invite?.tokenRotated) {
         toast(
           "Invite saved. The old link is invalid — use Resend Invite for the new address.",
         );

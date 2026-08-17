@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 
 import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
+import { useToast } from "@/components/Toast";
 
 interface SiteHeaderProps {
   isCommissioner?: boolean;
@@ -81,6 +82,7 @@ export function SiteHeader({
   isSignedIn,
 }: SiteHeaderProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const menuId = useId();
   const [menuOpen, setMenuOpen] = useState(false);
   const [signOutPending, setSignOutPending] = useState(false);
@@ -92,12 +94,15 @@ export function SiteHeader({
       const response = await fetch("/api/auth/sign-out", { method: "POST" });
 
       if (!response.ok) {
+        toast("Unable to sign out. Try again.", "error");
         return;
       }
 
       setMenuOpen(false);
       router.push("/login");
       router.refresh();
+    } catch {
+      toast("Unable to sign out. Try again.", "error");
     } finally {
       setSignOutPending(false);
     }

@@ -1,7 +1,7 @@
 import "server-only";
 
-import { hashInviteToken } from "@/lib/invites.server";
-import { hashPassword } from "@/lib/passwords.server";
+import { getInviteByToken, hashInviteToken } from "@/lib/invites.server";
+import { hashPassword, verifyPassword } from "@/lib/passwords.server";
 import { getServiceSupabase } from "@/lib/supabase.server";
 
 export type JoinWithInviteErrorCode =
@@ -31,10 +31,10 @@ interface JoinRpcRow {
 const JOIN_ERROR_CODES = new Set<JoinWithInviteErrorCode>([
   "already_in_pool",
   "email_taken",
-  "invite_expired",
-  "invite_used",
   "invalid_invite",
   "invalid_name",
+  "invite_expired",
+  "invite_used",
   "name_taken",
   "pool_full",
 ]);
@@ -51,33 +51,7 @@ export function parseJoinErrorMessage(
   return null;
 }
 
-/**
- * Atomically join a pool via invite (Postgres RPC).
- */
-export async function joinWithInvite(params: {
-  name: string;
-  password: string;
-  token: string;
-}): Promise<JoinWithInviteResult> {
-  const passwordHash = await hashPassword(params.password);
-  const supabase = getServiceSupabase();
-
-  const { data, error } = await supabase.rpc("join_pool_with_invite", {
-    p_name: params.name,
-    p_password_hash: passwordHash,
-    p_token_hash: hashInviteToken(params.token),
-  });
-
-  if (error) {
-    const code = parseJoinErrorMessage(error.message);
-
-    if (code) {
-      throw new Error(code);
-    }
-
-    throw new Error(`join_failed: ${error.message}`);
-  }
-
+function mapJoinRpcRow(data: unknown): JoinWithInviteResult {
   const row = (Array.isArray(data) ? data[0] : data) as JoinRpcRow | null;
 
   if (!row) {
@@ -90,6 +64,88 @@ export async function joinWithInvite(params: {
     userId: row.user_id,
     userName: row.user_name,
   };
+}
+
+/**
+ * Atomically join a pool via invite (Postgres RPC).
+ * Existing accounts matched by invite email re-use the user after password check.
+ */
+export async function joinWithInvite(params: {
+  name: string;
+  password: string;
+  token: string;
+}): Promise<JoinWithInviteResult> {
+  const invite = await getInviteByToken(params.token);
+
+  if (!invite) {
+    throw new Error("invalid_invite");
+  }
+
+  if (invite.status === "used") {
+    throw new Error("invite_used");
+  }
+
+  if (invite.status === "expired") {
+    throw new Error("invite_expired");
+  }
+
+  const tokenHash = hashInviteToken(params.token);
+  const supabase = getServiceSupabase();
+
+  if (invite.email) {
+    const existing = await findUserByLoginIdentifier(invite.email);
+
+    if (existing) {
+      const passwordOk = await verifyPassword(
+        params.password,
+        existing.passwordHash,
+      );
+
+      if (!passwordOk) {
+        throw new Error("email_taken");
+      }
+
+      const { data, error } = await supabase.rpc(
+        "join_existing_user_with_invite",
+        {
+          p_token_hash: tokenHash,
+          p_user_id: existing.id,
+        },
+      );
+
+      if (error) {
+        const code = parseJoinErrorMessage(error.message);
+
+        if (code) {
+          throw new Error(code);
+        }
+
+        throw new Error(`join_failed: ${error.message}`);
+      }
+
+      return mapJoinRpcRow(data);
+    }
+  }
+
+  const passwordHash = await hashPassword(params.password);
+
+  const { data, error } = await supabase.rpc("join_pool_with_invite", {
+    p_name: params.name,
+    p_password_hash: passwordHash,
+    p_token_hash: tokenHash,
+  });
+
+  if (error) {
+    const code = parseJoinErrorMessage(error.message);
+
+    if (code) {
+      throw new Error(code);
+    }
+
+    throw new Error(`join_failed: ${error.message}`);
+  }
+
+  return mapJoinRpcRow(data);
 }
 
 /**

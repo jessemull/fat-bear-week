@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 
-import { formButtonSecondaryClassName, formInputClassName } from "@/lib/form-styles";
+import {
+  formButtonSecondaryClassName,
+  formErrorClassName,
+  formInputClassName,
+} from "@/lib/form-styles";
 
 interface InviteLinkFallbackProps {
   inviteUrl: string;
@@ -14,13 +18,16 @@ export function InviteLinkFallback({
   message = "Email could not be sent. Copy this invite link:",
 }: InviteLinkFallbackProps) {
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState<null | string>(null);
 
   async function onCopy() {
     try {
       await navigator.clipboard.writeText(inviteUrl);
       setCopied(true);
+      setCopyError(null);
     } catch {
       setCopied(false);
+      setCopyError("Copy failed — select the link and copy it manually.");
     }
   }
 
@@ -43,6 +50,7 @@ export function InviteLinkFallback({
           {copied ? "Copied" : "Copy link"}
         </button>
       </div>
+      {copyError ? <p className={formErrorClassName}>{copyError}</p> : null}
     </div>
   );
 }

@@ -60,14 +60,17 @@ export function JoinForm({
         headers: { "content-type": "application/json" },
         method: "POST",
       });
-      const json = (await response.json()) as { data?: unknown; error?: string };
+      const json = (await response.json()) as {
+        data?: { needsSignIn?: boolean };
+        error?: string;
+      };
 
       if (!response.ok) {
         setError(json.error ?? "Unable to join.");
         return;
       }
 
-      router.push("/");
+      router.push(json.data?.needsSignIn ? "/login" : "/");
       router.refresh();
     } catch {
       setError("Unable to join right now.");

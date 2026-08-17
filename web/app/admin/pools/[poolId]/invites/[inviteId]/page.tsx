@@ -51,11 +51,15 @@ export default async function AdminEditInvitePage({
     <div className="flex w-full max-w-lg flex-col gap-4">
       <AdminPageHeader
         action={
-          invite.status === "unused" ? (
+          invite.status === "unused" || invite.status === "expired" ? (
             <ResendInviteButton inviteId={invite.id} poolId={poolId} />
           ) : undefined
         }
-        description="Update the invitee or resend the invite email."
+        description={
+          invite.status === "expired"
+            ? "Resend to revive this invite with a fresh link and expiry."
+            : "Update the invitee or resend the invite email."
+        }
         title={invite.email ?? "Invite"}
       />
       <InviteForm

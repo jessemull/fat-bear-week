@@ -31,6 +31,7 @@ import { JoinPanel } from "@/components/auth/JoinPanel";
 import { LoginPanel } from "@/components/auth/LoginPanel";
 import { SignInForm } from "@/components/auth/SignInForm";
 import { SignOutButton } from "@/components/auth/SignOutButton";
+import { ToastProvider } from "@/components/Toast";
 
 describe("auth forms", () => {
   beforeEach(() => {
@@ -109,6 +110,41 @@ describe("auth forms", () => {
     expect(push).toHaveBeenCalledWith("/");
   });
 
+  it("should send JoinForm users to login when session was not created", async () => {
+    const user = userEvent.setup();
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        json: async () => ({
+          data: {
+            entryId: "e1",
+            needsSignIn: true,
+            poolId: "p1",
+            userId: "u1",
+            userName: "Otis",
+          },
+        }),
+        ok: true,
+      }),
+    );
+
+    render(
+      <JoinForm
+        email="otis@example.com"
+        token={"t".repeat(32)}
+        turnstileToken="test-turnstile-token"
+      />,
+    );
+
+    await user.type(screen.getByLabelText("Display name"), "Otis");
+    await user.type(screen.getByLabelText("Password"), "password1");
+    await user.type(screen.getByLabelText("Confirm password"), "password1");
+    await user.click(screen.getByRole("button", { name: "Join pool" }));
+
+    expect(push).toHaveBeenCalledWith("/login");
+  });
+
   it("should reject mismatched passwords on join", async () => {
     const user = userEvent.setup();
 
@@ -147,7 +183,11 @@ describe("auth forms", () => {
       expect.objectContaining({ method: "POST" }),
     );
 
-    rerender(<SignOutButton />);
+    rerender(
+      <ToastProvider>
+        <SignOutButton />
+      </ToastProvider>,
+    );
     await user.click(screen.getByRole("button", { name: "Sign out" }));
 
     expect(fetch).toHaveBeenCalledWith(
@@ -183,12 +223,41 @@ describe("auth forms", () => {
   });
 
   it("should render SignOutButton without a11y violations", async () => {
-    const { container } = render(<SignOutButton />);
+    const { container } = render(
+      <ToastProvider>
+        <SignOutButton />
+      </ToastProvider>,
+    );
 
     expect(
       screen.getByRole("button", { name: "Sign out" }),
     ).toBeInTheDocument();
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it("should toast when SignOutButton fails", async () => {
+    const user = userEvent.setup();
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        json: async () => ({ error: "Invalid request origin." }),
+        ok: false,
+      }),
+    );
+
+    render(
+      <ToastProvider>
+        <SignOutButton />
+      </ToastProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Sign out" }));
+
+    expect(push).not.toHaveBeenCalled();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Unable to sign out. Try again.",
+    );
   });
 
   it("should show sign-in errors from the API", async () => {

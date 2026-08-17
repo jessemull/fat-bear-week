@@ -244,22 +244,46 @@ describe("invites.server data access", () => {
         }),
       })
       .mockReturnValueOnce({
-        update: () => ({
+        select: () => ({
           eq: () => ({
             eq: () => ({
               is: () => ({
-                select: () => ({
-                  maybeSingle: () =>
-                    Promise.resolve({
-                      data: {
-                        email: "a@example.com",
-                        expires_at: new Date(Date.now() + 60_000).toISOString(),
-                        id: "inv-1",
-                        name_hint: "Alex",
-                        used_at: null,
-                      },
-                      error: null,
-                    }),
+                maybeSingle: () =>
+                  Promise.resolve({
+                    data: {
+                      email: "a@example.com",
+                      expires_at: new Date(Date.now() + 60_000).toISOString(),
+                      id: "inv-1",
+                      name_hint: "Alex",
+                      token_hash: "hashed",
+                      used_at: null,
+                    },
+                    error: null,
+                  }),
+              }),
+            }),
+          }),
+        }),
+      })
+      .mockReturnValueOnce({
+        update: () => ({
+          eq: () => ({
+            eq: () => ({
+              eq: () => ({
+                is: () => ({
+                  select: () => ({
+                    maybeSingle: () =>
+                      Promise.resolve({
+                        data: {
+                          email: "a@example.com",
+                          expires_at: new Date(Date.now() + 60_000).toISOString(),
+                          id: "inv-1",
+                          name_hint: "Alex",
+                          used_at: null,
+                        },
+                        error: null,
+                      }),
+                  }),
                 }),
               }),
             }),
@@ -301,6 +325,28 @@ describe("invites.server data access", () => {
         }),
       })
       .mockReturnValueOnce({
+        select: () => ({
+          eq: () => ({
+            eq: () => ({
+              is: () => ({
+                maybeSingle: () =>
+                  Promise.resolve({
+                    data: {
+                      email: "a@example.com",
+                      expires_at: new Date(Date.now() - 60_000).toISOString(),
+                      id: "inv-1",
+                      name_hint: "Alex",
+                      token_hash: "hashed",
+                      used_at: null,
+                    },
+                    error: null,
+                  }),
+              }),
+            }),
+          }),
+        }),
+      })
+      .mockReturnValueOnce({
         update: (patch: Record<string, unknown>) => {
           expect(patch.expires_at).toEqual(expect.any(String));
           expect(patch.token_hash).toEqual(expect.any(String));
@@ -308,19 +354,21 @@ describe("invites.server data access", () => {
           return {
             eq: () => ({
               eq: () => ({
-                is: () => ({
-                  select: () => ({
-                    maybeSingle: () =>
-                      Promise.resolve({
-                        data: {
-                          email: "a@example.com",
-                          expires_at: refreshedExpiry,
-                          id: "inv-1",
-                          name_hint: "Alex",
-                          used_at: null,
-                        },
-                        error: null,
-                      }),
+                eq: () => ({
+                  is: () => ({
+                    select: () => ({
+                      maybeSingle: () =>
+                        Promise.resolve({
+                          data: {
+                            email: "a@example.com",
+                            expires_at: refreshedExpiry,
+                            id: "inv-1",
+                            name_hint: "Alex",
+                            used_at: null,
+                          },
+                          error: null,
+                        }),
+                    }),
                   }),
                 }),
               }),
@@ -577,18 +625,20 @@ describe("invites.server data access", () => {
           return {
             eq: () => ({
               eq: () => ({
-                select: () => ({
-                  maybeSingle: () =>
-                    Promise.resolve({
-                      data: {
-                        email: "b@example.com",
-                        expires_at: null,
-                        id: "inv-1",
-                        name_hint: "Bea",
-                        used_at: null,
-                      },
-                      error: null,
-                    }),
+                is: () => ({
+                  select: () => ({
+                    maybeSingle: () =>
+                      Promise.resolve({
+                        data: {
+                          email: "b@example.com",
+                          expires_at: null,
+                          id: "inv-1",
+                          name_hint: "Bea",
+                          used_at: null,
+                        },
+                        error: null,
+                      }),
+                  }),
                 }),
               }),
             }),
@@ -651,18 +701,20 @@ describe("invites.server data access", () => {
           return {
             eq: () => ({
               eq: () => ({
-                select: () => ({
-                  maybeSingle: () =>
-                    Promise.resolve({
-                      data: {
-                        email: "a@example.com",
-                        expires_at: null,
-                        id: "inv-1",
-                        name_hint: "Alexandra",
-                        used_at: null,
-                      },
-                      error: null,
-                    }),
+                is: () => ({
+                  select: () => ({
+                    maybeSingle: () =>
+                      Promise.resolve({
+                        data: {
+                          email: "a@example.com",
+                          expires_at: null,
+                          id: "inv-1",
+                          name_hint: "Alexandra",
+                          used_at: null,
+                        },
+                        error: null,
+                      }),
+                  }),
                 }),
               }),
             }),

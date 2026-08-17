@@ -1,6 +1,7 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { createHash, randomBytes } from "node:crypto";
+import { cache } from "react";
 
 import { getServiceSupabase } from "@/lib/supabase.server";
 
@@ -127,8 +128,9 @@ export async function createSession(userId: string): Promise<void> {
 
 /**
  * Resolve the current session from the cookie, or null if missing/expired.
+ * Cached per request so layout + page share one lookup.
  */
-export async function getSession(): Promise<null | SessionUser> {
+export const getSession = cache(async (): Promise<null | SessionUser> => {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
 
@@ -169,7 +171,7 @@ export async function getSession(): Promise<null | SessionUser> {
     isCommissioner: Boolean(user.is_commissioner),
     name: user.name,
   };
-}
+});
 
 /**
  * Revoke the current session row (if any) and clear the cookie.

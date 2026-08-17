@@ -253,35 +253,53 @@ async function rotateInviteTokenOnce(params: {
   refreshExpiry?: boolean;
 }): Promise<MintedInvite | null> {
   const { inviteId, poolId, refreshExpiry = false } = params;
+  const supabase = getServiceSupabase();
+
+  const { data: current, error: currentError } = await supabase
+    .from("invitations")
+    .select("email, expires_at, id, name_hint, token_hash, used_at")
+    .eq("id", inviteId)
+    .eq("pool_id", poolId)
+    .is("used_at", null)
+    .maybeSingle();
+
+  if (currentError || !current || !current.email) {
+    return null;
+  }
+
+  const currentStatus = resolveInviteStatus({
+    expiresAt: (current.expires_at as null | string) ?? null,
+    usedAt: (current.used_at as null | string) ?? null,
+  });
+
+  if (currentStatus === "used") {
+    return null;
+  }
+
+  if (!refreshExpiry && currentStatus === "expired") {
+    return null;
+  }
+
   const token = createInviteToken();
   const tokenHash = hashInviteToken(token);
-  const supabase = getServiceSupabase();
   const patch: Record<string, string> = { token_hash: tokenHash };
 
   if (refreshExpiry) {
     patch.expires_at = defaultInviteExpiresAt();
   }
 
+  // Compare-and-swap on token_hash so concurrent isolates cannot both win.
   const { data, error } = await supabase
     .from("invitations")
     .update(patch)
     .eq("id", inviteId)
     .eq("pool_id", poolId)
+    .eq("token_hash", current.token_hash as string)
     .is("used_at", null)
     .select("email, expires_at, id, name_hint, used_at")
     .maybeSingle();
 
   if (error || !data || !data.email) {
-    return null;
-  }
-
-  const status = resolveInviteStatus({
-    expiresAt: (data.expires_at as null | string) ?? null,
-    usedAt: (data.used_at as null | string) ?? null,
-  });
-
-  // After refreshExpiry, status should be unused; otherwise reject used/expired.
-  if (status === "used" || (!refreshExpiry && status === "expired")) {
     return null;
   }
 
@@ -430,6 +448,7 @@ export async function updateInvite(params: {
     .update(patch)
     .eq("id", inviteId)
     .eq("pool_id", poolId)
+    .is("used_at", null)
     .select("email, expires_at, id, name_hint, used_at")
     .maybeSingle();
 
