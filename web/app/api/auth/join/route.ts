@@ -19,6 +19,19 @@ export async function POST(request: Request) {
   }
 
   const clientIp = getClientIp(request) ?? "unknown";
+
+  if (
+    !consumeRateLimit({
+      key: `auth:join:ip:${clientIp}`,
+      limit: JOIN_LIMIT,
+      windowMs: JOIN_WINDOW_MS,
+    })
+  ) {
+    return jsonError("Too many join attempts. Try again shortly.", {
+      status: 429,
+    });
+  }
+
   const parsed = await parseJsonBody(request, joinBodySchema);
 
   if ("error" in parsed) {
@@ -32,18 +45,6 @@ export async function POST(request: Request) {
 
   if (!turnstileOk) {
     return jsonError("Bot check failed. Please try again.", { status: 400 });
-  }
-
-  if (
-    !consumeRateLimit({
-      key: `auth:join:ip:${clientIp}`,
-      limit: JOIN_LIMIT,
-      windowMs: JOIN_WINDOW_MS,
-    })
-  ) {
-    return jsonError("Too many join attempts. Try again shortly.", {
-      status: 429,
-    });
   }
 
   try {
@@ -93,8 +94,12 @@ export async function POST(request: Request) {
     const message = error instanceof Error ? error.message : "join_failed";
     const code = parseJoinErrorMessage(message) ?? message;
 
-    if (code === "invalid_invite" || code === "invalid_name") {
+    if (code === "invalid_invite") {
       return jsonError("This invite is invalid.", { status: 400 });
+    }
+
+    if (code === "invalid_name") {
+      return jsonError("Display names cannot include @.", { status: 400 });
     }
 
     if (code === "invite_used") {

@@ -41,12 +41,13 @@ Then retry the request.
 2. Run the new migration against existing dev and prod projects (SQL Editor).
 3. Run `make db-bootstrap` and commit the updated `database/bootstrap.sql`.
 
-## Planned Phase 1 migrations
+## Phase 1 migrations (shipped in-repo)
 
-Ship these as numbered SQL files before (or with) the invite/join and admin work — do not bury them in app code:
+Apply numbered files from `database/migrations/` in order on each Supabase
+project (dev and prod). Do not bury schema changes only in app code.
 
-| Planned file | Purpose |
-| ------------ | ------- |
+| File | Purpose |
+| ---- | ------- |
 | `002_sessions.sql` | HTTP-only session store (token hash, user_id, expires_at, created_at); `invitations.email`; unique display names; `join_pool_with_invite` RPC |
 | `003_commissioner_gate.sql` | `users.is_commissioner` boolean for pool management and result publishing |
 | `004_invite_email_unique.sql` | Unique unused invite email per pool; distinguish `email_taken` vs `name_taken` on join |
@@ -55,7 +56,9 @@ Ship these as numbered SQL files before (or with) the invite/join and admin work
 | `007_users_name_lower.sql` | Stored `name_lower` for exact case-insensitive sign-in lookups |
 | `008_join_existing_user_with_invite.sql` | Existing account joins another pool via invite email + password (`join_existing_user_with_invite`) |
 
-Until those land, RLS remains enabled with **no policies** on app tables (anon/authenticated denied; service role bypasses RLS on the server).
+App tables enable **RLS** with **no anon/authenticated policies** yet — only the
+service role (server) can read/write until explicit policies ship.
+
 
 ## Schema notes (001)
 

@@ -32,8 +32,13 @@
 ## Auth & invites (product intent)
 
 - No public registration.
-- Join requires a valid invite token + display name + password (with confirm) +
-  Turnstile token. Invite email is copied onto the user and shown read-only.
+- Join requires a valid invite token + Turnstile token.
+  - **New users:** display name + password (with confirm). Invite email is
+    copied onto the user and shown read-only.
+  - **Existing accounts:** when the invite email already matches a user, join
+    another pool with that account’s password (multi-pool; display name is not
+    changed).
+- Sign in with **email or display name** + password + Turnstile (no public signup).
 - Sessions via HTTP-only cookies (or equivalent); validate server-side on protected routes and mutations.
 - Sign-out revokes **only the current session cookie** (not every device).
 - Invite tokens must be unguessable; store SHA-256 hashes at rest (raw token only in email/URL).

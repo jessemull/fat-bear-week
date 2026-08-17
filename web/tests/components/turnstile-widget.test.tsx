@@ -128,6 +128,63 @@ describe("TurnstileWidget", () => {
     });
   });
 
+  it("should reuse an already-loaded turnstile script without hanging", async () => {
+    vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "site-key");
+
+    const script = document.createElement("script");
+
+    script.dataset.fbwTurnstile = "ready";
+    script.id = "cf-turnstile-script";
+    document.head.appendChild(script);
+
+    const renderMock = vi.fn(() => "widget-existing");
+
+    Object.defineProperty(window, "turnstile", {
+      configurable: true,
+      value: {
+        remove: vi.fn(),
+        render: renderMock,
+        reset: vi.fn(),
+      },
+    });
+
+    const onToken = vi.fn();
+
+    render(<TurnstileWidget onToken={onToken} />);
+
+    await waitFor(() => {
+      expect(renderMock).toHaveBeenCalled();
+    });
+  });
+
+  it("should recover when an existing script finished loading before remount", async () => {
+    vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "site-key");
+
+    const script = document.createElement("script");
+
+    script.id = "cf-turnstile-script";
+    document.head.appendChild(script);
+
+    const renderMock = vi.fn(() => "widget-remount");
+
+    Object.defineProperty(window, "turnstile", {
+      configurable: true,
+      value: {
+        remove: vi.fn(),
+        render: renderMock,
+        reset: vi.fn(),
+      },
+    });
+
+    const onToken = vi.fn();
+
+    render(<TurnstileWidget onToken={onToken} />);
+
+    await waitFor(() => {
+      expect(renderMock).toHaveBeenCalled();
+    });
+  });
+
   it("should reset and remove the widget", async () => {
     vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "site-key");
 

@@ -30,6 +30,70 @@ const SCRIPT_ID = "cf-turnstile-script";
 const SCRIPT_SRC =
   "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
 
+function waitForExistingTurnstileScript(
+  script: HTMLScriptElement,
+): Promise<void> {
+  if (window.turnstile) {
+    return Promise.resolve();
+  }
+
+  if (script.dataset.fbwTurnstile === "ready") {
+    return Promise.reject(new Error("turnstile_script_failed"));
+  }
+
+  if (script.dataset.fbwTurnstile === "error") {
+    return Promise.reject(new Error("turnstile_script_failed"));
+  }
+
+  return new Promise((resolve, reject) => {
+    let settled = false;
+
+    const succeed = () => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      script.dataset.fbwTurnstile = "ready";
+      resolve();
+    };
+
+    const fail = () => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      script.dataset.fbwTurnstile = "error";
+      reject(new Error("turnstile_script_failed"));
+    };
+
+    script.addEventListener(
+      "load",
+      () => {
+        if (window.turnstile) {
+          succeed();
+        } else {
+          fail();
+        }
+      },
+      { once: true },
+    );
+    script.addEventListener("error", fail, { once: true });
+
+    // Load/error may have already fired before listeners were attached.
+    queueMicrotask(() => {
+      if (settled) {
+        return;
+      }
+
+      if (window.turnstile) {
+        succeed();
+      }
+    });
+  });
+}
+
 function loadTurnstileScript(): Promise<void> {
   if (typeof window === "undefined") {
     return Promise.resolve();
@@ -41,27 +105,31 @@ function loadTurnstileScript(): Promise<void> {
 
   const existing = document.getElementById(SCRIPT_ID);
 
-  if (existing) {
-    return new Promise((resolve, reject) => {
-      existing.addEventListener("load", () => resolve(), { once: true });
-      existing.addEventListener(
-        "error",
-        () => reject(new Error("turnstile_script_failed")),
-        { once: true },
-      );
-    });
+  if (existing instanceof HTMLScriptElement) {
+    return waitForExistingTurnstileScript(existing);
   }
 
   return new Promise((resolve, reject) => {
     const script = document.createElement("script");
 
     script.async = true;
+    script.dataset.fbwTurnstile = "loading";
     script.id = SCRIPT_ID;
     script.src = SCRIPT_SRC;
-    script.addEventListener("load", () => resolve(), { once: true });
+    script.addEventListener(
+      "load",
+      () => {
+        script.dataset.fbwTurnstile = "ready";
+        resolve();
+      },
+      { once: true },
+    );
     script.addEventListener(
       "error",
-      () => reject(new Error("turnstile_script_failed")),
+      () => {
+        script.dataset.fbwTurnstile = "error";
+        reject(new Error("turnstile_script_failed"));
+      },
       { once: true },
     );
     document.head.appendChild(script);
