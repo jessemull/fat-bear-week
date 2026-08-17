@@ -185,6 +185,147 @@ describe("TurnstileWidget", () => {
     });
   });
 
+  it("should clear the token when an existing script is marked error", async () => {
+    vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "site-key");
+
+    const script = document.createElement("script");
+
+    script.dataset.fbwTurnstile = "error";
+    script.id = "cf-turnstile-script";
+    document.head.appendChild(script);
+
+    const onToken = vi.fn();
+
+    render(<TurnstileWidget onToken={onToken} />);
+
+    await waitFor(() => {
+      expect(onToken).toHaveBeenCalledWith(null);
+    });
+  });
+
+  it("should clear the token when ready script lacks the turnstile API", async () => {
+    vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "site-key");
+
+    const script = document.createElement("script");
+
+    script.dataset.fbwTurnstile = "ready";
+    script.id = "cf-turnstile-script";
+    document.head.appendChild(script);
+
+    const onToken = vi.fn();
+
+    render(<TurnstileWidget onToken={onToken} />);
+
+    await waitFor(() => {
+      expect(onToken).toHaveBeenCalledWith(null);
+    });
+  });
+
+  it("should clear the token when an existing script errors", async () => {
+    vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "site-key");
+
+    const script = document.createElement("script");
+
+    script.id = "cf-turnstile-script";
+    document.head.appendChild(script);
+
+    const onToken = vi.fn();
+
+    render(<TurnstileWidget onToken={onToken} />);
+
+    await waitFor(() => {
+      expect(document.getElementById("cf-turnstile-script")).toBe(script);
+    });
+
+    script.dispatchEvent(new Event("error"));
+
+    await waitFor(() => {
+      expect(onToken).toHaveBeenCalledWith(null);
+      expect(script.dataset.fbwTurnstile).toBe("error");
+    });
+  });
+
+  it("should clear the token when an existing script loads without turnstile", async () => {
+    vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "site-key");
+
+    const script = document.createElement("script");
+
+    script.id = "cf-turnstile-script";
+    document.head.appendChild(script);
+
+    const onToken = vi.fn();
+
+    render(<TurnstileWidget onToken={onToken} />);
+
+    await waitFor(() => {
+      expect(document.getElementById("cf-turnstile-script")).toBe(script);
+    });
+
+    script.dispatchEvent(new Event("load"));
+
+    await waitFor(() => {
+      expect(onToken).toHaveBeenCalledWith(null);
+      expect(script.dataset.fbwTurnstile).toBe("error");
+    });
+  });
+
+  it("should clear the token when the new script fails to load", async () => {
+    vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "site-key");
+
+    const onToken = vi.fn();
+
+    render(<TurnstileWidget onToken={onToken} />);
+
+    await waitFor(() => {
+      expect(document.getElementById("cf-turnstile-script")).toBeTruthy();
+    });
+
+    document
+      .getElementById("cf-turnstile-script")
+      ?.dispatchEvent(new Event("error"));
+
+    await waitFor(() => {
+      expect(onToken).toHaveBeenCalledWith(null);
+      expect(
+        document.getElementById("cf-turnstile-script")?.dataset.fbwTurnstile,
+      ).toBe("error");
+    });
+  });
+
+  it("should attach to an existing script after its load event provides turnstile", async () => {
+    vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "site-key");
+
+    const script = document.createElement("script");
+
+    script.id = "cf-turnstile-script";
+    document.head.appendChild(script);
+
+    const onToken = vi.fn();
+    const renderMock = vi.fn(() => "widget-load-existing");
+
+    render(<TurnstileWidget onToken={onToken} />);
+
+    await waitFor(() => {
+      expect(document.getElementById("cf-turnstile-script")).toBe(script);
+    });
+
+    Object.defineProperty(window, "turnstile", {
+      configurable: true,
+      value: {
+        remove: vi.fn(),
+        render: renderMock,
+        reset: vi.fn(),
+      },
+    });
+
+    script.dispatchEvent(new Event("load"));
+
+    await waitFor(() => {
+      expect(renderMock).toHaveBeenCalled();
+      expect(script.dataset.fbwTurnstile).toBe("ready");
+    });
+  });
+
   it("should reset and remove the widget", async () => {
     vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "site-key");
 
