@@ -75,4 +75,36 @@ describe("ConfirmDialog", () => {
       screen.getByRole("button", { name: "Working…" }),
     ).toBeInTheDocument();
   });
+
+  it("should cancel on Escape unless pending", async () => {
+    const user = userEvent.setup();
+    const onCancel = vi.fn();
+
+    const { rerender } = render(
+      <ConfirmDialog
+        description="Continue?"
+        open
+        title="Confirm"
+        onCancel={onCancel}
+        onConfirm={vi.fn()}
+      />,
+    );
+
+    await user.keyboard("{Escape}");
+    expect(onCancel).toHaveBeenCalledTimes(1);
+
+    rerender(
+      <ConfirmDialog
+        description="Continue?"
+        open
+        pending
+        title="Confirm"
+        onCancel={onCancel}
+        onConfirm={vi.fn()}
+      />,
+    );
+
+    await user.keyboard("{Escape}");
+    expect(onCancel).toHaveBeenCalledTimes(1);
+  });
 });

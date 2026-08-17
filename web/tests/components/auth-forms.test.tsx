@@ -27,6 +27,8 @@ vi.mock("@/components/auth/TurnstileWidget", () => ({
 }));
 
 import { JoinForm } from "@/components/auth/JoinForm";
+import { JoinPanel } from "@/components/auth/JoinPanel";
+import { LoginPanel } from "@/components/auth/LoginPanel";
 import { SignInForm } from "@/components/auth/SignInForm";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 
@@ -211,5 +213,26 @@ describe("auth forms", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(
       "Invalid name, email, or password.",
     );
+  });
+
+  it("should render JoinPanel and LoginPanel shells", async () => {
+    const { container: joinContainer } = render(
+      <JoinPanel
+        email="a@example.com"
+        nameHint="Alex"
+        poolName="Friends"
+        token="invite-token"
+      />,
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "Join Friends" }),
+    ).toBeInTheDocument();
+    expect(await axe(joinContainer)).toHaveNoViolations();
+
+    const { container: loginContainer } = render(<LoginPanel />);
+
+    expect(screen.getByRole("heading", { name: "Sign In" })).toBeInTheDocument();
+    expect(await axe(loginContainer)).toHaveNoViolations();
   });
 });
