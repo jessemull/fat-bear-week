@@ -210,20 +210,6 @@ export function InviteCsvUploadDialog({
       return;
     }
 
-    setError(null);
-    setPending(false);
-    setSelectedFile(null);
-
-    if (fileRef.current) {
-      fileRef.current.value = "";
-    }
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape" && !pending) {
         onCancel();

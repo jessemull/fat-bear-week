@@ -52,6 +52,7 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
   const [error, setError] = useState<null | string>(null);
   const [pending, setPending] = useState(false);
   const [rows, setRows] = useState<InviteRow[]>([INITIAL_ROW]);
+  const [uploadKey, setUploadKey] = useState(0);
   const [uploadOpen, setUploadOpen] = useState(false);
 
   function createRow(email = "", nameHint = ""): InviteRow {
@@ -264,7 +265,10 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
             className={formButtonPrimaryClassName}
             disabled={pending}
             type="button"
-            onClick={() => setUploadOpen(true)}
+            onClick={() => {
+              setUploadKey((current) => current + 1);
+              setUploadOpen(true);
+            }}
           >
             Upload
           </button>
@@ -293,8 +297,8 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
             </button>
           </div>
           <div
-            ref={listRef}
             className="subtle-scrollbar flex flex-col gap-3 overflow-y-auto overscroll-contain pr-1"
+            ref={listRef}
           >
             {rows.map((row, index) => (
               <div
@@ -373,7 +377,7 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
             {error}
           </p>
         ) : null}
-        <div ref={actionsRef} className={formActionsClassName}>
+        <div className={formActionsClassName} ref={actionsRef}>
           <button
             className={`${formButtonSecondaryClassName} w-full justify-center`}
             disabled={pending}
@@ -396,6 +400,7 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
         </div>
       </form>
       <InviteCsvUploadDialog
+        key={uploadKey}
         open={uploadOpen}
         onCancel={() => setUploadOpen(false)}
         onImport={(invites: ParsedInviteRow[]) => {
