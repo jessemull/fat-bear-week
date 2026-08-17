@@ -76,19 +76,22 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
         return;
       }
 
+      const listEl = list;
+      const actionsEl = actions;
+
       function measure() {
-        const listTop = list.getBoundingClientRect().top;
-        const actionsHeight = actions.getBoundingClientRect().height;
+        const listTop = listEl.getBoundingClientRect().top;
+        const actionsHeight = actionsEl.getBoundingClientRect().height;
         const available =
           window.innerHeight - listTop - actionsHeight - LIST_BOTTOM_GAP_PX;
 
-        list.style.maxHeight = `${Math.max(available, 12 * 16)}px`;
+        listEl.style.maxHeight = `${Math.max(available, 12 * 16)}px`;
 
         const pageOverflow =
           document.documentElement.scrollHeight - window.innerHeight;
 
         if (pageOverflow > 0) {
-          list.style.maxHeight = `${Math.max(list.clientHeight - pageOverflow, 12 * 16)}px`;
+          listEl.style.maxHeight = `${Math.max(listEl.clientHeight - pageOverflow, 12 * 16)}px`;
         }
       }
 
