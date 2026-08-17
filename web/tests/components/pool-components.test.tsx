@@ -488,7 +488,7 @@ describe("pool components", () => {
   it("should render CreatePoolForm without a11y violations", async () => {
     vi.stubGlobal("fetch", mockFetchWithTournaments());
 
-    const { container } = render(<CreatePoolForm />);
+    const { container } = renderWithToast(<CreatePoolForm />);
 
     await waitFor(() => {
       expect(screen.getByLabelText("Tournament")).toHaveTextContent("2026");
@@ -602,7 +602,7 @@ describe("pool components", () => {
       }),
     );
 
-    render(<CreatePoolForm />);
+    renderWithToast(<CreatePoolForm />);
 
     await waitFor(() => {
       expect(screen.getByLabelText("Tournament")).toHaveTextContent("2026");
@@ -623,7 +623,7 @@ describe("pool components", () => {
       }),
     );
 
-    render(<CreatePoolForm />);
+    renderWithToast(<CreatePoolForm />);
 
     await waitFor(() => {
       expect(screen.getByRole("alert")).toHaveTextContent("Forbidden.");
@@ -639,7 +639,7 @@ describe("pool components", () => {
       }),
     );
 
-    render(<CreatePoolForm />);
+    renderWithToast(<CreatePoolForm />);
 
     await waitFor(() => {
       expect(screen.getByRole("status")).toHaveTextContent(
@@ -654,7 +654,7 @@ describe("pool components", () => {
 
     vi.stubGlobal("fetch", fetchMock);
 
-    render(<CreatePoolForm />);
+    renderWithToast(<CreatePoolForm />);
 
     await waitFor(() => {
       expect(screen.getByLabelText("Tournament")).toHaveTextContent("2026");
@@ -756,7 +756,7 @@ describe("pool components", () => {
       }),
     );
 
-    render(<DeletePoolButton name="Friends" poolId="pool-1" />);
+    renderWithToast(<DeletePoolButton name="Friends" poolId="pool-1" />);
 
     await user.click(screen.getByRole("button", { name: "Delete Pool" }));
     await user.click(
@@ -785,7 +785,7 @@ describe("pool components", () => {
 
     vi.stubGlobal("fetch", fetchMock);
 
-    render(
+    renderWithToast(
       <PoolForm
         mode="edit"
         pool={{
@@ -823,7 +823,7 @@ describe("pool components", () => {
       }),
     );
 
-    render(<DeletePoolButton name="Friends" poolId="pool-1" />);
+    renderWithToast(<DeletePoolButton name="Friends" poolId="pool-1" />);
 
     await user.click(screen.getByRole("button", { name: "Delete Pool" }));
     await user.click(

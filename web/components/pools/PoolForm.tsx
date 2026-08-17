@@ -5,6 +5,7 @@ import { type FormEvent, useEffect, useState } from "react";
 
 import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
 import { FormSelect } from "@/components/FormSelect";
+import { useToast } from "@/components/Toast";
 import {
   formActionsClassName,
   formButtonPrimaryClassName,
@@ -53,6 +54,7 @@ function toDatetimeLocalValue(iso: null | string): string {
 
 export function PoolForm({ mode, pool }: PoolFormProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const [bracketDeadline, setBracketDeadline] = useState(
     toDatetimeLocalValue(pool?.bracketDeadline ?? null),
   );
@@ -172,16 +174,19 @@ export function PoolForm({ mode, pool }: PoolFormProps) {
         const poolId = json.data?.id;
 
         if (poolId) {
+          toast("Pool created.");
           router.push(`/admin/pools/${poolId}`);
           router.refresh();
           return;
         }
 
+        toast("Pool created.");
         router.push("/admin/pools");
         router.refresh();
         return;
       }
 
+      toast("Pool saved.");
       router.refresh();
     } catch {
       setError(

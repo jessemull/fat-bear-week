@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { useToast } from "@/components/Toast";
 import {
   formButtonDangerClassName,
   formErrorClassName,
@@ -17,6 +18,7 @@ interface DeletePoolButtonProps {
 
 export function DeletePoolButton({ name, poolId }: DeletePoolButtonProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [error, setError] = useState<null | string>(null);
   const [pending, setPending] = useState(false);
@@ -38,6 +40,7 @@ export function DeletePoolButton({ name, poolId }: DeletePoolButtonProps) {
       }
 
       setConfirmOpen(false);
+      toast("Pool deleted.");
       router.push("/admin/pools");
       router.refresh();
     } catch {

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
 import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
+import { useToast } from "@/components/Toast";
 import {
   formActionsClassName,
   formButtonPrimaryClassName,
@@ -39,6 +40,7 @@ interface BearMutationResponse {
 
 export function BearForm({ bear, mode, tournamentId }: BearFormProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const [biography, setBiography] = useState(bear?.biography ?? "");
   const [error, setError] = useState<null | string>(null);
   const [identification, setIdentification] = useState(
@@ -95,9 +97,11 @@ export function BearForm({ bear, mode, tournamentId }: BearFormProps) {
 
         router.push(`/admin/tournaments/${tournamentId}/bears/${bearId}`);
         router.refresh();
+        toast("Bear created.");
         return;
       }
 
+      toast("Bear saved.");
       router.refresh();
     } catch {
       setError(

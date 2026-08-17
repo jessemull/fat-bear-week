@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { FormSelect } from "@/components/FormSelect";
+import { useToast } from "@/components/Toast";
 import { formErrorClassName } from "@/lib/form-styles";
 import {
   formatTournamentStatus,
@@ -27,6 +28,7 @@ export function TournamentStatusControls({
   tournamentId,
 }: TournamentStatusControlsProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const [error, setError] = useState<null | string>(null);
   const [pending, setPending] = useState(false);
 
@@ -54,6 +56,7 @@ export function TournamentStatusControls({
         return;
       }
 
+      toast("Status updated.");
       router.refresh();
     } catch {
       setError("Unable to update status right now.");

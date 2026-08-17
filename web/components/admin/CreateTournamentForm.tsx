@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
 import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
+import { useToast } from "@/components/Toast";
 import {
   formActionsClassName,
   formButtonPrimaryClassName,
@@ -24,6 +25,7 @@ interface CreateTournamentResponse {
 
 export function CreateTournamentForm() {
   const router = useRouter();
+  const { toast } = useToast();
   const [error, setError] = useState<null | string>(null);
   const [pending, setPending] = useState(false);
   const [year, setYear] = useState(String(new Date().getFullYear()));
@@ -63,6 +65,7 @@ export function CreateTournamentForm() {
 
       router.push(`/admin/tournaments/${tournamentId}`);
       router.refresh();
+      toast("Tournament created.");
     } catch {
       setError("Unable to create tournament right now.");
     } finally {

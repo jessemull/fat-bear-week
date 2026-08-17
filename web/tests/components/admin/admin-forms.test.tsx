@@ -1,6 +1,7 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
+import { type ReactElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const push = vi.fn();
@@ -23,9 +24,14 @@ import { DeleteBearButton } from "@/components/admin/DeleteBearButton";
 import { DeleteTournamentButton } from "@/components/admin/DeleteTournamentButton";
 import { TournamentList } from "@/components/admin/TournamentList";
 import { TournamentStatusControls } from "@/components/admin/TournamentStatusControls";
+import { ToastProvider } from "@/components/Toast";
 
 const tournamentId = "11111111-1111-4111-8111-111111111111";
 const bearAId = "22222222-2222-4222-8222-222222222222";
+
+function renderWithToast(ui: ReactElement) {
+  return render(<ToastProvider>{ui}</ToastProvider>);
+}
 
 describe("admin forms", () => {
   beforeEach(() => {
@@ -42,7 +48,7 @@ describe("admin forms", () => {
   });
 
   it("should render CreateTournamentForm without a11y violations", async () => {
-    const { container } = render(<CreateTournamentForm />);
+    const { container } = renderWithToast(<CreateTournamentForm />);
 
     expect(screen.getByLabelText("Year")).toBeInTheDocument();
     expect(await axe(container)).toHaveNoViolations();
@@ -130,7 +136,7 @@ describe("admin forms", () => {
       }),
     );
 
-    render(<CreateTournamentForm />);
+    renderWithToast(<CreateTournamentForm />);
 
     const yearInput = screen.getByLabelText("Year");
 
@@ -163,7 +169,7 @@ describe("admin forms", () => {
   });
 
   it("should render BearForm without a11y violations", async () => {
-    const { container } = render(
+    const { container } = renderWithToast(
       <BearForm mode="create" tournamentId={tournamentId} />,
     );
 
@@ -175,7 +181,7 @@ describe("admin forms", () => {
   it("should go back when Cancel is clicked on BearForm", async () => {
     const user = userEvent.setup();
 
-    render(<BearForm mode="create" tournamentId={tournamentId} />);
+    renderWithToast(<BearForm mode="create" tournamentId={tournamentId} />);
 
     await user.click(screen.getByRole("button", { name: "Cancel" }));
 
@@ -193,7 +199,7 @@ describe("admin forms", () => {
       }),
     );
 
-    render(<BearForm mode="create" tournamentId={tournamentId} />);
+    renderWithToast(<BearForm mode="create" tournamentId={tournamentId} />);
 
     await user.type(screen.getByLabelText("Name"), "Otis");
     await user.type(screen.getByLabelText("Nickname"), "The Boss");
@@ -222,7 +228,7 @@ describe("admin forms", () => {
   it("should submit BearForm edit", async () => {
     const user = userEvent.setup();
 
-    render(
+    renderWithToast(
       <BearForm
         bear={{
           biography: null,
@@ -330,7 +336,7 @@ describe("admin forms", () => {
       }),
     );
 
-    render(<BearForm mode="create" tournamentId={tournamentId} />);
+    renderWithToast(<BearForm mode="create" tournamentId={tournamentId} />);
 
     await user.type(screen.getByLabelText("Name"), "Otis");
     await user.click(screen.getByRole("button", { name: "Create Bear" }));
@@ -343,7 +349,7 @@ describe("admin forms", () => {
   it("should delete a bear after confirm", async () => {
     const user = userEvent.setup();
 
-    render(
+    renderWithToast(
       <DeleteBearButton
         bearId={bearAId}
         name="Otis"
@@ -378,7 +384,7 @@ describe("admin forms", () => {
       }),
     );
 
-    render(
+    renderWithToast(
       <DeleteBearButton
         bearId={bearAId}
         name="Otis"
@@ -400,7 +406,7 @@ describe("admin forms", () => {
 
   it("should transition tournament status", async () => {
     const user = userEvent.setup();
-    const { container } = render(
+    const { container } = renderWithToast(
       <TournamentStatusControls
         status="draft"
         tournamentId={tournamentId}
@@ -431,7 +437,7 @@ describe("admin forms", () => {
       }),
     );
 
-    render(
+    renderWithToast(
       <TournamentStatusControls
         status="draft"
         tournamentId={tournamentId}
@@ -449,7 +455,7 @@ describe("admin forms", () => {
   it("should delete a tournament after confirm", async () => {
     const user = userEvent.setup();
 
-    const { container } = render(
+    const { container } = renderWithToast(
       <DeleteTournamentButton tournamentId={tournamentId} year={2026} />,
     );
 
@@ -475,7 +481,7 @@ describe("admin forms", () => {
   it("should show delete errors and cancel without calling API", async () => {
     const user = userEvent.setup();
 
-    render(<DeleteTournamentButton tournamentId={tournamentId} year={2026} />);
+    renderWithToast(<DeleteTournamentButton tournamentId={tournamentId} year={2026} />);
     await user.click(
       screen.getByRole("button", { name: "Delete Tournament" }),
     );
