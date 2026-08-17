@@ -13,10 +13,14 @@ import {
 } from "@/lib/form-styles";
 
 interface SignInFormProps {
+  onBotCheckReset?: () => void;
   turnstileToken: null | string;
 }
 
-export function SignInForm({ turnstileToken }: SignInFormProps) {
+export function SignInForm({
+  onBotCheckReset,
+  turnstileToken,
+}: SignInFormProps) {
   const router = useRouter();
   const [error, setError] = useState<null | string>(null);
   const [identifier, setIdentifier] = useState("");
@@ -45,6 +49,7 @@ export function SignInForm({ turnstileToken }: SignInFormProps) {
 
       if (!response.ok) {
         setError(json.error ?? "Unable to sign in.");
+        onBotCheckReset?.();
         return;
       }
 
@@ -52,6 +57,7 @@ export function SignInForm({ turnstileToken }: SignInFormProps) {
       router.refresh();
     } catch {
       setError("Unable to sign in right now.");
+      onBotCheckReset?.();
     } finally {
       setPending(false);
     }
@@ -111,6 +117,7 @@ export function SignInForm({ turnstileToken }: SignInFormProps) {
         </p>
       ) : null}
       <button
+        aria-busy={pending}
         className={`${formButtonPrimaryClassName} mt-2`}
         disabled={pending}
         type="submit"

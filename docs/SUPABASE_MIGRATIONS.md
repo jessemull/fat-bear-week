@@ -53,6 +53,7 @@ Ship these as numbered SQL files before (or with) the invite/join and admin work
 | `005_bears_profile_fields.sql` | Rename `description` → `identification`; add `biography`; drop `number` |
 | `006_invite_token_hash_email_unique.sql` | Hash invite tokens at rest; case-insensitive `users.email` unique; join RPC uses `p_token_hash` |
 | `007_users_name_lower.sql` | Stored `name_lower` for exact case-insensitive sign-in lookups |
+| `008_join_existing_user_with_invite.sql` | Existing account joins another pool via invite email + password (`join_existing_user_with_invite`) |
 
 Until those land, RLS remains enabled with **no policies** on app tables (anon/authenticated denied; service role bypasses RLS on the server).
 

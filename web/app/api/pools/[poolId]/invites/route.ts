@@ -16,6 +16,8 @@ import { requirePoolCommissioner } from "@/lib/pools.server";
 import { requireSiteUrl } from "@/lib/site-url";
 import { getServiceSupabase } from "@/lib/supabase.server";
 
+export const maxDuration = 60;
+
 interface RouteContext {
   params: Promise<{
     poolId: string;

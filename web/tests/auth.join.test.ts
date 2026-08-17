@@ -89,7 +89,7 @@ describe("auth.server join/sign-in helpers", () => {
     verifyPassword.mockResolvedValue(true);
     fromMock.mockImplementationOnce(() => ({
       select: () => ({
-        eq: () => ({
+        ilike: () => ({
           maybeSingle: () =>
             Promise.resolve({
               data: {
@@ -140,7 +140,7 @@ describe("auth.server join/sign-in helpers", () => {
     verifyPassword.mockResolvedValue(false);
     fromMock.mockImplementationOnce(() => ({
       select: () => ({
-        eq: () => ({
+        ilike: () => ({
           maybeSingle: () =>
             Promise.resolve({
               data: {
@@ -163,7 +163,7 @@ describe("auth.server join/sign-in helpers", () => {
         password: "wrong-password",
         token: "t".repeat(32),
       }),
-    ).rejects.toThrow("email_taken");
+    ).rejects.toThrow("invalid_credentials");
     expect(rpcMock).not.toHaveBeenCalled();
   });
 
@@ -172,7 +172,7 @@ describe("auth.server join/sign-in helpers", () => {
     verifyPassword.mockResolvedValue(true);
     fromMock.mockImplementationOnce(() => ({
       select: () => ({
-        eq: () => ({
+        ilike: () => ({
           maybeSingle: () =>
             Promise.resolve({
               data: {
@@ -275,7 +275,7 @@ describe("auth.server join/sign-in helpers", () => {
   it("should find users by email via login identifier", async () => {
     fromMock.mockImplementation(() => ({
       select: () => ({
-        eq: () => ({
+        ilike: () => ({
           maybeSingle: vi.fn().mockResolvedValue({
             data: {
               email: "otis@example.com",
@@ -295,6 +295,45 @@ describe("auth.server join/sign-in helpers", () => {
     expect(user).toEqual({
       id: "u1",
       name: "Otis",
+      passwordHash: "hash",
+    });
+  });
+
+  it("should fall through to display-name lookup when email miss has @", async () => {
+    fromMock
+      .mockImplementationOnce(() => ({
+        select: () => ({
+          ilike: () => ({
+            maybeSingle: () =>
+              Promise.resolve({
+                data: null,
+                error: null,
+              }),
+          }),
+        }),
+      }))
+      .mockImplementationOnce(() => ({
+        select: () => ({
+          eq: () => ({
+            maybeSingle: () =>
+              Promise.resolve({
+                data: {
+                  id: "u2",
+                  name: "otis@friends",
+                  password_hash: "hash",
+                },
+                error: null,
+              }),
+          }),
+        }),
+      }));
+
+    const { findUserByLoginIdentifier } = await import("@/lib/auth.server");
+    const user = await findUserByLoginIdentifier("otis@friends");
+
+    expect(user).toEqual({
+      id: "u2",
+      name: "otis@friends",
       passwordHash: "hash",
     });
   });

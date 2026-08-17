@@ -252,6 +252,21 @@ async function rotateInviteTokenOnce(params: {
   poolId: string;
   refreshExpiry?: boolean;
 }): Promise<MintedInvite | null> {
+  const first = await attemptRotateInviteToken(params);
+
+  if (first) {
+    return first;
+  }
+
+  // CAS miss: another isolate may have rotated; re-read and try once more.
+  return attemptRotateInviteToken(params);
+}
+
+async function attemptRotateInviteToken(params: {
+  inviteId: string;
+  poolId: string;
+  refreshExpiry?: boolean;
+}): Promise<MintedInvite | null> {
   const { inviteId, poolId, refreshExpiry = false } = params;
   const supabase = getServiceSupabase();
 
@@ -463,7 +478,7 @@ export async function updateInvite(params: {
   }
 
   if (!data) {
-    throw new Error("not_found");
+    throw new Error("invite_used");
   }
 
   return {

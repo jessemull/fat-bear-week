@@ -30,6 +30,20 @@ export async function POST(request: Request) {
   }
 
   const clientIp = getClientIp(request) ?? "unknown";
+  const parsed = await parseJsonBody(request, signInBodySchema);
+
+  if ("error" in parsed) {
+    return parsed.error;
+  }
+
+  const turnstileOk = await verifyTurnstileToken(
+    parsed.data.turnstileToken,
+    clientIp === "unknown" ? null : clientIp,
+  );
+
+  if (!turnstileOk) {
+    return jsonError("Bot check failed. Please try again.", { status: 400 });
+  }
 
   if (
     !consumeRateLimit({
@@ -41,12 +55,6 @@ export async function POST(request: Request) {
     return jsonError("Too many sign-in attempts. Try again shortly.", {
       status: 429,
     });
-  }
-
-  const parsed = await parseJsonBody(request, signInBodySchema);
-
-  if ("error" in parsed) {
-    return parsed.error;
   }
 
   const identifierKey = parsed.data.identifier.trim().toLowerCase();
@@ -61,15 +69,6 @@ export async function POST(request: Request) {
     return jsonError("Too many sign-in attempts. Try again shortly.", {
       status: 429,
     });
-  }
-
-  const turnstileOk = await verifyTurnstileToken(
-    parsed.data.turnstileToken,
-    clientIp === "unknown" ? null : clientIp,
-  );
-
-  if (!turnstileOk) {
-    return jsonError("Bot check failed. Please try again.", { status: 400 });
   }
 
   const user = await findUserByLoginIdentifier(parsed.data.identifier);

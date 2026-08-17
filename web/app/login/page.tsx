@@ -6,16 +6,24 @@ import { getSession } from "@/lib/sessions.server";
 
 export const dynamic = "force-dynamic";
 
-export default async function LoginPage() {
+interface LoginPageProps {
+  searchParams: Promise<{
+    joined?: string;
+  }>;
+}
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
   const session = await getSession();
 
   if (session) {
     redirect("/");
   }
 
+  const params = await searchParams;
+
   return (
     <main className={`${formPageClassName} max-w-sm justify-center pb-24`}>
-      <LoginPanel />
+      <LoginPanel joined={params.joined === "1"} />
     </main>
   );
 }

@@ -26,12 +26,18 @@ vi.mock("@/components/auth/TurnstileWidget", () => ({
   },
 }));
 
+import type { ReactElement } from "react";
+
 import { JoinForm } from "@/components/auth/JoinForm";
 import { JoinPanel } from "@/components/auth/JoinPanel";
 import { LoginPanel } from "@/components/auth/LoginPanel";
 import { SignInForm } from "@/components/auth/SignInForm";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 import { ToastProvider } from "@/components/Toast";
+
+function renderWithToast(ui: ReactElement) {
+  return render(<ToastProvider>{ui}</ToastProvider>);
+}
 
 describe("auth forms", () => {
   beforeEach(() => {
@@ -57,7 +63,7 @@ describe("auth forms", () => {
       }),
     );
 
-    render(
+    renderWithToast(
       <JoinForm
         email="otis@example.com"
         token={"t".repeat(32)}
@@ -73,7 +79,7 @@ describe("auth forms", () => {
   });
 
   it("should render JoinForm without a11y violations", async () => {
-    const { container } = render(
+    const { container } = renderWithToast(
       <JoinForm
         email="jess@example.com"
         nameHint="Jess"
@@ -90,7 +96,7 @@ describe("auth forms", () => {
   it("should submit JoinForm", async () => {
     const user = userEvent.setup();
 
-    render(
+    renderWithToast(
       <JoinForm
         email="otis@example.com"
         token={"t".repeat(32)}
@@ -129,7 +135,7 @@ describe("auth forms", () => {
       }),
     );
 
-    render(
+    renderWithToast(
       <JoinForm
         email="otis@example.com"
         token={"t".repeat(32)}
@@ -142,13 +148,93 @@ describe("auth forms", () => {
     await user.type(screen.getByLabelText("Confirm password"), "password1");
     await user.click(screen.getByRole("button", { name: "Join pool" }));
 
-    expect(push).toHaveBeenCalledWith("/login");
+    expect(push).toHaveBeenCalledWith("/login?joined=1");
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Account ready — sign in to continue.",
+    );
+  });
+
+  it("should join with an existing account using current password", async () => {
+    const user = userEvent.setup();
+    const onBotCheckReset = vi.fn();
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        json: async () => ({ error: "Incorrect password for this account." }),
+        ok: false,
+      }),
+    );
+
+    renderWithToast(
+      <JoinForm
+        email="otis@example.com"
+        existingAccount
+        existingName="Otis"
+        token={"t".repeat(32)}
+        turnstileToken="test-turnstile-token"
+        onBotCheckReset={onBotCheckReset}
+      />,
+    );
+
+    expect(screen.getByLabelText("Display name")).toHaveAttribute("readonly");
+    expect(screen.queryByLabelText("Confirm password")).toBeNull();
+    expect(
+      screen.getByText(/existing display name will be used/i),
+    ).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText("Password"), "password1");
+    await user.click(screen.getByRole("button", { name: "Join pool" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Incorrect password for this account.",
+    );
+    expect(onBotCheckReset).toHaveBeenCalled();
+  });
+
+  it("should reset Turnstile from JoinPanel after a failed submit", async () => {
+    const user = userEvent.setup();
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        json: async () => ({ error: "This pool is full." }),
+        ok: false,
+      }),
+    );
+
+    renderWithToast(
+      <JoinPanel
+        email="a@example.com"
+        existingAccount
+        existingName="Alex"
+        poolName="Friends"
+        token={"t".repeat(32)}
+      />,
+    );
+
+    expect(
+      screen.getByText(/Enter your existing password/i),
+    ).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText("Password"), "password1");
+    await user.click(screen.getByRole("button", { name: "Join pool" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent("This pool is full.");
+  });
+
+  it("should show joined messaging on LoginPanel", () => {
+    renderWithToast(<LoginPanel joined />);
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Your account is ready. Sign in to continue.",
+    );
   });
 
   it("should reject mismatched passwords on join", async () => {
     const user = userEvent.setup();
 
-    render(
+    renderWithToast(
       <JoinForm
         email="otis@example.com"
         token={"t".repeat(32)}
@@ -285,7 +371,7 @@ describe("auth forms", () => {
   });
 
   it("should render JoinPanel and LoginPanel shells", async () => {
-    const { container: joinContainer } = render(
+    const { container: joinContainer } = renderWithToast(
       <JoinPanel
         email="a@example.com"
         nameHint="Alex"
@@ -299,7 +385,7 @@ describe("auth forms", () => {
     ).toBeInTheDocument();
     expect(await axe(joinContainer)).toHaveNoViolations();
 
-    const { container: loginContainer } = render(<LoginPanel />);
+    const { container: loginContainer } = renderWithToast(<LoginPanel />);
 
     expect(screen.getByRole("heading", { name: "Sign In" })).toBeInTheDocument();
     expect(await axe(loginContainer)).toHaveNoViolations();

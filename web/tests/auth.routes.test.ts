@@ -6,6 +6,7 @@ const getClientIp = vi.fn();
 const joinWithInvite = vi.fn();
 const findUserByLoginIdentifier = vi.fn();
 const createSession = vi.fn();
+const revokeSession = vi.fn();
 const verifyPassword = vi.fn();
 const hashPassword = vi.fn();
 
@@ -22,18 +23,36 @@ vi.mock("@/lib/auth.server", () => ({
   findUserByLoginIdentifier: (...args: unknown[]) =>
     findUserByLoginIdentifier(...args),
   joinWithInvite: (...args: unknown[]) => joinWithInvite(...args),
-  parseJoinErrorMessage: (message: string) =>
-    message.includes("invite_used") ? "invite_used" : null,
+  parseJoinErrorMessage: (message: string) => {
+    if (message.includes("invalid_credentials")) {
+      return "invalid_credentials";
+    }
+
+    if (message.includes("invite_used")) {
+      return "invite_used";
+    }
+
+    return null;
+  },
 }));
 
 vi.mock("@/lib/sessions.server", () => ({
   createSession: (...args: unknown[]) => createSession(...args),
+  revokeSession: (...args: unknown[]) => revokeSession(...args),
 }));
 
 vi.mock("@/lib/passwords.server", () => ({
   hashPassword: (...args: unknown[]) => hashPassword(...args),
   verifyPassword: (...args: unknown[]) => verifyPassword(...args),
 }));
+
+const joinBody = {
+  name: "Otis",
+  password: "password1",
+  passwordConfirm: "password1",
+  token: "t".repeat(32),
+  turnstileToken: "token",
+};
 
 describe("auth route rate limits", () => {
   beforeEach(() => {
@@ -44,10 +63,13 @@ describe("auth route rate limits", () => {
     joinWithInvite.mockReset();
     findUserByLoginIdentifier.mockReset();
     createSession.mockReset();
+    revokeSession.mockReset();
     verifyPassword.mockReset();
     hashPassword.mockReset();
     getClientIp.mockReturnValue("127.0.0.1");
     hashPassword.mockResolvedValue("scrypt$dummy");
+    verifyTurnstileToken.mockResolvedValue(true);
+    revokeSession.mockResolvedValue(undefined);
   });
 
   it("should return 429 when join IP rate limit denies", async () => {
@@ -56,7 +78,9 @@ describe("auth route rate limits", () => {
     const { POST } = await import("@/app/api/auth/join/route");
     const response = await POST(
       new Request("http://localhost/api/auth/join", {
+        body: JSON.stringify(joinBody),
         headers: {
+          "content-type": "application/json",
           origin: "http://localhost",
           "x-fbw-test-origin-bypass": "1",
         },
@@ -100,7 +124,6 @@ describe("auth route rate limits", () => {
     consumeRateLimit.mockImplementation((params: { key: string }) => {
       return !params.key.startsWith("auth:sign-in:id:");
     });
-    verifyTurnstileToken.mockResolvedValue(true);
 
     const { POST } = await import("@/app/api/auth/sign-in/route");
     const response = await POST(
@@ -128,7 +151,6 @@ describe("auth route rate limits", () => {
 
   it("should return needsSignIn when join succeeds but session create fails", async () => {
     consumeRateLimit.mockReturnValue(true);
-    verifyTurnstileToken.mockResolvedValue(true);
     joinWithInvite.mockResolvedValue({
       entryId: "e1",
       poolId: "p1",
@@ -140,13 +162,7 @@ describe("auth route rate limits", () => {
     const { POST } = await import("@/app/api/auth/join/route");
     const response = await POST(
       new Request("http://localhost/api/auth/join", {
-        body: JSON.stringify({
-          name: "Otis",
-          password: "password1",
-          passwordConfirm: "password1",
-          token: "t".repeat(32),
-          turnstileToken: "token",
-        }),
+        body: JSON.stringify(joinBody),
         headers: {
           "content-type": "application/json",
           origin: "http://localhost",
@@ -157,6 +173,7 @@ describe("auth route rate limits", () => {
     );
 
     expect(response.status).toBe(201);
+    expect(revokeSession).toHaveBeenCalled();
     await expect(response.json()).resolves.toEqual({
       data: {
         entryId: "e1",
@@ -165,6 +182,29 @@ describe("auth route rate limits", () => {
         userId: "u1",
         userName: "Otis",
       },
+    });
+  });
+
+  it("should return 401 for invalid credentials on existing-user join", async () => {
+    consumeRateLimit.mockReturnValue(true);
+    joinWithInvite.mockRejectedValue(new Error("invalid_credentials"));
+
+    const { POST } = await import("@/app/api/auth/join/route");
+    const response = await POST(
+      new Request("http://localhost/api/auth/join", {
+        body: JSON.stringify(joinBody),
+        headers: {
+          "content-type": "application/json",
+          origin: "http://localhost",
+          "x-fbw-test-origin-bypass": "1",
+        },
+        method: "POST",
+      }),
+    );
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({
+      error: "Incorrect password for this account.",
     });
   });
 });

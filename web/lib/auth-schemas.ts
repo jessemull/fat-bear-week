@@ -4,7 +4,14 @@ export const MAX_BULK_INVITES = 100;
 
 export const joinBodySchema = z
   .object({
-    name: z.string().trim().min(1).max(80),
+    name: z
+      .string()
+      .trim()
+      .min(1)
+      .max(80)
+      .refine((value) => !value.includes("@"), {
+        message: "Display names cannot include @.",
+      }),
     password: z.string().min(8).max(128),
     passwordConfirm: z.string().min(8).max(128),
     token: z.string().min(20).max(200),

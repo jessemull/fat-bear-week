@@ -113,6 +113,7 @@ describe("TurnstileWidget", () => {
     Object.defineProperty(window, "turnstile", {
       configurable: true,
       value: {
+        remove: vi.fn(),
         render: renderMock,
         reset: vi.fn(),
       },
@@ -125,5 +126,42 @@ describe("TurnstileWidget", () => {
     await waitFor(() => {
       expect(renderMock).toHaveBeenCalled();
     });
+  });
+
+  it("should reset and remove the widget", async () => {
+    vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "site-key");
+
+    const reset = vi.fn();
+    const remove = vi.fn();
+    const renderMock = vi.fn(() => "widget-4");
+
+    Object.defineProperty(window, "turnstile", {
+      configurable: true,
+      value: {
+        remove,
+        render: renderMock,
+        reset,
+      },
+    });
+
+    const onToken = vi.fn();
+    const { rerender, unmount } = render(
+      <TurnstileWidget resetNonce={0} onToken={onToken} />,
+    );
+
+    await waitFor(() => {
+      expect(renderMock).toHaveBeenCalled();
+    });
+
+    rerender(<TurnstileWidget resetNonce={1} onToken={onToken} />);
+
+    await waitFor(() => {
+      expect(reset).toHaveBeenCalledWith("widget-4");
+      expect(onToken).toHaveBeenCalledWith(null);
+    });
+
+    unmount();
+
+    expect(remove).toHaveBeenCalledWith("widget-4");
   });
 });

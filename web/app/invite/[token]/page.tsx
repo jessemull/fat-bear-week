@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { JoinPanel } from "@/components/auth/JoinPanel";
+import { findUserByLoginIdentifier } from "@/lib/auth.server";
 import {
   formHeadingClassName,
   formLinkClassName,
@@ -68,10 +69,16 @@ export default async function InvitePage({ params }: InvitePageProps) {
     );
   }
 
+  const existing = invite.email
+    ? await findUserByLoginIdentifier(invite.email)
+    : null;
+
   return (
     <main className={`${formPageClassName} max-w-sm justify-center`}>
       <JoinPanel
         email={invite.email}
+        existingAccount={Boolean(existing)}
+        existingName={existing?.name ?? null}
         nameHint={invite.nameHint}
         poolName={invite.poolName}
         token={token}

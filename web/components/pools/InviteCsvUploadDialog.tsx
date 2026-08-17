@@ -201,6 +201,8 @@ export function InviteCsvUploadDialog({
 }: InviteCsvUploadDialogProps) {
   const titleId = useId();
   const descriptionId = useId();
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<null | string>(null);
   const [pending, setPending] = useState(false);
@@ -211,9 +213,37 @@ export function InviteCsvUploadDialog({
       return;
     }
 
+    cancelRef.current?.focus();
+
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape" && !pending) {
         onCancel();
+        return;
+      }
+
+      if (event.key !== "Tab" || !dialogRef.current) {
+        return;
+      }
+
+      const focusable = [
+        ...dialogRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled])',
+        ),
+      ];
+
+      if (focusable.length === 0) {
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
       }
     }
 
@@ -308,6 +338,7 @@ export function InviteCsvUploadDialog({
         aria-labelledby={titleId}
         aria-modal="true"
         className="relative z-10 w-full max-w-md rounded-md border border-zinc-300 bg-white p-5 shadow-xl dark:border-zinc-600 dark:bg-zinc-950"
+        ref={dialogRef}
         role="dialog"
       >
         <div className="flex flex-col gap-2">
@@ -363,6 +394,7 @@ export function InviteCsvUploadDialog({
           <button
             className={`${formButtonSecondaryClassName} w-full justify-center`}
             disabled={pending}
+            ref={cancelRef}
             type="button"
             onClick={onCancel}
           >

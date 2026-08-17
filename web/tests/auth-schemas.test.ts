@@ -22,6 +22,18 @@ describe("auth-schemas", () => {
     expect(parsed.name).toBe("Otis");
   });
 
+  it("should reject display names that include @", () => {
+    const result = joinBodySchema.safeParse({
+      name: "otis@friends",
+      password: "password1",
+      passwordConfirm: "password1",
+      token: "a".repeat(32),
+      turnstileToken: "turnstile-ok",
+    });
+
+    expect(result.success).toBe(false);
+  });
+
   it("should reject short passwords on join", () => {
     const result = joinBodySchema.safeParse({
       name: "Otis",

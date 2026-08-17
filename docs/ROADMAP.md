@@ -175,7 +175,7 @@ Prefer admin entry first. Investigate automation later:
 
 - [ ] ~~Public registration / open pool directory~~
 - [ ] ~~Multiple brackets per person~~
-- [ ] ~~Multiple pools per person (unless later demand)~~
+- [x] Multiple pools per person (invite-based join for an existing account)
 - [ ] ~~Payments / entry fees~~
 - [ ] ~~Advertising~~
 - [ ] ~~Comments / chat / message boards~~

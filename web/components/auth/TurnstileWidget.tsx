@@ -5,6 +5,7 @@ import { useEffect, useId, useRef } from "react";
 declare global {
   interface Window {
     turnstile?: {
+      remove: (widgetId?: string) => void;
       render: (
         element: HTMLElement,
         options: {
@@ -22,6 +23,7 @@ declare global {
 
 interface TurnstileWidgetProps {
   onToken: (token: null | string) => void;
+  resetNonce?: number;
 }
 
 const SCRIPT_ID = "cf-turnstile-script";
@@ -69,7 +71,10 @@ function loadTurnstileScript(): Promise<void> {
 /**
  * Cloudflare Turnstile widget. Requires NEXT_PUBLIC_TURNSTILE_SITE_KEY.
  */
-export function TurnstileWidget({ onToken }: TurnstileWidgetProps) {
+export function TurnstileWidget({
+  onToken,
+  resetNonce = 0,
+}: TurnstileWidgetProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const onTokenRef = useRef(onToken);
   const widgetIdRef = useRef<null | string>(null);
@@ -111,8 +116,24 @@ export function TurnstileWidget({ onToken }: TurnstileWidgetProps) {
 
     return () => {
       cancelled = true;
+
+      if (widgetIdRef.current && window.turnstile?.remove) {
+        window.turnstile.remove(widgetIdRef.current);
+        widgetIdRef.current = null;
+      }
     };
   }, [siteKey]);
+
+  useEffect(() => {
+    if (resetNonce < 1) {
+      return;
+    }
+
+    if (widgetIdRef.current && window.turnstile?.reset) {
+      window.turnstile.reset(widgetIdRef.current);
+      onTokenRef.current(null);
+    }
+  }, [resetNonce]);
 
   if (!siteKey) {
     return (

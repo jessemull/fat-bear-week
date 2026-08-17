@@ -7,7 +7,7 @@ import {
 import { joinBodySchema } from "@/lib/auth-schemas";
 import { joinWithInvite, parseJoinErrorMessage } from "@/lib/auth.server";
 import { consumeRateLimit } from "@/lib/rate-limit.server";
-import { createSession } from "@/lib/sessions.server";
+import { createSession, revokeSession } from "@/lib/sessions.server";
 import { getClientIp, verifyTurnstileToken } from "@/lib/turnstile.server";
 
 const JOIN_LIMIT = 10;
@@ -19,19 +19,6 @@ export async function POST(request: Request) {
   }
 
   const clientIp = getClientIp(request) ?? "unknown";
-
-  if (
-    !consumeRateLimit({
-      key: `auth:join:ip:${clientIp}`,
-      limit: JOIN_LIMIT,
-      windowMs: JOIN_WINDOW_MS,
-    })
-  ) {
-    return jsonError("Too many join attempts. Try again shortly.", {
-      status: 429,
-    });
-  }
-
   const parsed = await parseJsonBody(request, joinBodySchema);
 
   if ("error" in parsed) {
@@ -47,6 +34,18 @@ export async function POST(request: Request) {
     return jsonError("Bot check failed. Please try again.", { status: 400 });
   }
 
+  if (
+    !consumeRateLimit({
+      key: `auth:join:ip:${clientIp}`,
+      limit: JOIN_LIMIT,
+      windowMs: JOIN_WINDOW_MS,
+    })
+  ) {
+    return jsonError("Too many join attempts. Try again shortly.", {
+      status: 429,
+    });
+  }
+
   try {
     const result = await joinWithInvite({
       name: parsed.data.name,
@@ -56,7 +55,15 @@ export async function POST(request: Request) {
 
     try {
       await createSession(result.userId);
-    } catch {
+    } catch (sessionError) {
+      console.error("join createSession failed", sessionError);
+
+      try {
+        await revokeSession();
+      } catch (revokeError) {
+        console.error("join revokeSession after createSession failure", revokeError);
+      }
+
       return jsonData(
         {
           entryId: result.entryId,
@@ -93,6 +100,10 @@ export async function POST(request: Request) {
 
     if (code === "invite_expired") {
       return jsonError("This invite has expired.", { status: 400 });
+    }
+
+    if (code === "invalid_credentials") {
+      return jsonError("Incorrect password for this account.", { status: 401 });
     }
 
     if (code === "name_taken") {
