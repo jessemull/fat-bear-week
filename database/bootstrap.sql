@@ -3,6 +3,9 @@
 -- 001_initial_schema.sql
 -- Fat Bear Week Fantasy Bracket — initial schema
 -- Conventions: UUID PKs, TIMESTAMPTZ, created_at/updated_at on mutable tables
+--
+-- RLS is enabled on all app tables with no policies yet: the anon/authenticated
+-- roles cannot read or write. The service role bypasses RLS (server-only).
 
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
@@ -32,29 +35,10 @@ CREATE TABLE users (
 
 CREATE UNIQUE INDEX users_email_unique ON users (email) WHERE email IS NOT NULL;
 
--- ---------------------------------------------------------------------------
--- pools
--- ---------------------------------------------------------------------------
-
-CREATE TABLE pools (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL,
-  invite_prefix TEXT,
-  max_players INTEGER NOT NULL DEFAULT 100 CHECK (max_players > 0),
-  bracket_deadline TIMESTAMPTZ,
-  scoring_system TEXT NOT NULL DEFAULT 'standard_1_2_4_8',
-  show_brackets_before_lock BOOLEAN NOT NULL DEFAULT FALSE,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TRIGGER pools_updated_at
-  BEFORE UPDATE ON pools
-  FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 
 -- ---------------------------------------------------------------------------
--- tournaments
+-- tournaments (before pools — pools reference a tournament)
 -- ---------------------------------------------------------------------------
 
 CREATE TABLE tournaments (
@@ -72,6 +56,34 @@ CREATE TRIGGER tournaments_updated_at
   BEFORE UPDATE ON tournaments
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
+
+ALTER TABLE tournaments ENABLE ROW LEVEL SECURITY;
+
+-- ---------------------------------------------------------------------------
+-- pools (each pool is tied to exactly one tournament)
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE pools (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tournament_id UUID NOT NULL REFERENCES tournaments (id) ON DELETE RESTRICT,
+  name TEXT NOT NULL,
+  invite_prefix TEXT,
+  max_players INTEGER NOT NULL DEFAULT 100 CHECK (max_players > 0),
+  bracket_deadline TIMESTAMPTZ,
+  scoring_system TEXT NOT NULL DEFAULT 'standard_1_2_4_8',
+  show_brackets_before_lock BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX pools_tournament_id_idx ON pools (tournament_id);
+
+CREATE TRIGGER pools_updated_at
+  BEFORE UPDATE ON pools
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+ALTER TABLE pools ENABLE ROW LEVEL SECURITY;
 
 -- ---------------------------------------------------------------------------
 -- bears
@@ -101,8 +113,11 @@ CREATE TRIGGER bears_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
+ALTER TABLE bears ENABLE ROW LEVEL SECURITY;
+
 -- ---------------------------------------------------------------------------
 -- matchups
+-- winner_id must be bear_a, bear_b, or null (covers byes when one side is null)
 -- ---------------------------------------------------------------------------
 
 CREATE TABLE matchups (
@@ -121,7 +136,12 @@ CREATE TABLE matchups (
   ends_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE (tournament_id, round, position)
+  UNIQUE (tournament_id, round, position),
+  CONSTRAINT matchups_winner_is_participant CHECK (
+    winner_id IS NULL
+    OR winner_id = bear_a_id
+    OR winner_id = bear_b_id
+  )
 );
 
 CREATE INDEX matchups_tournament_id_idx ON matchups (tournament_id);
@@ -132,8 +152,11 @@ CREATE TRIGGER matchups_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
+ALTER TABLE matchups ENABLE ROW LEVEL SECURITY;
+
 -- ---------------------------------------------------------------------------
 -- invitations (individual, curated invite tokens)
+-- used_at is the non-reuse signal; used_by is optional audit (may be nullified)
 -- ---------------------------------------------------------------------------
 
 CREATE TABLE invitations (
@@ -141,13 +164,20 @@ CREATE TABLE invitations (
   pool_id UUID NOT NULL REFERENCES pools (id) ON DELETE CASCADE,
   token TEXT NOT NULL UNIQUE,
   name_hint TEXT,
+  used_at TIMESTAMPTZ,
   used_by UUID REFERENCES users (id) ON DELETE SET NULL,
   expires_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- used_at IS NOT NULL means the invite is permanently consumed, even if
+-- used_by is later nullified by user deletion (ON DELETE SET NULL).
+
 CREATE INDEX invitations_pool_id_idx ON invitations (pool_id);
+CREATE INDEX invitations_used_at_idx ON invitations (used_at);
 CREATE INDEX invitations_used_by_idx ON invitations (used_by);
+
+ALTER TABLE invitations ENABLE ROW LEVEL SECURITY;
 
 -- ---------------------------------------------------------------------------
 -- entries (one bracket per user per pool)
@@ -165,6 +195,8 @@ CREATE TABLE entries (
 
 CREATE INDEX entries_pool_id_idx ON entries (pool_id);
 
+ALTER TABLE entries ENABLE ROW LEVEL SECURITY;
+
 -- ---------------------------------------------------------------------------
 -- picks
 -- ---------------------------------------------------------------------------
@@ -180,3 +212,567 @@ CREATE TABLE picks (
 
 CREATE INDEX picks_entry_id_idx ON picks (entry_id);
 CREATE INDEX picks_matchup_id_idx ON picks (matchup_id);
+
+ALTER TABLE picks ENABLE ROW LEVEL SECURITY;
+-- 002_sessions.sql
+-- HTTP-only session store, invitee email, unique display names, atomic join RPC
+--
+-- Commissioner / admin role: see 003_commissioner_gate.sql (users.is_commissioner).
+
+-- ---------------------------------------------------------------------------
+-- sessions
+-- Cookie holds the raw token; only the SHA-256 hex hash is stored here.
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE sessions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+  token_hash TEXT NOT NULL UNIQUE,
+  expires_at TIMESTAMPTZ NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX sessions_user_id_idx ON sessions (user_id);
+CREATE INDEX sessions_expires_at_idx ON sessions (expires_at);
+
+ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
+
+-- ---------------------------------------------------------------------------
+-- Sign-in identity: display name must be unique (case-insensitive)
+-- ---------------------------------------------------------------------------
+
+CREATE UNIQUE INDEX users_name_lower_unique ON users (lower(name));
+
+-- ---------------------------------------------------------------------------
+-- Invitee address for automatic email + audit
+-- ---------------------------------------------------------------------------
+
+ALTER TABLE invitations
+  ADD COLUMN email TEXT;
+
+CREATE INDEX invitations_email_idx ON invitations (email);
+
+-- ---------------------------------------------------------------------------
+-- Atomic join: validate invite, enforce max_players, create user + entry,
+-- consume invite (used_at) in one transaction. Called via service role only.
+-- ---------------------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION join_pool_with_invite(
+  p_name TEXT,
+  p_password_hash TEXT,
+  p_token TEXT
+)
+RETURNS TABLE (
+  entry_id UUID,
+  pool_id UUID,
+  user_id UUID,
+  user_name TEXT
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_invitation invitations%ROWTYPE;
+  v_pool pools%ROWTYPE;
+  v_entry_count INTEGER;
+  v_user_id UUID;
+  v_entry_id UUID;
+BEGIN
+  IF p_token IS NULL OR length(trim(p_token)) = 0 THEN
+    RAISE EXCEPTION 'invalid_invite' USING ERRCODE = 'P0001';
+  END IF;
+
+  IF p_name IS NULL OR length(trim(p_name)) = 0 THEN
+    RAISE EXCEPTION 'invalid_name' USING ERRCODE = 'P0001';
+  END IF;
+
+  IF p_password_hash IS NULL OR length(p_password_hash) = 0 THEN
+    RAISE EXCEPTION 'invalid_password' USING ERRCODE = 'P0001';
+  END IF;
+
+  SELECT *
+  INTO v_invitation
+  FROM invitations
+  WHERE token = p_token
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'invalid_invite' USING ERRCODE = 'P0001';
+  END IF;
+
+  IF v_invitation.used_at IS NOT NULL THEN
+    RAISE EXCEPTION 'invite_used' USING ERRCODE = 'P0001';
+  END IF;
+
+  IF v_invitation.expires_at IS NOT NULL AND v_invitation.expires_at <= NOW() THEN
+    RAISE EXCEPTION 'invite_expired' USING ERRCODE = 'P0001';
+  END IF;
+
+  SELECT *
+  INTO v_pool
+  FROM pools
+  WHERE id = v_invitation.pool_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'invalid_invite' USING ERRCODE = 'P0001';
+  END IF;
+
+  SELECT count(*)::INTEGER
+  INTO v_entry_count
+  FROM entries
+  WHERE entries.pool_id = v_pool.id;
+
+  IF v_entry_count >= v_pool.max_players THEN
+    RAISE EXCEPTION 'pool_full' USING ERRCODE = 'P0001';
+  END IF;
+
+  BEGIN
+    INSERT INTO users (email, name, password_hash)
+    VALUES (v_invitation.email, trim(p_name), p_password_hash)
+    RETURNING users.id INTO v_user_id;
+  EXCEPTION
+    WHEN unique_violation THEN
+      RAISE EXCEPTION 'name_taken' USING ERRCODE = 'P0001';
+  END;
+
+  BEGIN
+    INSERT INTO entries (pool_id, user_id)
+    VALUES (v_pool.id, v_user_id)
+    RETURNING entries.id INTO v_entry_id;
+  EXCEPTION
+    WHEN unique_violation THEN
+      RAISE EXCEPTION 'already_in_pool' USING ERRCODE = 'P0001';
+  END;
+
+  UPDATE invitations
+  SET
+    used_at = NOW(),
+    used_by = v_user_id
+  WHERE id = v_invitation.id;
+
+  RETURN QUERY
+  SELECT v_entry_id, v_pool.id, v_user_id, trim(p_name);
+END;
+$$;
+
+REVOKE ALL ON FUNCTION join_pool_with_invite(TEXT, TEXT, TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION join_pool_with_invite(TEXT, TEXT, TEXT) TO service_role;
+-- 003_commissioner_gate.sql
+-- Commissioner / admin gate for pool management and (later) result publishing.
+-- Prefer this column over any env allowlist.
+
+ALTER TABLE users
+  ADD COLUMN is_commissioner BOOLEAN NOT NULL DEFAULT FALSE;
+
+CREATE INDEX users_is_commissioner_idx ON users (is_commissioner)
+  WHERE is_commissioner = TRUE;
+-- 004_invite_email_unique.sql
+-- One active (unused) invite per email per pool; clearer join unique errors.
+
+-- ---------------------------------------------------------------------------
+-- Unique unused invite email within a pool (case-insensitive)
+-- ---------------------------------------------------------------------------
+
+CREATE UNIQUE INDEX invitations_pool_email_unused_unique
+  ON invitations (pool_id, lower(email))
+  WHERE used_at IS NULL AND email IS NOT NULL;
+
+-- ---------------------------------------------------------------------------
+-- Distinguish name_taken vs email_taken on join
+-- ---------------------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION join_pool_with_invite(
+  p_name TEXT,
+  p_password_hash TEXT,
+  p_token TEXT
+)
+RETURNS TABLE (
+  entry_id UUID,
+  pool_id UUID,
+  user_id UUID,
+  user_name TEXT
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_entry_count INTEGER;
+  v_entry_id UUID;
+  v_invitation invitations%ROWTYPE;
+  v_pool pools%ROWTYPE;
+  v_user_id UUID;
+BEGIN
+  IF p_token IS NULL OR length(trim(p_token)) = 0 THEN
+    RAISE EXCEPTION 'invalid_invite' USING ERRCODE = 'P0001';
+  END IF;
+
+  IF p_name IS NULL OR length(trim(p_name)) = 0 THEN
+    RAISE EXCEPTION 'invalid_name' USING ERRCODE = 'P0001';
+  END IF;
+
+  IF p_password_hash IS NULL OR length(p_password_hash) = 0 THEN
+    RAISE EXCEPTION 'invalid_password' USING ERRCODE = 'P0001';
+  END IF;
+
+  SELECT *
+  INTO v_invitation
+  FROM invitations
+  WHERE token = p_token
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'invalid_invite' USING ERRCODE = 'P0001';
+  END IF;
+
+  IF v_invitation.used_at IS NOT NULL THEN
+    RAISE EXCEPTION 'invite_used' USING ERRCODE = 'P0001';
+  END IF;
+
+  IF v_invitation.expires_at IS NOT NULL AND v_invitation.expires_at <= NOW() THEN
+    RAISE EXCEPTION 'invite_expired' USING ERRCODE = 'P0001';
+  END IF;
+
+  SELECT *
+  INTO v_pool
+  FROM pools
+  WHERE id = v_invitation.pool_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'invalid_invite' USING ERRCODE = 'P0001';
+  END IF;
+
+  SELECT count(*)::INTEGER
+  INTO v_entry_count
+  FROM entries
+  WHERE entries.pool_id = v_pool.id;
+
+  IF v_entry_count >= v_pool.max_players THEN
+    RAISE EXCEPTION 'pool_full' USING ERRCODE = 'P0001';
+  END IF;
+
+  BEGIN
+    INSERT INTO users (email, name, password_hash)
+    VALUES (v_invitation.email, trim(p_name), p_password_hash)
+    RETURNING users.id INTO v_user_id;
+  EXCEPTION
+    WHEN unique_violation THEN
+      IF v_invitation.email IS NOT NULL
+         AND EXISTS (
+           SELECT 1
+           FROM users u
+           WHERE u.email IS NOT DISTINCT FROM v_invitation.email
+         ) THEN
+        RAISE EXCEPTION 'email_taken' USING ERRCODE = 'P0001';
+      END IF;
+
+      RAISE EXCEPTION 'name_taken' USING ERRCODE = 'P0001';
+  END;
+
+  BEGIN
+    INSERT INTO entries (pool_id, user_id)
+    VALUES (v_pool.id, v_user_id)
+    RETURNING entries.id INTO v_entry_id;
+  EXCEPTION
+    WHEN unique_violation THEN
+      RAISE EXCEPTION 'already_in_pool' USING ERRCODE = 'P0001';
+  END;
+
+  UPDATE invitations
+  SET
+    used_at = NOW(),
+    used_by = v_user_id
+  WHERE id = v_invitation.id;
+
+  RETURN QUERY
+  SELECT v_entry_id, v_pool.id, v_user_id, trim(p_name);
+END;
+$$;
+
+REVOKE ALL ON FUNCTION join_pool_with_invite(TEXT, TEXT, TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION join_pool_with_invite(TEXT, TEXT, TEXT) TO service_role;
+-- Bear profile fields aligned with Fat Bear Week catalog pages.
+-- Rename description → identification, add biography, drop number.
+
+DROP INDEX IF EXISTS bears_number_idx;
+
+ALTER TABLE bears RENAME COLUMN description TO identification;
+
+ALTER TABLE bears ADD COLUMN biography TEXT;
+
+ALTER TABLE bears DROP COLUMN number;
+-- 006_invite_token_hash_email_unique.sql
+-- Hash invite tokens at rest (like sessions); case-insensitive users.email uniqueness.
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- ---------------------------------------------------------------------------
+-- invitations.token → token_hash
+-- ---------------------------------------------------------------------------
+
+ALTER TABLE invitations
+  ADD COLUMN IF NOT EXISTS token_hash TEXT;
+
+UPDATE invitations
+SET token_hash = encode(digest(convert_to(token, 'UTF8'), 'sha256'), 'hex')
+WHERE token_hash IS NULL
+  AND token IS NOT NULL;
+
+ALTER TABLE invitations
+  ALTER COLUMN token_hash SET NOT NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS invitations_token_hash_unique
+  ON invitations (token_hash);
+
+ALTER TABLE invitations
+  DROP COLUMN IF EXISTS token;
+
+-- ---------------------------------------------------------------------------
+-- Case-insensitive unique users.email
+-- ---------------------------------------------------------------------------
+
+DROP INDEX IF EXISTS users_email_unique;
+
+CREATE UNIQUE INDEX users_email_lower_unique
+  ON users (lower(email))
+  WHERE email IS NOT NULL;
+
+-- ---------------------------------------------------------------------------
+-- join_pool_with_invite looks up token_hash (app passes SHA-256 hex)
+-- ---------------------------------------------------------------------------
+-- Postgres forbids renaming input params via CREATE OR REPLACE (002 used
+-- p_token). Drop the old (TEXT, TEXT, TEXT) signature first.
+
+DROP FUNCTION IF EXISTS join_pool_with_invite(TEXT, TEXT, TEXT);
+
+CREATE OR REPLACE FUNCTION join_pool_with_invite(
+  p_name TEXT,
+  p_password_hash TEXT,
+  p_token_hash TEXT
+)
+RETURNS TABLE (
+  entry_id UUID,
+  pool_id UUID,
+  user_id UUID,
+  user_name TEXT
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_entry_count INTEGER;
+  v_entry_id UUID;
+  v_invitation invitations%ROWTYPE;
+  v_pool pools%ROWTYPE;
+  v_user_id UUID;
+BEGIN
+  IF p_token_hash IS NULL OR length(trim(p_token_hash)) = 0 THEN
+    RAISE EXCEPTION 'invalid_invite' USING ERRCODE = 'P0001';
+  END IF;
+
+  IF p_name IS NULL OR length(trim(p_name)) = 0 THEN
+    RAISE EXCEPTION 'invalid_name' USING ERRCODE = 'P0001';
+  END IF;
+
+  IF p_password_hash IS NULL OR length(p_password_hash) = 0 THEN
+    RAISE EXCEPTION 'invalid_password' USING ERRCODE = 'P0001';
+  END IF;
+
+  SELECT *
+  INTO v_invitation
+  FROM invitations
+  WHERE token_hash = p_token_hash
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'invalid_invite' USING ERRCODE = 'P0001';
+  END IF;
+
+  IF v_invitation.used_at IS NOT NULL THEN
+    RAISE EXCEPTION 'invite_used' USING ERRCODE = 'P0001';
+  END IF;
+
+  IF v_invitation.expires_at IS NOT NULL AND v_invitation.expires_at <= NOW() THEN
+    RAISE EXCEPTION 'invite_expired' USING ERRCODE = 'P0001';
+  END IF;
+
+  SELECT *
+  INTO v_pool
+  FROM pools
+  WHERE id = v_invitation.pool_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'invalid_invite' USING ERRCODE = 'P0001';
+  END IF;
+
+  SELECT count(*)::INTEGER
+  INTO v_entry_count
+  FROM entries
+  WHERE entries.pool_id = v_pool.id;
+
+  IF v_entry_count >= v_pool.max_players THEN
+    RAISE EXCEPTION 'pool_full' USING ERRCODE = 'P0001';
+  END IF;
+
+  BEGIN
+    INSERT INTO users (email, name, password_hash)
+    VALUES (v_invitation.email, trim(p_name), p_password_hash)
+    RETURNING users.id INTO v_user_id;
+  EXCEPTION
+    WHEN unique_violation THEN
+      IF v_invitation.email IS NOT NULL
+         AND EXISTS (
+           SELECT 1
+           FROM users u
+           WHERE lower(u.email) = lower(v_invitation.email)
+         ) THEN
+        RAISE EXCEPTION 'email_taken' USING ERRCODE = 'P0001';
+      END IF;
+
+      RAISE EXCEPTION 'name_taken' USING ERRCODE = 'P0001';
+  END;
+
+  BEGIN
+    INSERT INTO entries (pool_id, user_id)
+    VALUES (v_pool.id, v_user_id)
+    RETURNING entries.id INTO v_entry_id;
+  EXCEPTION
+    WHEN unique_violation THEN
+      RAISE EXCEPTION 'already_in_pool' USING ERRCODE = 'P0001';
+  END;
+
+  UPDATE invitations
+  SET
+    used_at = NOW(),
+    used_by = v_user_id
+  WHERE id = v_invitation.id;
+
+  RETURN QUERY
+  SELECT v_entry_id, v_pool.id, v_user_id, trim(p_name);
+END;
+$$;
+
+REVOKE ALL ON FUNCTION join_pool_with_invite(TEXT, TEXT, TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION join_pool_with_invite(TEXT, TEXT, TEXT) TO service_role;
+-- 007_users_name_lower.sql
+-- Stored lower(name) for exact case-insensitive sign-in (avoid ILIKE _/% wildcards).
+
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS name_lower TEXT
+    GENERATED ALWAYS AS (lower(name)) STORED;
+
+DROP INDEX IF EXISTS users_name_lower_unique;
+
+CREATE UNIQUE INDEX users_name_lower_unique ON users (name_lower);
+-- 008_join_existing_user_with_invite.sql
+-- Allow an existing account (matched by invite email) to join another pool.
+
+CREATE OR REPLACE FUNCTION join_existing_user_with_invite(
+  p_token_hash TEXT,
+  p_user_id UUID
+)
+RETURNS TABLE (
+  entry_id UUID,
+  pool_id UUID,
+  user_id UUID,
+  user_name TEXT
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_entry_count INTEGER;
+  v_entry_id UUID;
+  v_invitation invitations%ROWTYPE;
+  v_pool pools%ROWTYPE;
+  v_user users%ROWTYPE;
+BEGIN
+  IF p_token_hash IS NULL OR length(trim(p_token_hash)) = 0 THEN
+    RAISE EXCEPTION 'invalid_invite' USING ERRCODE = 'P0001';
+  END IF;
+
+  IF p_user_id IS NULL THEN
+    RAISE EXCEPTION 'invalid_invite' USING ERRCODE = 'P0001';
+  END IF;
+
+  SELECT *
+  INTO v_invitation
+  FROM invitations
+  WHERE token_hash = p_token_hash
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'invalid_invite' USING ERRCODE = 'P0001';
+  END IF;
+
+  IF v_invitation.used_at IS NOT NULL THEN
+    RAISE EXCEPTION 'invite_used' USING ERRCODE = 'P0001';
+  END IF;
+
+  IF v_invitation.expires_at IS NOT NULL AND v_invitation.expires_at <= NOW() THEN
+    RAISE EXCEPTION 'invite_expired' USING ERRCODE = 'P0001';
+  END IF;
+
+  SELECT *
+  INTO v_user
+  FROM users
+  WHERE id = p_user_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'invalid_invite' USING ERRCODE = 'P0001';
+  END IF;
+
+  IF v_invitation.email IS NULL
+     OR v_user.email IS NULL
+     OR lower(v_user.email) <> lower(v_invitation.email) THEN
+    RAISE EXCEPTION 'email_mismatch' USING ERRCODE = 'P0001';
+  END IF;
+
+  SELECT *
+  INTO v_pool
+  FROM pools
+  WHERE id = v_invitation.pool_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'invalid_invite' USING ERRCODE = 'P0001';
+  END IF;
+
+  SELECT count(*)::INTEGER
+  INTO v_entry_count
+  FROM entries
+  WHERE entries.pool_id = v_pool.id;
+
+  IF v_entry_count >= v_pool.max_players THEN
+    RAISE EXCEPTION 'pool_full' USING ERRCODE = 'P0001';
+  END IF;
+
+  BEGIN
+    INSERT INTO entries (pool_id, user_id)
+    VALUES (v_pool.id, v_user.id)
+    RETURNING entries.id INTO v_entry_id;
+  EXCEPTION
+    WHEN unique_violation THEN
+      RAISE EXCEPTION 'already_in_pool' USING ERRCODE = 'P0001';
+  END;
+
+  UPDATE invitations
+  SET
+    used_at = NOW(),
+    used_by = v_user.id
+  WHERE id = v_invitation.id;
+
+  RETURN QUERY
+  SELECT v_entry_id, v_pool.id, v_user.id, v_user.name;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION join_existing_user_with_invite(TEXT, UUID) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION join_existing_user_with_invite(TEXT, UUID) TO service_role;

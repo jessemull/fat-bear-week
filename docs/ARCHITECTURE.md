@@ -16,9 +16,11 @@ Browser → Vercel (Next.js App Router + API)
 ```
 
 - **Preview:** push to `main` → Vercel Preview + **dev** Supabase
-- **Production:** push to `release` → Vercel Production + **prod** Supabase (`fatbearweek.net`)
+- **Production:** push to `release` → Vercel Production + **prod** Supabase (`www.fatbearweek.net`)
 - Admin enters official winners; scoring/leaderboards derive from DB state
 - This app does **not** replace FatBearWeek.org voting
+- Each pool references exactly one tournament (`pools.tournament_id`)
+- App tables enable RLS with no anon policies yet; mutations use the service role on the server
 
 ---
 
@@ -54,6 +56,11 @@ Browser → Vercel (Next.js App Router + API)
 - Consistent JSON: `{ data }` or `{ error }`
 - Invite/session checks before mutations
 - Generic tournament model (rounds/matchups), not hardcoded field size
+
+### Legacy `/pools` paths
+
+Commissioner pool management lives under `/admin/pools`. Thin redirects remain at
+`/pools` and `/pools/[poolId]/invites` for old bookmarks; prefer admin URLs in new links.
 
 ---
 

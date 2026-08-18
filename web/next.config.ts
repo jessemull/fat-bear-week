@@ -3,6 +3,19 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Prefer repo-root CONTEXT.md / AGENTS.md over Next-generated agent files
   agentRules: false,
+  async headers() {
+    return [
+      {
+        headers: [
+          {
+            key: "Referrer-Policy",
+            value: "no-referrer",
+          },
+        ],
+        source: "/invite/:path*",
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {

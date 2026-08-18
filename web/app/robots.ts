@@ -1,17 +1,19 @@
 import type { MetadataRoute } from "next";
 
+import { getSiteUrl } from "@/lib/site-url";
+
 /**
  * Invite-only pool — allow the public landing page for discovery,
  * but keep future private app surfaces out of crawlers.
  */
 export default function robots(): MetadataRoute.Robots {
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://fatbearweek.net";
+  const siteUrl = getSiteUrl();
 
   return {
     rules: {
       allow: "/",
-      disallow: ["/admin/", "/api/"],
+      disallow: ["/admin/", "/api/", "/invite/", "/login", "/pools/"],
+
       userAgent: "*",
     },
     sitemap: `${siteUrl}/sitemap.xml`,

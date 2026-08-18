@@ -27,7 +27,7 @@
 
 | Pin | Value | Notes |
 | --- | ----- | ----- |
-| Node (CI + `.nvmrc`) | **22** | `.github/workflows/ci.yml` `setup-node` |
+| Node (CI + `.nvmrc` + `web/package.json` `engines`) | **24** | Vercel Functions default; Node 26 is Sandbox-only, not a Functions runtime |
 | Package manager | npm + `legacy-peer-deps=true` (`web/.npmrc`) | |
 
 ---
@@ -38,6 +38,14 @@
 | ------- | ----- |
 | `eslint-plugin-perfectionist` | Use **v5** option shape (`internalPattern`, `newlinesBetween` as number, array `customGroups`). Do not copy nextdoor’s v2 config verbatim. |
 | `@lhci/cli` / `lighthouse` | Keep `@lhci/cli@^0.15` with direct `lighthouse@^12.8` (same major pin as crow/100-letters). Do **not** `npm audit fix --force` — it may downgrade LHCI. |
+
+## Phase 1 additions
+
+| Package | Why |
+| ------- | --- |
+| `resend` | Server-side invite email delivery (no AWS in this repo). API key stays server-only. |
+
+Cloudflare Turnstile uses the public script + `fetch` siteverify — **no npm SDK**.
 
 ---
 
@@ -65,3 +73,4 @@ Do **not** run `npm audit fix --force`.
 - Target stack: Next **16** + Tailwind **4** + React **19** + TypeScript **5+** + Vitest + ESLint **9** (flat config).
 - ESLint: `eslint-config-next/core-web-vitals` + perfectionist (v5) + unused-imports in `web/eslint.config.mjs`.
 - **No Prettier** — format with `make format` (ESLint `--fix`), matching nextdoor. Crow/100-letters use Prettier; do not dual-stack here.
+- **Knip ignores:** `web/knip.json` `ignoreDependencies` may list packages reserved for Phase 1 or CLI-only wiring. When you first import a package in app/lib code (or drop the unused package), **delete it from `ignoreDependencies`** in the same PR.

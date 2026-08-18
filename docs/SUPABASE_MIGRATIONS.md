@@ -13,7 +13,7 @@ Two Supabase projects are used: one for development (Preview / local) and one fo
 
 ### Full schema reset (wipe and re-bootstrap)
 
-If you need to reset an existing project to a clean schema:
+If you need to reset an existing project to a clean schema (including after amending `001` during early scaffold):
 
 1. In Supabase SQL Editor, run [`database/scripts/drop_all_tables.sql`](../database/scripts/drop_all_tables.sql).
 2. Run `database/bootstrap.sql` once.
@@ -37,12 +37,39 @@ Then retry the request.
 
 ## Adding a new migration
 
-1. Add a new file to `database/migrations/` with the next number and a descriptive name (e.g. `002_add_sessions.sql`).
+1. Add a new file to `database/migrations/` with the next number and a descriptive name (e.g. `002_sessions.sql`).
 2. Run the new migration against existing dev and prod projects (SQL Editor).
 3. Run `make db-bootstrap` and commit the updated `database/bootstrap.sql`.
+
+## Phase 1 migrations (shipped in-repo)
+
+Apply numbered files from `database/migrations/` in order on each Supabase
+project (dev and prod). Do not bury schema changes only in app code.
+
+| File | Purpose |
+| ---- | ------- |
+| `002_sessions.sql` | HTTP-only session store (token hash, user_id, expires_at, created_at); `invitations.email`; unique display names; `join_pool_with_invite` RPC |
+| `003_commissioner_gate.sql` | `users.is_commissioner` boolean for pool management and result publishing |
+| `004_invite_email_unique.sql` | Unique unused invite email per pool; distinguish `email_taken` vs `name_taken` on join |
+| `005_bears_profile_fields.sql` | Rename `description` → `identification`; add `biography`; drop `number` |
+| `006_invite_token_hash_email_unique.sql` | Hash invite tokens at rest; case-insensitive `users.email` unique; join RPC uses `p_token_hash` |
+| `007_users_name_lower.sql` | Stored `name_lower` for exact case-insensitive sign-in lookups |
+| `008_join_existing_user_with_invite.sql` | Existing account joins another pool via invite email + password (`join_existing_user_with_invite`) |
+
+App tables enable **RLS** with **no anon/authenticated policies** yet — only the
+service role (server) can read/write until explicit policies ship.
+
+
+## Schema notes (001)
+
+- Each `pools` row requires `tournament_id` (pool ↔ tournament link).
+- `matchups.winner_id` must be null, `bear_a_id`, or `bear_b_id` (bye-safe).
+- Invite consumption is `invitations.used_at IS NOT NULL` (not merely `used_by`).
 
 ## Related
 
 - [ENVIRONMENTS.md](ENVIRONMENTS.md)
 - [DEPLOYMENT.md](DEPLOYMENT.md)
 - [ARCHITECTURE.md](ARCHITECTURE.md)
+- [SECURITY.md](SECURITY.md)
+- [ROADMAP.md](ROADMAP.md)

@@ -32,10 +32,21 @@ to Preview, Production, or both.
 
 | Variable | Preview | Production |
 |----------|---------|------------|
+| `NEXT_PUBLIC_SITE_URL` | Preview URL or `https://www.fatbearweek.net` | `https://www.fatbearweek.net` |
 | `NEXT_PUBLIC_SUPABASE_URL` | Dev project URL | Prod project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Dev anon key | Prod anon key |
 | `SUPABASE_URL` | Dev project URL | Prod project URL |
 | `SUPABASE_SERVICE_KEY` | Dev service key | Prod service key |
+| `RESEND_API_KEY` | Resend API key | Resend API key |
+| `EMAIL_FROM` | Verified From, e.g. `Fat Bear Week <invites@fatbearweek.net>` | Same (verified domain) |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Cloudflare Turnstile site key | Prod Turnstile site key |
+| `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile secret | Prod Turnstile secret |
+
+`NEXT_PUBLIC_SITE_URL` is the canonical origin for invite email links and must be
+set correctly per environment (`requireSiteUrl` — no production fallback). SEO
+routes (`robots.ts` / `sitemap.ts`) use `getSiteUrl`, which falls back to
+`https://www.fatbearweek.net` only when unset. Locally you may use
+`http://localhost:3000`.
 
 ### Local development
 
@@ -45,16 +56,19 @@ Use the **dev** Supabase project credentials only.
 
 ---
 
-## Auth configuration (product intent)
-
-v0 scaffold does not yet implement auth. Target design:
+## Auth configuration
 
 1. No public account registration.
-2. Participants join only via a valid invitation token
-   (`/invite/<token>` or similar).
-3. Join collects display name + password; session uses an HTTP-only cookie.
-4. Admin access is restricted (commissioner account / separate admin gate —
-   see [ROADMAP.md](ROADMAP.md)).
+2. Participants join only via a valid invitation token (`/invite/<token>`).
+3. Join collects display name + password (with confirmation) + Turnstile;
+   invite email is shown read-only and stored on the user. Session cookie is
+   `fbw_session` (HTTP-only, 30 days).
+4. Commissioners mint invites with an email; Resend delivers the link.
+   Unused invite emails are unique per pool.
+5. Admin access is `users.is_commissioner` in Postgres
+   (see `003_commissioner_gate.sql` / [ROADMAP.md](ROADMAP.md)).
+6. Local Turnstile: Cloudflare always-pass test keys are documented in
+   `web/.env.example`.
 
 ---
 

@@ -1,7 +1,7 @@
 // Lighthouse CI — measures production build via `next start` (not `next dev`).
 // Build first: `npm run build` (or `make lighthouse`, which builds).
 
-const productionUrl = process.env.LHCI_URL || "https://fatbearweek.net";
+const productionUrl = process.env.LHCI_URL || "https://www.fatbearweek.net";
 const localUrl = process.env.LHCI_URL || "http://localhost:3000";
 
 const isProduction = process.env.NODE_ENV === "production";
