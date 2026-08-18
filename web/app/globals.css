@@ -24,3 +24,39 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
 }
+
+/* Match OS overlay scrollbars: muted thumb, no bright track. */
+.subtle-scrollbar {
+  scrollbar-color: #52525b transparent;
+  scrollbar-width: thin;
+}
+
+.subtle-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.subtle-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #52525b;
+  border-radius: 9999px;
+}
+
+.subtle-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Native datetime field: pointer on calendar glyph; amber accent when supported. */
+.datetime-local-input {
+  accent-color: #d97706;
+  cursor: pointer;
+}
+
+.datetime-local-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  .datetime-local-input {
+    color-scheme: dark;
+  }
+}

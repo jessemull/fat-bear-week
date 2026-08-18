@@ -34,27 +34,36 @@ features in phases below; check items off as they ship.
 
 ### Auth & invites
 
-- [ ] Commissioner / admin account gate for pool management
-- [ ] Create private pool (name, max players, bracket deadline, scoring,
+- [x] Commissioner / admin account gate for pool management
+      (`users.is_commissioner` via `003_commissioner_gate.sql`)
+- [x] Create private pool (name, max players, bracket deadline, scoring,
       visibility of brackets before lock)
-- [ ] Generate **individual** invite links (`/invite/<token>`)
-- [ ] Invite metadata: name hint, used/unused, optional expiry
-- [ ] Join flow: valid invite → display name + password → entry created
-- [ ] HTTP-only session cookie (no public registration)
-- [ ] Sign in / sign out for returning participants
-- [ ] Enforce one bracket (entry) per person per pool
-- [ ] Cap at `max_players`
+- [x] Generate **individual** invite links (`/invite/<token>`) + Resend email
+- [x] Invite metadata: name hint, used/unused, optional expiry (default 14d)
+- [x] Join flow: valid invite → display name + password → entry created
+- [x] HTTP-only session cookie (no public registration)
+- [x] Sign in / sign out for returning participants
+- [x] Enforce one bracket (entry) per person per pool
+- [x] Cap at `max_players`
+- [x] Multiple pools per person (invite-based join for an existing account)
+- [ ] Forgot password / reset via email (Resend + single-use token;
+      Turnstile on request + reset forms)
+- [ ] Account settings / profile page (`/settings` or `/profile`): display
+      name, email (read-only from invite), password change, optional avatar
+- [ ] Nav avatar / account menu (opens profile; scores & history later when
+      scoring ships)
 
 ### Tournament data (admin)
 
-- [ ] Create tournament year + status (`draft` / `locked` / `live` /
+- [x] Create tournament year + status (`draft` / `locked` / `live` /
       `complete`)
-- [ ] Import / edit bears (number, name, nickname, description, photos,
+- [x] Import / edit bears (name, nickname, identification, biography, photos,
       profile URL, age/sex if available)
 - [ ] Build generic bracket: rounds → matchups → bear A / bear B / byes
 - [ ] Do **not** hardcode 64-team NCAA structure (support ~8–20 bears,
       byes, varying rounds)
-- [ ] Publish tournament / open pool for picks
+- [x] Publish tournament / open pool for picks
+      (status transitions: `draft` → `live` → `locked` → `complete`)
 - [ ] Lock brackets at deadline (no further pick edits)
 
 ### Bracket UX
@@ -75,12 +84,12 @@ features in phases below; check items off as they ship.
 - [ ] Live leaderboard (rank, score)
 - [ ] Correct / incorrect pick indicators on brackets
 - [ ] Advance winners into later matchups automatically (never hand-build
-      next round)
+      next round) — deferred with bracket admin UI redesign
 
 ### Admin result entry
 
-- [ ] “Set winner” UI per matchup (required)
-- [ ] Optional official vote totals A/B
+- [ ] “Set winner” UI per matchup (required) — deferred with bracket admin UI
+- [ ] Optional official vote totals A/B — deferred with bracket admin UI
 - [ ] Publish result → score entries → update leaderboard → mark picks
 - [ ] Enter results in batches (e.g. a day’s matchups at once)
 - [ ] Expect ~6 admin sessions / ~11 matchups per year (based on 2025 shape)
@@ -167,7 +176,6 @@ Prefer admin entry first. Investigate automation later:
 
 - [ ] ~~Public registration / open pool directory~~
 - [ ] ~~Multiple brackets per person~~
-- [ ] ~~Multiple pools per person (unless later demand)~~
 - [ ] ~~Payments / entry fees~~
 - [ ] ~~Advertising~~
 - [ ] ~~Comments / chat / message boards~~

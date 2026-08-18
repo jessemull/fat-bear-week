@@ -6,7 +6,7 @@
 
 ## Setup
 
-1. `make install` (Node 22+ recommended; CI uses 22)
+1. `make install` (Node 24+ recommended; CI uses 24)
 2. Copy `web/.env.example` → `web/.env.local` with **dev** Supabase credentials
 3. Apply schema to the dev project if needed (`docs/SUPABASE_MIGRATIONS.md`)
 4. `make dev` → http://localhost:3000

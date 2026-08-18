@@ -1,24 +1,35 @@
 import { z } from "zod";
 
-const DEFAULT_SITE_URL = "https://www.fatbearweek.net";
+const FALLBACK_SITE_URL = "https://www.fatbearweek.net";
 
-const siteUrlSchema = z
-  .string()
-  .trim()
-  .url()
-  .optional()
-  .catch(undefined);
+const siteUrlSchema = z.string().trim().url();
 
 /**
- * Canonical public site origin for robots, sitemap, and absolute links.
- * Prefers NEXT_PUBLIC_SITE_URL when it is a valid URL.
+ * Public site origin for SEO routes (robots / sitemap).
+ * Prefers NEXT_PUBLIC_SITE_URL; falls back only for static metadata.
  */
 export function getSiteUrl(
   envValue: null | string | undefined = process.env.NEXT_PUBLIC_SITE_URL,
 ): string {
-  const parsed = siteUrlSchema.parse(envValue || undefined);
+  const parsed = siteUrlSchema.safeParse(envValue || undefined);
 
-  return parsed ?? DEFAULT_SITE_URL;
+  return parsed.success ? parsed.data : FALLBACK_SITE_URL;
 }
 
-export { DEFAULT_SITE_URL };
+/**
+ * Required site origin for invite links and other absolute emails.
+ * Never falls back to production — misconfig must fail loudly.
+ */
+export function requireSiteUrl(
+  envValue: null | string | undefined = process.env.NEXT_PUBLIC_SITE_URL,
+): string {
+  const parsed = siteUrlSchema.safeParse(envValue || undefined);
+
+  if (!parsed.success) {
+    throw new Error("NEXT_PUBLIC_SITE_URL is not configured.");
+  }
+
+  return parsed.data;
+}
+
+export { FALLBACK_SITE_URL as DEFAULT_SITE_URL };

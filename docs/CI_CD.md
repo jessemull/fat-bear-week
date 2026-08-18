@@ -34,7 +34,7 @@ Do **not** rewrite CI lightly. Document changes in the PR; treat as human-review
 | E2E | Yes | Cypress smoke via `make e2e` |
 | Lighthouse | Yes | LHCI against `next start` (`web/.lighthouserc.js`) |
 
-Node **22** via `actions/setup-node` and `.nvmrc`, with npm cache on root + `web/` lockfiles.
+Node **24** via `actions/setup-node` and `.nvmrc`, with npm cache on root + `web/` lockfiles. `web/package.json` `engines.node` is `24.x` so Vercel deploys match CI.
 
 ---
 

@@ -52,7 +52,7 @@ Scaffold **v0** ships infrastructure only. Planned product features:
 | Bracket | Interactive tournament bracket with bear cards |
 | Scoring | Round-weighted points; optional vote totals as display metadata |
 | Leaderboard | Live ranks, correct/incorrect picks, still-alive indicators |
-| Admin | Import bears/bracket, lock picks, publish matchup winners |
+| Admin | Catalog bears; lock picks and publish winners later |
 | Cams / links | Embed Explore.org cams; deep-link to official voting |
 
 ## Technologies used
