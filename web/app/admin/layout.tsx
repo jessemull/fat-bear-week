@@ -47,7 +47,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
           year: tournament.year,
         }))}
       />
-      <main className="min-w-0 flex-1 px-4 py-8 sm:px-6">
+      <main className="min-w-0 flex-1 px-5 py-4 sm:px-6 lg:py-8">
         <div className="flex w-full max-w-3xl flex-col gap-8 text-zinc-900 dark:text-zinc-50">
           {children}
         </div>

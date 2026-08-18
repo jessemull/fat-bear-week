@@ -1,9 +1,7 @@
 "use client";
 
-import { PanelLeft, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useId, useState } from "react";
 
 import {
   formatTournamentStatus,
@@ -50,7 +48,7 @@ function linkClassName(
   return `${base} ${active ? activeClass : inactiveClass}`;
 }
 
-function NavBody({
+export function AdminNavBody({
   onNavigate,
   pathname,
   pools,
@@ -253,52 +251,17 @@ function NavBody({
 }
 
 export function AdminSidebar({ pools, tournaments }: AdminSidebarProps) {
-  const menuId = useId();
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
 
   return (
-    <>
-      <div className="mb-6 lg:hidden">
-        <button
-          aria-controls={menuId}
-          aria-expanded={open}
-          className="inline-flex items-center gap-2 rounded-md border border-zinc-800 px-3 py-2 text-sm text-zinc-200 transition-colors hover:border-zinc-600 hover:bg-zinc-900"
-          type="button"
-          onClick={() => setOpen((current) => !current)}
-        >
-          {open ? (
-            <X aria-hidden="true" className="h-4 w-4" />
-          ) : (
-            <PanelLeft aria-hidden="true" className="h-4 w-4" />
-          )}
-          Admin menu
-        </button>
-        {open ? (
-          <nav
-            aria-label="Admin"
-            className="mt-3 rounded-md border border-zinc-800 bg-black p-3"
-            id={menuId}
-          >
-            <NavBody
-              pathname={pathname}
-              pools={pools}
-              tournaments={tournaments}
-              onNavigate={() => setOpen(false)}
-            />
-          </nav>
-        ) : null}
-      </div>
-
-      <aside className="hidden w-56 shrink-0 lg:block">
-        <nav aria-label="Admin" className="sticky top-24">
-          <NavBody
-            pathname={pathname}
-            pools={pools}
-            tournaments={tournaments}
-          />
-        </nav>
-      </aside>
-    </>
+    <aside className="hidden w-56 shrink-0 lg:block">
+      <nav aria-label="Admin" className="sticky top-24">
+        <AdminNavBody
+          pathname={pathname}
+          pools={pools}
+          tournaments={tournaments}
+        />
+      </nav>
+    </aside>
   );
 }

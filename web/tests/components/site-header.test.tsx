@@ -8,6 +8,7 @@ const push = vi.fn();
 const refresh = vi.fn();
 
 vi.mock("next/navigation", () => ({
+  usePathname: () => "/",
   useRouter: () => ({
     push,
     refresh,
@@ -38,7 +39,7 @@ describe("SiteHeader", () => {
   it("should render enabled and disabled nav items when signed out", async () => {
     const { container } = renderHeader(<SiteHeader isSignedIn={false} />);
 
-    expect(container.querySelector("header")).toHaveClass("sticky", "top-0");
+    expect(container.querySelector("header")).toHaveClass("fixed", "top-0");
 
     const desktopNav = screen.getByRole("navigation", { name: "Primary" });
 
@@ -163,5 +164,44 @@ describe("SiteHeader", () => {
       "aria-expanded",
       "true",
     );
+    expect(
+      screen.getByRole("button", { name: "Dismiss menu" }),
+    ).toBeInTheDocument();
+  });
+
+  it("should include admin nav in the hamburger without visiting /admin first", async () => {
+    const user = userEvent.setup();
+
+    renderHeader(
+      <SiteHeader
+        adminNav={{
+          pools: [{ id: "pool-1", name: "My Pool" }],
+          tournaments: [{ id: "t-2026", status: "live", year: 2026 }],
+        }}
+        isCommissioner={true}
+        isSignedIn={true}
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: "Admin menu" })).toBeNull();
+
+    await user.click(screen.getByRole("button", { name: "Open menu" }));
+
+    const mobileNav = screen.getByRole("navigation", { name: "Mobile" });
+
+    expect(mobileNav).toHaveClass("top-16", "bottom-0");
+    expect(
+      within(mobileNav).getByRole("link", { name: "Home" }),
+    ).toBeInTheDocument();
+    expect(
+      within(mobileNav).getByRole("link", { name: "All Tournaments" }),
+    ).toHaveAttribute("href", "/admin/tournaments");
+    expect(within(mobileNav).getByText("My Pool")).toBeInTheDocument();
+
+    await user.click(within(mobileNav).getByRole("link", { name: "All Pools" }));
+
+    expect(
+      screen.queryByRole("navigation", { name: "Mobile" }),
+    ).not.toBeInTheDocument();
   });
 });

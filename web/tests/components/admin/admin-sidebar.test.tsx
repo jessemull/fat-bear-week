@@ -1,5 +1,4 @@
 import { render, screen, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -21,17 +20,19 @@ const tournaments = [
   { id: "t-2025", status: "draft" as const, year: 2025 },
 ];
 
+function renderSidebar() {
+  return render(<AdminSidebar pools={pools} tournaments={tournaments} />);
+}
+
 describe("AdminSidebar", () => {
   beforeEach(() => {
     usePathname.mockReturnValue("/admin/tournaments");
   });
 
   it("should render tournament and pool links", async () => {
-    const { container } = render(
-      <AdminSidebar pools={pools} tournaments={tournaments} />,
-    );
+    const { container } = renderSidebar();
 
-    const desktopNav = screen.getAllByRole("navigation", { name: "Admin" })[0];
+    const desktopNav = screen.getByRole("navigation", { name: "Admin" });
 
     expect(
       within(desktopNav).getByRole("link", { name: "Tournaments" }),
@@ -73,9 +74,9 @@ describe("AdminSidebar", () => {
   it("should highlight bears for the current tournament", () => {
     usePathname.mockReturnValue("/admin/tournaments/t-2025/bears/new");
 
-    render(<AdminSidebar pools={pools} tournaments={tournaments} />);
+    renderSidebar();
 
-    const desktopNav = screen.getAllByRole("navigation", { name: "Admin" })[0];
+    const desktopNav = screen.getByRole("navigation", { name: "Admin" });
     const bearsLinks = within(desktopNav).getAllByRole("link", {
       name: "Bears",
     });
@@ -85,9 +86,7 @@ describe("AdminSidebar", () => {
   });
 
   it("should highlight create and overview routes", () => {
-    const { rerender } = render(
-      <AdminSidebar pools={pools} tournaments={tournaments} />,
-    );
+    const { rerender } = renderSidebar();
 
     usePathname.mockReturnValue("/admin/tournaments/new");
     rerender(<AdminSidebar pools={pools} tournaments={tournaments} />);
@@ -120,31 +119,10 @@ describe("AdminSidebar", () => {
     ).toHaveClass("text-amber-800");
   });
 
-  it("should open and close the mobile admin menu", async () => {
-    const user = userEvent.setup();
+  it("should not render a separate mobile admin menu button", () => {
+    renderSidebar();
 
-    render(<AdminSidebar pools={pools} tournaments={tournaments} />);
-
-    await user.click(screen.getByRole("button", { name: "Admin menu" }));
-
-    expect(screen.getByRole("button", { name: "Admin menu" })).toHaveAttribute(
-      "aria-expanded",
-      "true",
-    );
-
-    const drawerNav = screen.getAllByRole("navigation", { name: "Admin" })[0];
-
-    expect(
-      within(drawerNav).getByRole("link", { name: "Create Pool" }),
-    ).toBeInTheDocument();
-
-    await user.click(
-      within(drawerNav).getByRole("link", { name: "Tournaments" }),
-    );
-
-    expect(screen.getByRole("button", { name: "Admin menu" })).toHaveAttribute(
-      "aria-expanded",
-      "false",
-    );
+    expect(screen.queryByRole("button", { name: "Admin menu" })).toBeNull();
+    expect(screen.getByRole("navigation", { name: "Admin" })).toBeInTheDocument();
   });
 });
