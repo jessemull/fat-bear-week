@@ -59,7 +59,7 @@
     "eslint-plugin-unused-imports": "^4.4.1",
     "jest-axe": "^11.0.0",
     "jsdom": "^30.0.1",
-    "knip": "^6.32.1",
+    "knip": "^6.32.2",
     "lighthouse": "^13.4.1",
     "lint-staged": "^17.3.0",
     "start-server-and-test": "^3.0.12",
