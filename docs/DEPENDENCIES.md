@@ -27,7 +27,7 @@
 
 | Pin | Value | Notes |
 | --- | ----- | ----- |
-| Node (CI + `.nvmrc`) | **22** | `.github/workflows/ci.yml` `setup-node` |
+| Node (CI + `.nvmrc` + `web/package.json` `engines`) | **24** | Vercel Functions default; Node 26 is Sandbox-only, not a Functions runtime |
 | Package manager | npm + `legacy-peer-deps=true` (`web/.npmrc`) | |
 
 ---
