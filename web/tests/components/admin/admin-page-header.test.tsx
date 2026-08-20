@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   AdminPageHeader,
+  AdminPageHeaderButtonAction,
   AdminPageHeaderLinkAction,
 } from "@/components/admin/AdminPageHeader";
 import { adminHeaderPrimaryActionClassName } from "@/lib/form-styles";
@@ -62,6 +63,30 @@ describe("AdminPageHeader", () => {
 
     expect(heading).toHaveClass("truncate");
     expect(heading).toHaveAttribute("title", email);
+    expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it("should show a spinner on the header action while pending", async () => {
+    const { container } = render(
+      <AdminPageHeader
+        action={
+          <AdminPageHeaderButtonAction
+            label="Resend Invite"
+            pending
+            pendingLabel="Sending…"
+            onClick={() => undefined}
+          />
+        }
+        description="Update the invitee or resend the invite email."
+        title="Invite"
+      />,
+    );
+
+    const button = screen.getByRole("button", { name: "Sending…" });
+
+    expect(button).toBeDisabled();
+    expect(button).toHaveAttribute("aria-busy", "true");
+    expect(container.querySelector("svg.animate-spin")).toBeInTheDocument();
     expect(await axe(container)).toHaveNoViolations();
   });
 });

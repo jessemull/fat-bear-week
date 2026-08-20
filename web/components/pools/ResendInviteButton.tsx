@@ -90,7 +90,9 @@ function ResendInviteHeaderAction({
     <AdminPageHeaderButtonAction
       disabled={pending}
       icon={RefreshCw}
-      label={pending ? "Sending…" : "Resend Invite"}
+      label="Resend Invite"
+      pending={pending}
+      pendingLabel="Sending…"
       onClick={() => {
         void onResend();
       }}

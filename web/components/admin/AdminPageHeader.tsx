@@ -1,9 +1,10 @@
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { Plus } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 import Link from "next/link";
 
+import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
 import {
   adminHeaderPrimaryActionClassName,
   formHeadingClassName,
@@ -25,6 +26,8 @@ interface AdminPageHeaderActionProps {
 interface AdminPageHeaderButtonActionProps extends AdminPageHeaderActionProps {
   disabled?: boolean;
   onClick: () => void;
+  pending?: boolean;
+  pendingLabel?: string;
   type?: "button" | "submit";
 }
 
@@ -64,18 +67,29 @@ export function AdminPageHeaderButtonAction({
   icon: Icon = Plus,
   label,
   onClick,
+  pending = false,
+  pendingLabel,
   type = "button",
 }: AdminPageHeaderButtonActionProps) {
+  const busyLabel = pendingLabel ?? label;
+
   return (
     <button
-      aria-label={label}
+      aria-busy={pending}
+      aria-label={pending ? busyLabel : label}
       className={adminHeaderPrimaryActionClassName}
-      disabled={disabled}
+      disabled={disabled || pending}
       type={type}
       onClick={onClick}
     >
-      <Icon aria-hidden className="size-5 md:hidden" />
-      <span className="hidden md:inline">{label}</span>
+      {pending ? (
+        <Loader2 aria-hidden className="size-5 animate-spin md:hidden" />
+      ) : (
+        <Icon aria-hidden className="size-5 md:hidden" />
+      )}
+      <span className="hidden md:inline">
+        {pending ? <ButtonPendingLabel>{busyLabel}</ButtonPendingLabel> : label}
+      </span>
     </button>
   );
 }
