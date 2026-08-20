@@ -9,29 +9,57 @@ import {
   type FormWidthTier,
 } from "@/lib/form-styles";
 
-interface FormShellProps extends Omit<ComponentPropsWithoutRef<"div">, "onSubmit"> {
-  as?: "div" | "form";
-  onSubmit?: (event: FormEvent<HTMLFormElement>) => void;
+interface FormShellBaseProps {
+  children?: ReactNode;
+  className?: string;
   tier?: FormWidthTier;
 }
 
+interface FormShellAsDivProps
+  extends FormShellBaseProps, Omit<ComponentPropsWithoutRef<"div">, "className"> {
+  as?: "div";
+  onSubmit?: never;
+}
+
+interface FormShellAsFormProps
+  extends FormShellBaseProps,
+    Omit<ComponentPropsWithoutRef<"form">, "className" | "onSubmit"> {
+  as: "form";
+  onSubmit?: (event: FormEvent<HTMLFormElement>) => void;
+}
+
+type FormShellProps = FormShellAsDivProps | FormShellAsFormProps;
+
 /** Caps form width and enables container-query breakpoints for fields and actions. */
 export function FormShell({
-  as: Tag = "div",
+  as = "div",
   children,
   className,
   onSubmit,
   tier = defaultFormWidthTier,
   ...rest
 }: FormShellProps) {
+  const shellClassName = cn(formShellClassNames[tier], className);
+
+  if (as === "form") {
+    return (
+      <form
+        className={shellClassName}
+        onSubmit={onSubmit}
+        {...(rest as Omit<ComponentPropsWithoutRef<"form">, "className" | "onSubmit">)}
+      >
+        {children}
+      </form>
+    );
+  }
+
   return (
-    <Tag
-      className={cn(formShellClassNames[tier], className)}
-      onSubmit={Tag === "form" ? onSubmit : undefined}
-      {...rest}
+    <div
+      className={shellClassName}
+      {...(rest as Omit<ComponentPropsWithoutRef<"div">, "className">)}
     >
       {children}
-    </Tag>
+    </div>
   );
 }
 

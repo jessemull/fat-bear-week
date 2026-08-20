@@ -360,7 +360,7 @@ describe("admin forms", () => {
     renderWithToast(
       <DeleteBearButton
         bearId={bearAId}
-        name="Otis"
+        bearName="Otis"
         tournamentId={tournamentId}
       />,
     );
@@ -395,7 +395,7 @@ describe("admin forms", () => {
     renderWithToast(
       <DeleteBearButton
         bearId={bearAId}
-        name="Otis"
+        bearName="Otis"
         tournamentId={tournamentId}
       />,
     );
