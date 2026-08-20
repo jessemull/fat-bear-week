@@ -68,5 +68,7 @@ export function CardFields({ children, className }: CardFieldsProps) {
 }
 
 export function CardList({ children, className }: CardListProps) {
-  return <ul className={cn("flex flex-col gap-3", className)}>{children}</ul>;
+  return (
+    <ul className={cn("mt-2 flex flex-col gap-3", className)}>{children}</ul>
+  );
 }

@@ -1,6 +1,11 @@
+import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { Plus } from "lucide-react";
+import Link from "next/link";
+
 import {
+  adminHeaderPrimaryActionClassName,
   formHeadingClassName,
   formMutedClassName,
 } from "@/lib/form-styles";
@@ -12,6 +17,21 @@ interface AdminPageHeaderProps {
   title: ReactNode;
 }
 
+interface AdminPageHeaderActionProps {
+  icon?: LucideIcon;
+  label: string;
+}
+
+interface AdminPageHeaderButtonActionProps extends AdminPageHeaderActionProps {
+  disabled?: boolean;
+  onClick: () => void;
+  type?: "button" | "submit";
+}
+
+interface AdminPageHeaderLinkActionProps extends AdminPageHeaderActionProps {
+  href: string;
+}
+
 export function AdminPageHeader({
   action,
   children,
@@ -19,19 +39,59 @@ export function AdminPageHeader({
   title,
 }: AdminPageHeaderProps) {
   return (
-    <header className="@container grid w-full grid-cols-1 gap-2 @min-[512px]:grid-cols-[minmax(0,1fr)_auto] @min-[512px]:items-start @min-[512px]:gap-x-4">
-      <h1 className={`min-w-0 text-3xl ${formHeadingClassName}`}>{title}</h1>
-      <p
-        className={`text-sm @min-[512px]:col-start-1 @min-[512px]:row-start-2 ${formMutedClassName}`}
-      >
-        {description}
-      </p>
-      {action ? (
-        <div className="w-full @min-[512px]:col-start-2 @min-[512px]:row-start-1 @min-[512px]:w-auto @min-[512px]:shrink-0 @min-[512px]:pt-1 [&>a]:flex [&>a]:w-full [&>button]:flex [&>button]:w-full @min-[512px]:[&>a]:w-auto @min-[512px]:[&>button]:w-auto">
-          {action}
-        </div>
-      ) : null}
-      {children ? <div className="@min-[512px]:col-span-2">{children}</div> : null}
+    <header className="relative flex w-full flex-col gap-2">
+      <div className="flex items-center justify-between gap-3">
+        <h1
+          className={`min-w-0 flex-1 text-3xl ${action ? "pr-10 md:pr-0" : ""} ${formHeadingClassName}`}
+        >
+          {title}
+        </h1>
+        {action ? (
+          <div className="absolute top-0 right-0 md:static md:shrink-0">
+            {action}
+          </div>
+        ) : null}
+      </div>
+      <p className={`text-sm ${formMutedClassName}`}>{description}</p>
+      {children}
     </header>
+  );
+}
+
+export function AdminPageHeaderButtonAction({
+  disabled,
+  icon: Icon = Plus,
+  label,
+  onClick,
+  type = "button",
+}: AdminPageHeaderButtonActionProps) {
+  return (
+    <button
+      aria-label={label}
+      className={adminHeaderPrimaryActionClassName}
+      disabled={disabled}
+      type={type}
+      onClick={onClick}
+    >
+      <Icon aria-hidden className="size-5 md:hidden" />
+      <span className="hidden md:inline">{label}</span>
+    </button>
+  );
+}
+
+export function AdminPageHeaderLinkAction({
+  href,
+  icon: Icon = Plus,
+  label,
+}: AdminPageHeaderLinkActionProps) {
+  return (
+    <Link
+      aria-label={label}
+      className={adminHeaderPrimaryActionClassName}
+      href={href}
+    >
+      <Icon aria-hidden className="size-5 md:hidden" />
+      <span className="hidden md:inline">{label}</span>
+    </Link>
   );
 }

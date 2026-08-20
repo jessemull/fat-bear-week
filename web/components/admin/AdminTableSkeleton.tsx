@@ -16,7 +16,7 @@ function AdminCardSkeleton({
   rows,
 }: Required<Pick<AdminTableSkeletonProps, "columns" | "rows">>) {
   return (
-    <CardList className="mt-4 md:hidden">
+    <CardList className="md:hidden">
       {Array.from({ length: rows }, (_, rowIndex) => (
         <li key={`card-${rowIndex}`}>
           <div className={skeletonCardClassName}>

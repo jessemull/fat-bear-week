@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   type FormEvent,
@@ -11,7 +11,10 @@ import {
   useState,
 } from "react";
 
-import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import {
+  AdminPageHeader,
+  AdminPageHeaderButtonAction,
+} from "@/components/admin/AdminPageHeader";
 import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
 import { FormShell } from "@/components/FormShell";
 import {
@@ -281,17 +284,15 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
     <FormShell>
       <AdminPageHeader
         action={
-          <button
-            className={formButtonPrimaryClassName}
+          <AdminPageHeaderButtonAction
             disabled={pending}
-            type="button"
+            icon={Upload}
+            label="Upload"
             onClick={() => {
               setUploadKey((current) => current + 1);
               setUploadOpen(true);
             }}
-          >
-            Upload
-          </button>
+          />
         }
         description="Add one or more people. Each person gets their own invite link. Large lists (up to 100) may take up to about a minute to send."
         title="Send Invites"
