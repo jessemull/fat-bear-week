@@ -44,6 +44,9 @@ describe("AdminPageHeader", () => {
       "href",
       "/admin/example",
     );
+    expect(container.querySelector("header")).not.toContainElement(
+      screen.getByRole("link", { name: "Action" }),
+    );
     expect(await axe(container)).toHaveNoViolations();
   });
 

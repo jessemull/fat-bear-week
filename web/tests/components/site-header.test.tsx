@@ -6,9 +6,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const push = vi.fn();
 const refresh = vi.fn();
+const pathnameMock = vi.fn(() => "/");
 
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/",
+  usePathname: () => pathnameMock(),
   useRouter: () => ({
     push,
     refresh,
@@ -25,8 +26,10 @@ function renderHeader(ui: ReactElement) {
 
 describe("SiteHeader", () => {
   beforeEach(() => {
+    pathnameMock.mockReturnValue("/");
     push.mockReset();
     refresh.mockReset();
+    document.body.classList.remove("overflow-hidden");
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -146,7 +149,7 @@ describe("SiteHeader", () => {
 
     await user.click(screen.getByRole("button", { name: "Open menu" }));
 
-    const mobileNav = screen.getByRole("navigation", { name: "Mobile" });
+    const mobileNav = screen.getByRole("dialog", { name: "Mobile" });
 
     expect(within(mobileNav).getByRole("link", { name: "Home" })).toBeInTheDocument();
     expect(within(mobileNav).queryByRole("link", { name: "Pools" })).toBeNull();
@@ -172,7 +175,7 @@ describe("SiteHeader", () => {
   it("should include admin nav in the hamburger without visiting /admin first", async () => {
     const user = userEvent.setup();
 
-    renderHeader(
+    const { container } = renderHeader(
       <SiteHeader
         adminNav={{
           pools: [{ id: "pool-1", name: "My Pool" }],
@@ -187,21 +190,94 @@ describe("SiteHeader", () => {
 
     await user.click(screen.getByRole("button", { name: "Open menu" }));
 
-    const mobileNav = screen.getByRole("navigation", { name: "Mobile" });
+    const mobileNav = screen.getByRole("dialog", { name: "Mobile" });
 
-    expect(mobileNav).toHaveClass("top-16", "bottom-0");
+    expect(mobileNav).toHaveAttribute("aria-modal", "true");
+    expect(mobileNav.className).toContain(
+      "top-[calc(4rem+env(safe-area-inset-top,0px))]",
+    );
     expect(
       within(mobileNav).getByRole("link", { name: "Home" }),
     ).toBeInTheDocument();
     expect(
+      within(mobileNav).queryByRole("link", { name: "Admin" }),
+    ).toBeNull();
+    expect(
       within(mobileNav).getByRole("link", { name: "All Tournaments" }),
     ).toHaveAttribute("href", "/admin/tournaments");
     expect(within(mobileNav).getByText("My Pool")).toBeInTheDocument();
+    expect(document.body).toHaveClass("overflow-hidden");
+    expect(await axe(container)).toHaveNoViolations();
 
     await user.click(within(mobileNav).getByRole("link", { name: "All Pools" }));
 
     expect(
-      screen.queryByRole("navigation", { name: "Mobile" }),
+      screen.queryByRole("dialog", { name: "Mobile" }),
     ).not.toBeInTheDocument();
+    expect(document.body).not.toHaveClass("overflow-hidden");
+  });
+
+  it("should close the mobile menu on Escape and overlay dismiss", async () => {
+    const user = userEvent.setup();
+
+    renderHeader(
+      <SiteHeader
+        adminNav={{
+          pools: [{ id: "pool-1", name: "My Pool" }],
+          tournaments: [{ id: "t-2026", status: "live", year: 2026 }],
+        }}
+        isCommissioner={true}
+        isSignedIn={true}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Open menu" }));
+    expect(screen.getByRole("dialog", { name: "Mobile" })).toBeInTheDocument();
+    expect(document.body).toHaveClass("overflow-hidden");
+
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog", { name: "Mobile" })).toBeNull();
+    expect(document.body).not.toHaveClass("overflow-hidden");
+
+    await user.click(screen.getByRole("button", { name: "Open menu" }));
+    await user.click(screen.getByRole("button", { name: "Dismiss menu" }));
+    expect(screen.queryByRole("dialog", { name: "Mobile" })).toBeNull();
+    expect(document.body).not.toHaveClass("overflow-hidden");
+  });
+
+  it("should close the mobile menu when the pathname changes", async () => {
+    const user = userEvent.setup();
+    const header = (
+      <SiteHeader
+        adminNav={{
+          pools: [{ id: "pool-1", name: "My Pool" }],
+          tournaments: [{ id: "t-2026", status: "live", year: 2026 }],
+        }}
+        isCommissioner={true}
+        isSignedIn={true}
+      />
+    );
+
+    const { rerender } = renderHeader(header);
+
+    await user.click(screen.getByRole("button", { name: "Open menu" }));
+    expect(screen.getByRole("dialog", { name: "Mobile" })).toBeInTheDocument();
+
+    pathnameMock.mockReturnValue("/admin/tournaments");
+    rerender(
+      <ToastProvider>
+        <SiteHeader
+          adminNav={{
+            pools: [{ id: "pool-1", name: "My Pool" }],
+            tournaments: [{ id: "t-2026", status: "live", year: 2026 }],
+          }}
+          isCommissioner={true}
+          isSignedIn={true}
+        />
+      </ToastProvider>,
+    );
+
+    expect(screen.queryByRole("dialog", { name: "Mobile" })).toBeNull();
+    expect(document.body).not.toHaveClass("overflow-hidden");
   });
 });

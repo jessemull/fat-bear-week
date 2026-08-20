@@ -5,6 +5,7 @@ import {
   type ReactNode,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -86,12 +87,19 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
       const timeoutId = window.setTimeout(() => {
         clearNavigationWait();
+        showToast(message, tone);
       }, TOAST_NAVIGATION_TIMEOUT_MS);
 
       navigationWaitRef.current = { intervalId, timeoutId };
     },
     [clearNavigationWait, showToast],
   );
+
+  useEffect(() => {
+    return () => {
+      clearNavigationWait();
+    };
+  }, [clearNavigationWait]);
 
   const value = useMemo(
     () => ({ toast, toastAfterNavigation }),

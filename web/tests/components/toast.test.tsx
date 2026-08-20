@@ -1,6 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { AppProviders } from "@/components/AppProviders";
 import { useToast } from "@/components/Toast";
@@ -26,6 +26,10 @@ function DeferredToastTrigger() {
 }
 
 describe("Toast", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("should render default and error toasts through AppProviders", async () => {
     const user = userEvent.setup();
 
@@ -59,6 +63,25 @@ describe("Toast", () => {
 
     window.history.pushState({}, "", "/to");
     expect(await screen.findByRole("status")).toHaveTextContent("Redirected.");
+  });
+
+  it("should show toastAfterNavigation if the URL never changes", async () => {
+    vi.useFakeTimers();
+    window.history.pushState({}, "", "/from");
+
+    render(
+      <AppProviders>
+        <DeferredToastTrigger />
+      </AppProviders>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Notify after nav" }));
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(8000);
+    });
+    expect(screen.getByRole("status")).toHaveTextContent("Redirected.");
   });
 
   it("should throw when useToast is used outside a provider", () => {

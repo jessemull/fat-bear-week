@@ -36,7 +36,10 @@ interface CardProps {
 }
 
 const cardClassName =
-  "block min-h-[4.75rem] rounded-xl border border-zinc-200 bg-white px-[1.125rem] py-4 text-left transition-colors hover:border-amber-600/50 hover:bg-amber-50/80 focus-visible:bg-amber-50/80 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-amber-600/40 dark:hover:bg-zinc-800 dark:focus-visible:bg-zinc-800";
+  "block min-h-[4.75rem] rounded-xl border border-zinc-200 bg-white px-[1.125rem] py-4 text-left dark:border-zinc-700 dark:bg-zinc-900";
+
+const cardLinkClassName =
+  "transition-colors hover:border-amber-600/50 hover:bg-amber-50/80 focus-visible:border-amber-600/50 focus-visible:bg-amber-50/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-600/60 dark:hover:border-amber-600/40 dark:hover:bg-zinc-800 dark:focus-visible:border-amber-600/40 dark:focus-visible:bg-zinc-800 dark:focus-visible:ring-amber-500/50";
 
 const badgeToneClassName = {
   accent:
@@ -48,17 +51,15 @@ const badgeToneClassName = {
 } as const;
 
 export function Card({ children, className, href }: CardProps) {
-  const classNames = cn(cardClassName, className);
-
   if (href) {
     return (
-      <Link className={classNames} href={href}>
+      <Link className={cn(cardClassName, cardLinkClassName, className)} href={href}>
         {children}
       </Link>
     );
   }
 
-  return <div className={classNames}>{children}</div>;
+  return <div className={cn(cardClassName, className)}>{children}</div>;
 }
 
 export function CardBadge({

@@ -20,6 +20,9 @@ describe("Card", () => {
 
     expect(screen.getByText("Draft tournament")).toBeInTheDocument();
     expect(screen.queryByRole("link")).toBeNull();
+    expect(container.firstElementChild).not.toHaveClass(
+      "hover:border-amber-600/50",
+    );
     expect(await axe(container)).toHaveNoViolations();
   });
 
@@ -31,6 +34,9 @@ describe("Card", () => {
     expect(screen.getByRole("link", { name: "Open 2026" })).toHaveAttribute(
       "href",
       "/admin/tournaments/t-2026",
+    );
+    expect(screen.getByRole("link", { name: "Open 2026" })).toHaveClass(
+      "focus-visible:ring-2",
     );
     expect(await axe(container)).toHaveNoViolations();
   });

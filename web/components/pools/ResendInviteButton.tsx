@@ -3,22 +3,11 @@
 import { RefreshCw } from "lucide-react";
 import { useState } from "react";
 
-import {
-  AdminPageHeader,
-  AdminPageHeaderButtonAction,
-} from "@/components/admin/AdminPageHeader";
+import { AdminPageHeaderButtonAction } from "@/components/admin/AdminPageHeader";
 import { InviteLinkFallback } from "@/components/pools/InviteLinkFallback";
 import { useToast } from "@/components/Toast";
 
-interface InviteEditHeaderProps {
-  description: string;
-  inviteId: string;
-  poolId: string;
-  showResend: boolean;
-  title: string;
-}
-
-interface ResendInviteButtonProps {
+export interface ResendInviteButtonProps {
   inviteId: string;
   poolId: string;
 }
@@ -29,7 +18,7 @@ interface ResendInviteState {
   pending: boolean;
 }
 
-function useResendInvite({
+export function useResendInvite({
   inviteId,
   poolId,
 }: ResendInviteButtonProps): ResendInviteState {
@@ -82,7 +71,7 @@ function useResendInvite({
   };
 }
 
-function ResendInviteHeaderAction({
+export function ResendInviteHeaderAction({
   onResend,
   pending,
 }: Pick<ResendInviteState, "onResend" | "pending">) {
@@ -97,37 +86,6 @@ function ResendInviteHeaderAction({
         void onResend();
       }}
     />
-  );
-}
-
-export function InviteEditHeader({
-  description,
-  inviteId,
-  poolId,
-  showResend,
-  title,
-}: InviteEditHeaderProps) {
-  const { inviteUrl, onResend, pending } = useResendInvite({
-    inviteId,
-    poolId,
-  });
-
-  return (
-    <>
-      <AdminPageHeader
-        action={
-          showResend ? (
-            <ResendInviteHeaderAction
-              pending={pending}
-              onResend={onResend}
-            />
-          ) : undefined
-        }
-        description={description}
-        title={title}
-      />
-      {inviteUrl ? <InviteLinkFallback inviteUrl={inviteUrl} /> : null}
-    </>
   );
 }
 

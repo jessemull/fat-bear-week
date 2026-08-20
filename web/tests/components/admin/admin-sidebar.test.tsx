@@ -8,7 +8,7 @@ vi.mock("next/navigation", () => ({
   usePathname: () => usePathname(),
 }));
 
-import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { AdminNavBody, AdminSidebar } from "@/components/admin/AdminSidebar";
 
 const pools = [
   { id: "pool-1", name: "My Pool" },
@@ -128,5 +128,27 @@ describe("AdminSidebar", () => {
       "pl-5",
       "lg:pl-6",
     );
+  });
+
+  it("should generate unique heading ids per AdminNavBody instance", () => {
+    const { container } = render(
+      <>
+        <AdminNavBody
+          pathname="/admin/tournaments"
+          pools={pools}
+          tournaments={tournaments}
+        />
+        <AdminNavBody
+          pathname="/admin/tournaments"
+          pools={pools}
+          tournaments={tournaments}
+        />
+      </>,
+    );
+
+    const ids = [...container.querySelectorAll("h2")].map((heading) => heading.id);
+
+    expect(ids).toHaveLength(4);
+    expect(new Set(ids).size).toBe(4);
   });
 });

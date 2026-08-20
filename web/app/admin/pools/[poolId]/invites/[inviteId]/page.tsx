@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 
+import { InviteEditHeader } from "@/components/pools/InviteEditHeader";
 import { InviteForm } from "@/components/pools/InviteForm";
-import { InviteEditHeader } from "@/components/pools/ResendInviteButton";
 import { getInviteForPool } from "@/lib/invites.server";
 import { getPool, userCanManagePool } from "@/lib/pools.server";
 import { getSession } from "@/lib/sessions.server";

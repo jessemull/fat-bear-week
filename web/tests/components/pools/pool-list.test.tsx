@@ -47,6 +47,9 @@ describe("PoolList", () => {
     ).toHaveAttribute("href", "/admin/pools/pool-1");
     expect(within(list).getByText("3 / 10 players")).toBeInTheDocument();
     expect(within(list).queryByRole("link", { name: /Friends/ })).toBeNull();
+    expect(within(list).getByText("Friends").closest("div")).not.toHaveClass(
+      "hover:border-amber-600/50",
+    );
     expect(within(list).getByText("Member")).toBeInTheDocument();
     expect(within(list).getByText("Admin")).toBeInTheDocument();
     expect(screen.getByRole("table")).toBeInTheDocument();

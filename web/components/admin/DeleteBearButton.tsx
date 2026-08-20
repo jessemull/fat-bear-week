@@ -79,7 +79,7 @@ export function DeleteBearButton({
       ) : null}
       <ConfirmDialog
         confirmLabel="Delete Bear"
-        description={`Delete bear ${bearName}? This cannot be undone.`}
+        description={`Delete bear ${bearName}? This cannot be undone. Bears used in matchups cannot be deleted.`}
         open={confirmOpen}
         pending={pending}
         title="Delete bear"

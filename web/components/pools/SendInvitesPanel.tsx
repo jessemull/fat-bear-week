@@ -334,7 +334,12 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
                 key={row.id}
                 className="relative flex items-start gap-2 rounded-sm border border-zinc-300 p-3 dark:border-zinc-600 @min-[512px]:rounded-none @min-[512px]:border-x-0 @min-[512px]:border-t-0 @min-[512px]:px-0 @min-[512px]:py-4"
               >
-                <div className="grid min-w-0 flex-1 grid-cols-1 gap-2 @min-[512px]:grid-cols-[auto_1fr] @min-[512px]:items-center @min-[512px]:gap-x-3">
+                <div
+                  className={cn(
+                    "grid min-w-0 flex-1 grid-cols-1 gap-2 @min-[512px]:grid-cols-[auto_1fr] @min-[512px]:items-center @min-[512px]:gap-x-3",
+                    rows.length > 1 && "pr-10 @min-[512px]:pr-0",
+                  )}
+                >
                   <label
                     className={`text-sm ${formLabelClassName}`}
                     htmlFor={`${baseId}-email-${row.id}`}

@@ -21,14 +21,12 @@ import type { ReactElement } from "react";
 import { CreatePoolForm } from "@/components/pools/CreatePoolForm";
 import { DeletePoolButton } from "@/components/pools/DeletePoolButton";
 import { parseInviteCsv } from "@/components/pools/InviteCsvUploadDialog";
+import { InviteEditHeader } from "@/components/pools/InviteEditHeader";
 import { InviteForm } from "@/components/pools/InviteForm";
 import { InviteList } from "@/components/pools/InviteList";
 import { PoolForm } from "@/components/pools/PoolForm";
 import { PoolList } from "@/components/pools/PoolList";
-import {
-  InviteEditHeader,
-  ResendInviteButton,
-} from "@/components/pools/ResendInviteButton";
+import { ResendInviteButton } from "@/components/pools/ResendInviteButton";
 import { SendInvitesPanel } from "@/components/pools/SendInvitesPanel";
 import { ToastProvider } from "@/components/Toast";
 

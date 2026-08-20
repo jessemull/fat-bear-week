@@ -42,23 +42,25 @@ export function AdminPageHeader({
   title,
 }: AdminPageHeaderProps) {
   return (
-    <header className="relative flex w-full flex-col gap-2">
-      <div className="flex items-center justify-between gap-3">
-        <h1
-          className={`min-w-0 flex-1 truncate text-3xl ${action ? "pr-10 md:pr-0" : ""} ${formHeadingClassName}`}
-          title={typeof title === "string" ? title : undefined}
-        >
-          {title}
-        </h1>
-        {action ? (
-          <div className="absolute top-0 right-0 md:static md:shrink-0">
-            {action}
-          </div>
-        ) : null}
-      </div>
-      <p className={`text-sm ${formMutedClassName}`}>{description}</p>
+    <div className="relative flex w-full flex-col gap-2">
+      <header className="flex w-full flex-col gap-2">
+        <div className="flex items-center justify-between gap-3">
+          <h1
+            className={`min-w-0 flex-1 truncate text-3xl ${action ? "pr-10 md:pr-0" : ""} ${formHeadingClassName}`}
+            title={typeof title === "string" ? title : undefined}
+          >
+            {title}
+          </h1>
+          {action ? (
+            <div className="absolute top-0 right-0 md:static md:shrink-0">
+              {action}
+            </div>
+          ) : null}
+        </div>
+        <p className={`text-sm ${formMutedClassName}`}>{description}</p>
+      </header>
       {children}
-    </header>
+    </div>
   );
 }
 
