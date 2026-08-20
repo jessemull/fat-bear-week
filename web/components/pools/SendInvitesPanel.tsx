@@ -24,6 +24,7 @@ import {
 import { InviteLinkFallback } from "@/components/pools/InviteLinkFallback";
 import { useToast } from "@/components/Toast";
 import { MAX_BULK_INVITES } from "@/lib/auth-schemas";
+import { cn } from "@/lib/cn";
 import {
   formActionsClassNames,
   formButtonPrimaryClassName,
@@ -331,7 +332,7 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
             {rows.map((row, index) => (
               <div
                 key={row.id}
-                className="flex items-start gap-2 rounded-sm border border-zinc-300 p-3 dark:border-zinc-600 @min-[512px]:rounded-none @min-[512px]:border-x-0 @min-[512px]:border-t-0 @min-[512px]:px-0 @min-[512px]:py-3"
+                className="relative flex items-start gap-2 rounded-sm border border-zinc-300 p-3 dark:border-zinc-600 @min-[512px]:rounded-none @min-[512px]:border-x-0 @min-[512px]:border-t-0 @min-[512px]:px-0 @min-[512px]:py-4"
               >
                 <div className="grid min-w-0 flex-1 grid-cols-1 gap-2 @min-[512px]:grid-cols-[auto_1fr] @min-[512px]:items-center @min-[512px]:gap-x-3">
                   <label
@@ -376,7 +377,10 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
                 {rows.length > 1 ? (
                   <button
                     aria-label={`Remove invitee ${index + 1}`}
-                    className={`${formButtonSecondaryClassName} shrink-0 self-start px-2`}
+                    className={cn(
+                      "absolute top-3 right-3 inline-flex size-8 shrink-0 cursor-pointer items-start justify-end text-zinc-500 transition-colors hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-60 dark:text-zinc-400 dark:hover:text-zinc-100",
+                      "@min-[512px]:static @min-[512px]:items-center @min-[512px]:justify-center @min-[512px]:rounded-md @min-[512px]:border @min-[512px]:border-zinc-300 @min-[512px]:px-2 @min-[512px]:text-zinc-900 @min-[512px]:hover:bg-zinc-100 @min-[512px]:dark:border-zinc-600 @min-[512px]:dark:text-zinc-100 @min-[512px]:dark:hover:bg-zinc-800",
+                    )}
                     disabled={pending}
                     type="button"
                     onClick={() =>
