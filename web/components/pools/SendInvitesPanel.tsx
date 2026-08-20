@@ -325,13 +325,13 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
             </button>
           </div>
           <div
-            className="subtle-scrollbar flex flex-col gap-3 overflow-y-auto overscroll-contain pr-1"
+            className="subtle-scrollbar flex flex-col gap-3 overflow-y-auto overscroll-contain pr-1 @min-[512px]:gap-0 @min-[512px]:border-t @min-[512px]:border-zinc-300 @min-[512px]:dark:border-zinc-600"
             ref={listRef}
           >
             {rows.map((row, index) => (
               <div
                 key={row.id}
-                className="flex items-start gap-2 rounded-sm border border-zinc-300 p-3 dark:border-zinc-600"
+                className="flex items-start gap-2 rounded-sm border border-zinc-300 p-3 dark:border-zinc-600 @min-[512px]:rounded-none @min-[512px]:border-x-0 @min-[512px]:border-t-0 @min-[512px]:px-0 @min-[512px]:py-3"
               >
                 <div className="grid min-w-0 flex-1 grid-cols-1 gap-2 @min-[512px]:grid-cols-[auto_1fr] @min-[512px]:items-center @min-[512px]:gap-x-3">
                   <label
