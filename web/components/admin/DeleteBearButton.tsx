@@ -25,7 +25,7 @@ export function DeleteBearButton({
   tournamentId,
 }: DeleteBearButtonProps) {
   const router = useRouter();
-  const { toast } = useToast();
+  const { toastAfterNavigation } = useToast();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [error, setError] = useState<null | string>(null);
   const [pending, setPending] = useState(false);
@@ -47,7 +47,7 @@ export function DeleteBearButton({
       }
 
       setConfirmOpen(false);
-      toast("Bear deleted.");
+      toastAfterNavigation("Bear deleted.");
       router.push(`/admin/tournaments/${tournamentId}/bears`);
       router.refresh();
     } catch {

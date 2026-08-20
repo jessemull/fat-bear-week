@@ -26,7 +26,7 @@ interface CreateTournamentResponse {
 
 export function CreateTournamentForm() {
   const router = useRouter();
-  const { toast } = useToast();
+  const { toastAfterNavigation } = useToast();
   const [error, setError] = useState<null | string>(null);
   const [pending, setPending] = useState(false);
   const [year, setYear] = useState(String(new Date().getFullYear()));
@@ -64,7 +64,7 @@ export function CreateTournamentForm() {
         return;
       }
 
-      toast("Tournament created.");
+      toastAfterNavigation("Tournament created.");
       router.push("/admin/tournaments");
       router.refresh();
     } catch {

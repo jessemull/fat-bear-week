@@ -9,7 +9,10 @@ const refresh = vi.fn();
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
-    push,
+    push: (href: string) => {
+      push(href);
+      window.history.pushState({}, "", href);
+    },
     refresh,
     replace: vi.fn(),
   }),
@@ -35,6 +38,7 @@ describe("admin forms", () => {
   beforeEach(() => {
     push.mockReset();
     refresh.mockReset();
+    window.history.pushState({}, "", "/admin/tournaments/new");
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({

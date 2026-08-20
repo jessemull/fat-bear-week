@@ -1,13 +1,16 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const push = vi.fn();
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
-    push,
+    push: (href: string) => {
+      push(href);
+      window.history.pushState({}, "", href);
+    },
     refresh: vi.fn(),
     replace: vi.fn(),
   }),
@@ -90,12 +93,16 @@ function mockFetchWithTournaments(
 }
 
 describe("pool components", () => {
+  beforeEach(() => {
+    push.mockClear();
+    window.history.pushState({}, "", "/admin/pools/pool-1/invites/inv-1");
+  });
+
   it("should submit CreatePoolForm and SendInvitesPanel", async () => {
     const user = userEvent.setup();
     const fetchMock = mockFetchWithTournaments();
 
     vi.stubGlobal("fetch", fetchMock);
-    push.mockClear();
 
     const { rerender } = renderWithToast(<CreatePoolForm tournaments={[{ id: tournamentId, status: "draft", year: 2026 }]} />);
 
@@ -238,10 +245,10 @@ describe("pool components", () => {
       "/api/pools/pool-1/invites/inv-1",
       expect.objectContaining({ method: "PATCH" }),
     );
-    expect(screen.getByRole("status")).toHaveTextContent(
+    expect(push).toHaveBeenCalledWith("/admin/pools/pool-1/invites");
+    expect(await screen.findByRole("status")).toHaveTextContent(
       "Invite saved. The old link is invalid — use Resend Invite for the new address.",
     );
-    expect(push).toHaveBeenCalledWith("/admin/pools/pool-1/invites");
   });
 
   it("should toast a simple save message when the token is not rotated", async () => {
@@ -279,8 +286,8 @@ describe("pool components", () => {
     await user.type(screen.getByLabelText("Name Hint"), "Alexandra");
     await user.click(screen.getByRole("button", { name: "Save Invite" }));
 
-    expect(screen.getByRole("status")).toHaveTextContent("Invite saved.");
     expect(push).toHaveBeenCalledWith("/admin/pools/pool-1/invites");
+    expect(await screen.findByRole("status")).toHaveTextContent("Invite saved.");
   });
 
   it("should show InviteForm API errors", async () => {

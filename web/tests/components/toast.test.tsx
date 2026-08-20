@@ -15,6 +15,16 @@ function ToastTrigger({ tone }: { tone?: "default" | "error" }) {
   );
 }
 
+function DeferredToastTrigger() {
+  const { toastAfterNavigation } = useToast();
+
+  return (
+    <button type="button" onClick={() => toastAfterNavigation("Redirected.")}>
+      Notify after nav
+    </button>
+  );
+}
+
 describe("Toast", () => {
   it("should render default and error toasts through AppProviders", async () => {
     const user = userEvent.setup();
@@ -31,6 +41,24 @@ describe("Toast", () => {
 
     await user.click(screen.getAllByRole("button", { name: "Notify" })[1]!);
     expect(screen.getAllByRole("status")).toHaveLength(2);
+  });
+
+  it("should show toastAfterNavigation only after the URL changes", async () => {
+    const user = userEvent.setup();
+
+    window.history.pushState({}, "", "/from");
+
+    render(
+      <AppProviders>
+        <DeferredToastTrigger />
+      </AppProviders>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Notify after nav" }));
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+
+    window.history.pushState({}, "", "/to");
+    expect(await screen.findByRole("status")).toHaveTextContent("Redirected.");
   });
 
   it("should throw when useToast is used outside a provider", () => {

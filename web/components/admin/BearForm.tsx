@@ -41,7 +41,7 @@ interface BearMutationResponse {
 
 export function BearForm({ bear, mode, tournamentId }: BearFormProps) {
   const router = useRouter();
-  const { toast } = useToast();
+  const { toastAfterNavigation } = useToast();
   const [biography, setBiography] = useState(bear?.biography ?? "");
   const [error, setError] = useState<null | string>(null);
   const [identification, setIdentification] = useState(
@@ -96,11 +96,13 @@ export function BearForm({ bear, mode, tournamentId }: BearFormProps) {
           return;
         }
 
-        toast("Bear created.");
-      } else {
-        toast("Bear saved.");
+        toastAfterNavigation("Bear created.");
+        router.push(`/admin/tournaments/${tournamentId}/bears`);
+        router.refresh();
+        return;
       }
 
+      toastAfterNavigation("Bear saved.");
       router.push(`/admin/tournaments/${tournamentId}/bears`);
       router.refresh();
     } catch {

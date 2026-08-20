@@ -23,7 +23,7 @@ export function DeleteTournamentButton({
   year,
 }: DeleteTournamentButtonProps) {
   const router = useRouter();
-  const { toast } = useToast();
+  const { toastAfterNavigation } = useToast();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [error, setError] = useState<null | string>(null);
   const [pending, setPending] = useState(false);
@@ -45,7 +45,7 @@ export function DeleteTournamentButton({
       }
 
       setConfirmOpen(false);
-      toast("Tournament deleted.");
+      toastAfterNavigation("Tournament deleted.");
       router.push("/admin/tournaments");
       router.refresh();
     } catch {

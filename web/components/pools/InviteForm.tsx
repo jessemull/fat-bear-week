@@ -29,7 +29,7 @@ interface InviteFormProps {
 
 export function InviteForm({ invite, poolId }: InviteFormProps) {
   const router = useRouter();
-  const { toast } = useToast();
+  const { toastAfterNavigation } = useToast();
   const [email, setEmail] = useState(invite.email ?? "");
   const [error, setError] = useState<null | string>(null);
   const [nameHint, setNameHint] = useState(invite.nameHint ?? "");
@@ -72,11 +72,11 @@ export function InviteForm({ invite, poolId }: InviteFormProps) {
       }
 
       if (json.data?.invite?.tokenRotated) {
-        toast(
+        toastAfterNavigation(
           "Invite saved. The old link is invalid — use Resend Invite for the new address.",
         );
       } else {
-        toast("Invite saved.");
+        toastAfterNavigation("Invite saved.");
       }
 
       router.push(`/admin/pools/${poolId}/invites`);

@@ -65,7 +65,7 @@ function toDatetimeLocalValue(iso: null | string): string {
 
 export function PoolForm({ mode, pool, tournaments }: PoolFormProps) {
   const router = useRouter();
-  const { toast } = useToast();
+  const { toastAfterNavigation } = useToast();
   const [bracketDeadline, setBracketDeadline] = useState(
     toDatetimeLocalValue(pool?.bracketDeadline ?? null),
   );
@@ -152,11 +152,13 @@ export function PoolForm({ mode, pool, tournaments }: PoolFormProps) {
           return;
         }
 
-        toast("Pool created.");
-      } else {
-        toast("Pool saved.");
+        toastAfterNavigation("Pool created.");
+        router.push("/admin/pools");
+        router.refresh();
+        return;
       }
 
+      toastAfterNavigation("Pool saved.");
       router.push("/admin/pools");
       router.refresh();
     } catch {

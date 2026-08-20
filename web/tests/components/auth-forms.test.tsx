@@ -8,7 +8,10 @@ const refresh = vi.fn();
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
-    push,
+    push: (href: string) => {
+      push(href);
+      window.history.pushState({}, "", href);
+    },
     refresh,
     replace: vi.fn(),
   }),
@@ -43,6 +46,7 @@ describe("auth forms", () => {
   beforeEach(() => {
     push.mockReset();
     refresh.mockReset();
+    window.history.pushState({}, "", "/invite/test-token");
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -149,7 +153,7 @@ describe("auth forms", () => {
     await user.click(screen.getByRole("button", { name: "Join pool" }));
 
     expect(push).toHaveBeenCalledWith("/login?joined=1");
-    expect(screen.getByRole("status")).toHaveTextContent(
+    expect(await screen.findByRole("status")).toHaveTextContent(
       "Account ready — sign in to continue.",
     );
   });

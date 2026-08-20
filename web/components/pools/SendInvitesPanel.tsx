@@ -52,7 +52,7 @@ const LIST_BOTTOM_GAP_PX = 56;
 
 export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
   const router = useRouter();
-  const { toast } = useToast();
+  const { toast, toastAfterNavigation } = useToast();
   const baseId = useId();
   const actionsRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -218,7 +218,7 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
       }
 
       setFailedInviteUrls([]);
-      toast(
+      toastAfterNavigation(
         json.data.created === 1
           ? "Invite sent."
           : `${json.data.created} invites sent.`,
