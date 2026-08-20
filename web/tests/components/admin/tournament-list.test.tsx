@@ -66,6 +66,7 @@ describe("TournamentList", () => {
     expect(card).toHaveAttribute("href", "/admin/tournaments/t-2026");
     expect(within(card).getByRole("heading", { name: "2026" })).toBeInTheDocument();
     expect(within(card).getByText("Live")).toBeInTheDocument();
+    expect(within(card).getByText(/Tournament ·/)).toBeInTheDocument();
     expect(
       within(list).getByRole("link", { name: /2025/ }),
     ).toHaveAttribute("href", "/admin/tournaments/t-2025");
@@ -73,7 +74,9 @@ describe("TournamentList", () => {
     expect(
       within(list).getByRole("link", { name: /2024/ }),
     ).toHaveAttribute("href", "/admin/tournaments/t-2024");
-    expect(within(list).getAllByText("—")).toHaveLength(4);
+    expect(within(list).getAllByText("Tournament · No dates set")).toHaveLength(
+      2,
+    );
 
     const table = screen.getByRole("table");
 

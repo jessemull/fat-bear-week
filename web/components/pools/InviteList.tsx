@@ -1,14 +1,11 @@
 "use client";
 
-import { ChevronRight, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { type KeyboardEvent } from "react";
 
-import { Card, CardField, CardFields, CardList } from "@/components/Card";
-import {
-  formHeadingClassName,
-  formMutedClassName,
-} from "@/lib/form-styles";
+import { Card, CardBadge, CardHeader, CardList, CardMeta } from "@/components/Card";
+import { formMutedClassName } from "@/lib/form-styles";
 
 interface InviteListItem {
   email: null | string;
@@ -23,7 +20,24 @@ interface InviteListProps {
   poolId: string;
 }
 
-function formatExpires(value: null | string): string {
+function formatExpires(value: null | string): null | string {
+  if (!value) {
+    return null;
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return date.toLocaleDateString("en-US", {
+    day: "numeric",
+    month: "short",
+  });
+}
+
+function formatExpiresFull(value: null | string): string {
   if (!value) {
     return "—";
   }
@@ -37,8 +51,46 @@ function formatExpires(value: null | string): string {
   return date.toLocaleString();
 }
 
+function formatInviteMeta(invite: InviteListItem): string {
+  const parts: string[] = [];
+
+  if (invite.nameHint) {
+    parts.push(invite.nameHint);
+  }
+
+  const expires = formatExpires(invite.expiresAt);
+
+  if (expires) {
+    parts.push(`Expires ${expires}`);
+  }
+
+  if (parts.length === 0) {
+    return "No name hint";
+  }
+
+  return parts.join(" · ");
+}
+
 function formatStatus(status: InviteListItem["status"]): string {
+  if (status === "unused") {
+    return "Pending";
+  }
+
   return `${status.charAt(0).toUpperCase()}${status.slice(1)}`;
+}
+
+function statusTone(
+  status: InviteListItem["status"],
+): "accent" | "default" | "muted" {
+  if (status === "unused") {
+    return "accent";
+  }
+
+  if (status === "expired") {
+    return "muted";
+  }
+
+  return "default";
 }
 
 export function InviteList({ invites, poolId }: InviteListProps) {
@@ -72,24 +124,15 @@ export function InviteList({ invites, poolId }: InviteListProps) {
         {invites.map((invite) => (
           <li key={invite.id}>
             <Card href={`/admin/pools/${poolId}/invites/${invite.id}`}>
-              <div className="flex items-start justify-between gap-3">
-                <h2 className={`min-w-0 text-lg ${formHeadingClassName}`}>
-                  {invite.email ?? "No email"}
-                </h2>
-                <ChevronRight
-                  aria-hidden="true"
-                  className="size-5 shrink-0 text-amber-800 dark:text-amber-400"
-                  strokeWidth={1.75}
-                />
-              </div>
-              <CardFields>
-                <CardField label="Name Hint" value={invite.nameHint ?? "—"} />
-                <CardField label="Status" value={formatStatus(invite.status)} />
-                <CardField
-                  label="Expires"
-                  value={formatExpires(invite.expiresAt)}
-                />
-              </CardFields>
+              <CardHeader
+                badge={
+                  <CardBadge tone={statusTone(invite.status)}>
+                    {formatStatus(invite.status)}
+                  </CardBadge>
+                }
+                title={invite.email ?? "No email"}
+              />
+              <CardMeta>{formatInviteMeta(invite)}</CardMeta>
             </Card>
           </li>
         ))}
@@ -137,7 +180,7 @@ export function InviteList({ invites, poolId }: InviteListProps) {
                   {formatStatus(invite.status)}
                 </td>
                 <td className={`py-3 pr-4 ${formMutedClassName}`}>
-                  {formatExpires(invite.expiresAt)}
+                  {formatExpiresFull(invite.expiresAt)}
                 </td>
                 <td className="py-3 pr-3">
                   <span className="flex justify-end">

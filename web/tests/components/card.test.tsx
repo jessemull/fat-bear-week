@@ -2,7 +2,13 @@ import { render, screen, within } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { describe, expect, it } from "vitest";
 
-import { Card, CardField, CardFields, CardList } from "@/components/Card";
+import {
+  Card,
+  CardBadge,
+  CardHeader,
+  CardList,
+  CardMeta,
+} from "@/components/Card";
 
 describe("Card", () => {
   it("should render static content when href is omitted", async () => {
@@ -29,16 +35,16 @@ describe("Card", () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 
-  it("should list labeled fields inside cards", async () => {
+  it("should render a compact title, badge, and meta line", async () => {
     const { container } = render(
       <CardList>
         <li>
           <Card href="/admin/tournaments/t-2026">
-            <h2>2026</h2>
-            <CardFields>
-              <CardField label="Status" value="Live" />
-              <CardField label="Starts" value="—" />
-            </CardFields>
+            <CardHeader
+              badge={<CardBadge tone="accent">Live</CardBadge>}
+              title="2026"
+            />
+            <CardMeta>Tournament · Oct 1 – Oct 8</CardMeta>
           </Card>
         </li>
       </CardList>,
@@ -48,9 +54,8 @@ describe("Card", () => {
     const card = within(list).getByRole("link", { name: /2026/ });
 
     expect(card).toHaveAttribute("href", "/admin/tournaments/t-2026");
-    expect(within(card).getByText("Status")).toBeInTheDocument();
     expect(within(card).getByText("Live")).toBeInTheDocument();
-    expect(card.querySelector("dl")).toHaveClass("grid-cols-[auto_1fr]");
+    expect(within(card).getByText("Tournament · Oct 1 – Oct 8")).toBeInTheDocument();
     expect(await axe(container)).toHaveNoViolations();
   });
 });

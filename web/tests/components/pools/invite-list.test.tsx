@@ -46,11 +46,13 @@ describe("InviteList", () => {
     const card = within(list).getByRole("link", { name: /player@example.com/ });
 
     expect(card).toHaveAttribute("href", "/admin/pools/pool-1/invites/invite-1");
-    expect(within(card).getByText("Alex")).toBeInTheDocument();
-    expect(within(card).getByText("Unused")).toBeInTheDocument();
+    expect(within(card).getByText(/Alex · Expires/)).toBeInTheDocument();
+    expect(within(card).getByText("Pending")).toBeInTheDocument();
     expect(
       within(list).getByRole("link", { name: /No email/ }),
     ).toHaveAttribute("href", "/admin/pools/pool-1/invites/invite-2");
+    expect(within(list).getByText("Used")).toBeInTheDocument();
+    expect(within(list).getByText("No name hint")).toBeInTheDocument();
     expect(screen.getByRole("table")).toBeInTheDocument();
     expect(await axe(container)).toHaveNoViolations();
   });

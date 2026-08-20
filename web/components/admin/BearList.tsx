@@ -1,14 +1,11 @@
 "use client";
 
-import { ChevronRight, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { type KeyboardEvent } from "react";
 
-import { Card, CardField, CardFields, CardList } from "@/components/Card";
-import {
-  formHeadingClassName,
-  formMutedClassName,
-} from "@/lib/form-styles";
+import { Card, CardHeader, CardList, CardMeta } from "@/components/Card";
+import { formMutedClassName } from "@/lib/form-styles";
 
 export interface BearListItem {
   id: string;
@@ -52,17 +49,8 @@ export function BearList({ bears, tournamentId }: BearListProps) {
         {bears.map((bear) => (
           <li key={bear.id}>
             <Card href={`/admin/tournaments/${tournamentId}/bears/${bear.id}`}>
-              <div className="flex items-start justify-between gap-3">
-                <h2 className={`text-lg ${formHeadingClassName}`}>{bear.name}</h2>
-                <ChevronRight
-                  aria-hidden="true"
-                  className="size-5 shrink-0 text-amber-800 dark:text-amber-400"
-                  strokeWidth={1.75}
-                />
-              </div>
-              <CardFields>
-                <CardField label="Nickname" value={bear.nickname ?? "—"} />
-              </CardFields>
+              <CardHeader title={bear.name} />
+              <CardMeta>{bear.nickname ?? "No nickname"}</CardMeta>
             </Card>
           </li>
         ))}

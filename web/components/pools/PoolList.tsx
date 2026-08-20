@@ -1,14 +1,11 @@
 "use client";
 
-import { ChevronRight, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { type KeyboardEvent } from "react";
 
-import { Card, CardField, CardFields, CardList } from "@/components/Card";
-import {
-  formHeadingClassName,
-  formMutedClassName,
-} from "@/lib/form-styles";
+import { Card, CardBadge, CardHeader, CardList, CardMeta } from "@/components/Card";
+import { formMutedClassName } from "@/lib/form-styles";
 
 export interface PoolListItem {
   entryCount: number;
@@ -20,6 +17,10 @@ export interface PoolListItem {
 
 interface PoolListProps {
   pools: PoolListItem[];
+}
+
+function formatRoleBadge(role: PoolListItem["role"]): string {
+  return role === "commissioner" ? "Admin" : "Member";
 }
 
 export function PoolList({ pools }: PoolListProps) {
@@ -61,28 +62,18 @@ export function PoolList({ pools }: PoolListProps) {
           return (
             <li key={pool.id}>
               <Card href={href}>
-                <div className="flex items-start justify-between gap-3">
-                  <h2 className={`text-lg ${formHeadingClassName}`}>
-                    {pool.name}
-                  </h2>
-                  {canOpen ? (
-                    <ChevronRight
-                      aria-hidden="true"
-                      className="size-5 shrink-0 text-amber-800 dark:text-amber-400"
-                      strokeWidth={1.75}
-                    />
-                  ) : null}
-                </div>
-                <CardFields>
-                  <CardField
-                    label="Players"
-                    value={`${pool.entryCount}/${pool.maxPlayers}`}
-                  />
-                  <CardField
-                    label="Role"
-                    value={pool.role.charAt(0).toUpperCase() + pool.role.slice(1)}
-                  />
-                </CardFields>
+                <CardHeader
+                  badge={
+                    <CardBadge tone={canOpen ? "accent" : "muted"}>
+                      {formatRoleBadge(pool.role)}
+                    </CardBadge>
+                  }
+                  showEdit={canOpen}
+                  title={pool.name}
+                />
+                <CardMeta>
+                  {pool.entryCount} / {pool.maxPlayers} players
+                </CardMeta>
               </Card>
             </li>
           );

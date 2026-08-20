@@ -1,23 +1,59 @@
 "use client";
 
-import { ChevronRight, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { type KeyboardEvent } from "react";
 
 import type { TournamentRecord } from "@/lib/tournament-types";
 
-import { Card, CardField, CardFields, CardList } from "@/components/Card";
-import {
-  formHeadingClassName,
-  formMutedClassName,
-} from "@/lib/form-styles";
+import { Card, CardBadge, CardHeader, CardList, CardMeta } from "@/components/Card";
+import { formMutedClassName } from "@/lib/form-styles";
 import { formatTournamentStatus } from "@/lib/tournament-types";
 
 interface TournamentListProps {
   tournaments: TournamentRecord[];
 }
 
-function formatDate(value: null | string): string {
+function formatDate(value: null | string): null | string {
+  if (!value) {
+    return null;
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return date.toLocaleDateString("en-US", {
+    day: "numeric",
+    month: "short",
+  });
+}
+
+function formatDateRange(
+  startsAt: null | string,
+  endsAt: null | string,
+): string {
+  const starts = formatDate(startsAt);
+  const ends = formatDate(endsAt);
+
+  if (starts && ends) {
+    return `Tournament · ${starts} – ${ends}`;
+  }
+
+  if (starts) {
+    return `Tournament · Starts ${starts}`;
+  }
+
+  if (ends) {
+    return `Tournament · Ends ${ends}`;
+  }
+
+  return "Tournament · No dates set";
+}
+
+function formatTableDate(value: null | string): string {
   if (!value) {
     return "—";
   }
@@ -33,6 +69,20 @@ function formatDate(value: null | string): string {
     month: "short",
     year: "numeric",
   });
+}
+
+function statusTone(
+  status: TournamentRecord["status"],
+): "accent" | "default" | "muted" {
+  if (status === "live") {
+    return "accent";
+  }
+
+  if (status === "complete" || status === "draft") {
+    return "muted";
+  }
+
+  return "default";
 }
 
 export function TournamentList({ tournaments }: TournamentListProps) {
@@ -66,30 +116,17 @@ export function TournamentList({ tournaments }: TournamentListProps) {
         {tournaments.map((tournament) => (
           <li key={tournament.id}>
             <Card href={`/admin/tournaments/${tournament.id}`}>
-              <div className="flex items-start justify-between gap-3">
-                <h2 className={`text-lg ${formHeadingClassName}`}>
-                  {tournament.year}
-                </h2>
-                <ChevronRight
-                  aria-hidden="true"
-                  className="size-5 shrink-0 text-amber-800 dark:text-amber-400"
-                  strokeWidth={1.75}
-                />
-              </div>
-              <CardFields>
-                <CardField
-                  label="Status"
-                  value={formatTournamentStatus(tournament.status)}
-                />
-                <CardField
-                  label="Starts"
-                  value={formatDate(tournament.startsAt)}
-                />
-                <CardField
-                  label="Ends"
-                  value={formatDate(tournament.endsAt)}
-                />
-              </CardFields>
+              <CardHeader
+                badge={
+                  <CardBadge tone={statusTone(tournament.status)}>
+                    {formatTournamentStatus(tournament.status)}
+                  </CardBadge>
+                }
+                title={tournament.year}
+              />
+              <CardMeta>
+                {formatDateRange(tournament.startsAt, tournament.endsAt)}
+              </CardMeta>
             </Card>
           </li>
         ))}
@@ -134,10 +171,10 @@ export function TournamentList({ tournaments }: TournamentListProps) {
                   {formatTournamentStatus(tournament.status)}
                 </td>
                 <td className={`py-3 pr-4 ${formMutedClassName}`}>
-                  {formatDate(tournament.startsAt)}
+                  {formatTableDate(tournament.startsAt)}
                 </td>
                 <td className={`py-3 pr-4 ${formMutedClassName}`}>
-                  {formatDate(tournament.endsAt)}
+                  {formatTableDate(tournament.endsAt)}
                 </td>
                 <td className="py-3 pr-3">
                   <span className="flex justify-end">

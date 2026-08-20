@@ -49,7 +49,7 @@ describe("BearList", () => {
       "/admin/tournaments/t-2026/bears/bear-1",
     );
     expect(within(card).getByText("Chunk")).toBeInTheDocument();
-    expect(within(list).getByText("—")).toBeInTheDocument();
+    expect(within(list).getByText("No nickname")).toBeInTheDocument();
 
     expect(
       screen.getByRole("link", { name: "Open bear Grazer" }),
