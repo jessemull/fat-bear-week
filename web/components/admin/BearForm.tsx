@@ -96,13 +96,12 @@ export function BearForm({ bear, mode, tournamentId }: BearFormProps) {
           return;
         }
 
-        router.push(`/admin/tournaments/${tournamentId}/bears/${bearId}`);
-        router.refresh();
         toast("Bear created.");
-        return;
+      } else {
+        toast("Bear saved.");
       }
 
-      toast("Bear saved.");
+      router.push(`/admin/tournaments/${tournamentId}/bears`);
       router.refresh();
     } catch {
       setError(
@@ -180,7 +179,9 @@ export function BearForm({ bear, mode, tournamentId }: BearFormProps) {
           className={`${formButtonSecondaryClassName} w-full justify-center`}
           disabled={pending}
           type="button"
-          onClick={() => router.back()}
+          onClick={() =>
+            router.push(`/admin/tournaments/${tournamentId}/bears`)
+          }
         >
           Cancel
         </button>

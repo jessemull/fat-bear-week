@@ -6,11 +6,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const push = vi.fn();
 const refresh = vi.fn();
-const back = vi.fn();
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
-    back,
     push,
     refresh,
     replace: vi.fn(),
@@ -35,7 +33,6 @@ function renderWithToast(ui: ReactElement) {
 
 describe("admin forms", () => {
   beforeEach(() => {
-    back.mockReset();
     push.mockReset();
     refresh.mockReset();
     vi.stubGlobal(
@@ -150,7 +147,7 @@ describe("admin forms", () => {
       "/api/admin/tournaments",
       expect.objectContaining({ method: "POST" }),
     );
-    expect(push).toHaveBeenCalledWith(`/admin/tournaments/${tournamentId}`);
+    expect(push).toHaveBeenCalledWith("/admin/tournaments");
     expect(refresh).toHaveBeenCalled();
 
     vi.stubGlobal(
@@ -178,14 +175,16 @@ describe("admin forms", () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 
-  it("should go back when Cancel is clicked on BearForm", async () => {
+  it("should return to the bears list when Cancel is clicked on BearForm", async () => {
     const user = userEvent.setup();
 
     renderWithToast(<BearForm mode="create" tournamentId={tournamentId} />);
 
     await user.click(screen.getByRole("button", { name: "Cancel" }));
 
-    expect(back).toHaveBeenCalled();
+    expect(push).toHaveBeenCalledWith(
+      `/admin/tournaments/${tournamentId}/bears`,
+    );
   });
 
   it("should submit BearForm create and redirect", async () => {
@@ -220,7 +219,7 @@ describe("admin forms", () => {
       );
     });
     expect(push).toHaveBeenCalledWith(
-      `/admin/tournaments/${tournamentId}/bears/${bearAId}`,
+      `/admin/tournaments/${tournamentId}/bears`,
     );
     expect(refresh).toHaveBeenCalled();
   });
@@ -252,6 +251,9 @@ describe("admin forms", () => {
         expect.objectContaining({ method: "PATCH" }),
       );
     });
+    expect(push).toHaveBeenCalledWith(
+      `/admin/tournaments/${tournamentId}/bears`,
+    );
     expect(refresh).toHaveBeenCalled();
   });
 

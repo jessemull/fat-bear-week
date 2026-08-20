@@ -64,9 +64,9 @@ export function CreateTournamentForm() {
         return;
       }
 
-      router.push(`/admin/tournaments/${tournamentId}`);
-      router.refresh();
       toast("Tournament created.");
+      router.push("/admin/tournaments");
+      router.refresh();
     } catch {
       setError("Unable to create tournament right now.");
     } finally {
@@ -103,7 +103,7 @@ export function CreateTournamentForm() {
           className={`${formButtonSecondaryClassName} w-full justify-center`}
           disabled={pending}
           type="button"
-          onClick={() => router.back()}
+          onClick={() => router.push("/admin/tournaments")}
         >
           Cancel
         </button>

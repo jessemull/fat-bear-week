@@ -60,6 +60,15 @@ function mockFetchWithTournaments(
       }
     }
 
+    if (url === "/api/pools") {
+      return {
+        json: async () => ({
+          data: { pool: { id: "11111111-1111-4111-8111-111111111111" } },
+        }),
+        ok: true,
+      };
+    }
+
     return {
       json: async () => ({
         data: {
@@ -101,6 +110,7 @@ describe("pool components", () => {
       "/api/pools",
       expect.objectContaining({ method: "POST" }),
     );
+    expect(push).toHaveBeenCalledWith("/admin/pools");
 
     rerender(
       <ToastProvider>
@@ -231,6 +241,7 @@ describe("pool components", () => {
     expect(screen.getByRole("status")).toHaveTextContent(
       "Invite saved. The old link is invalid — use Resend Invite for the new address.",
     );
+    expect(push).toHaveBeenCalledWith("/admin/pools/pool-1/invites");
   });
 
   it("should toast a simple save message when the token is not rotated", async () => {
@@ -269,6 +280,7 @@ describe("pool components", () => {
     await user.click(screen.getByRole("button", { name: "Save Invite" }));
 
     expect(screen.getByRole("status")).toHaveTextContent("Invite saved.");
+    expect(push).toHaveBeenCalledWith("/admin/pools/pool-1/invites");
   });
 
   it("should show InviteForm API errors", async () => {
@@ -814,6 +826,7 @@ describe("pool components", () => {
       "/api/pools",
       expect.objectContaining({ method: "POST" }),
     );
+    expect(push).toHaveBeenCalledWith("/admin/pools");
   });
 
   it("should omit open link for member pools", () => {
@@ -956,6 +969,7 @@ describe("pool components", () => {
       "/api/pools/pool-1",
       expect.objectContaining({ method: "PATCH" }),
     );
+    expect(push).toHaveBeenCalledWith("/admin/pools");
   });
 
   it("should show delete pool errors", async () => {

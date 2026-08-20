@@ -71,8 +71,6 @@ export function InviteForm({ invite, poolId }: InviteFormProps) {
         return;
       }
 
-      router.refresh();
-
       if (json.data?.invite?.tokenRotated) {
         toast(
           "Invite saved. The old link is invalid — use Resend Invite for the new address.",
@@ -80,6 +78,9 @@ export function InviteForm({ invite, poolId }: InviteFormProps) {
       } else {
         toast("Invite saved.");
       }
+
+      router.push(`/admin/pools/${poolId}/invites`);
+      router.refresh();
     } catch {
       setError("Unable to save invite right now.");
     } finally {

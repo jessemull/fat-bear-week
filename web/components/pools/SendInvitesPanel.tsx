@@ -417,7 +417,7 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
             className={`${formButtonSecondaryClassName} w-full justify-center`}
             disabled={pending}
             type="button"
-            onClick={() => router.back()}
+            onClick={() => router.push(`/admin/pools/${poolId}/invites`)}
           >
             Cancel
           </button>

@@ -147,22 +147,17 @@ export function PoolForm({ mode, pool, tournaments }: PoolFormProps) {
       }
 
       if (mode === "create") {
-        const poolId = json.data?.pool?.id;
-
-        if (poolId) {
-          toast("Pool created.");
-          router.push(`/admin/pools/${poolId}`);
-          router.refresh();
+        if (!json.data?.pool?.id) {
+          setError("Unable to create pool.");
           return;
         }
 
         toast("Pool created.");
-        router.push("/admin/pools");
-        router.refresh();
-        return;
+      } else {
+        toast("Pool saved.");
       }
 
-      toast("Pool saved.");
+      router.push("/admin/pools");
       router.refresh();
     } catch {
       setError(
@@ -298,7 +293,7 @@ export function PoolForm({ mode, pool, tournaments }: PoolFormProps) {
           className={`${formButtonSecondaryClassName} w-full justify-center`}
           disabled={pending}
           type="button"
-          onClick={() => router.back()}
+          onClick={() => router.push("/admin/pools")}
         >
           Cancel
         </button>
