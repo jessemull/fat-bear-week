@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { PageStatus } from "@/components/PageStatus";
+import { appMainPaddingClassName } from "@/lib/form-styles";
 import { listPoolsForSidebar } from "@/lib/pools.server";
 import { getSession } from "@/lib/sessions.server";
 import { listTournaments } from "@/lib/tournament.server";
@@ -47,7 +48,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
           year: tournament.year,
         }))}
       />
-      <main className="min-w-0 flex-1 px-4 py-8 sm:px-6">
+      <main className={`min-w-0 flex-1 ${appMainPaddingClassName}`}>
         <div className="flex w-full max-w-3xl flex-col gap-8 text-zinc-900 dark:text-zinc-50">
           {children}
         </div>

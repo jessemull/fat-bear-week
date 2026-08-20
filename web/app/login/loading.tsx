@@ -1,8 +1,10 @@
+import { appCenteredPagePaddingClassName } from "@/lib/form-styles";
+
 export default function Loading() {
   return (
     <main
       aria-busy="true"
-      className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-4 px-6 py-12 pb-24"
+      className={`mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-4 ${appCenteredPagePaddingClassName}`}
       role="status"
     >
       <span className="sr-only">Loading sign-in…</span>

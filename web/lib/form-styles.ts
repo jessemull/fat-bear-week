@@ -155,5 +155,13 @@ export const formErrorClassName =
 export const formLinkClassName =
   "text-amber-800 underline dark:text-amber-400";
 
+/** Side padding with top matching sides below the fixed mobile header (lg restores py-8). */
+export const appMainPaddingClassName =
+  "px-4 pt-4 pb-8 sm:px-6 sm:pt-6 lg:py-8";
+
+/** Centered status / auth pages: top matches sides until lg. */
+export const appCenteredPagePaddingClassName =
+  "px-6 pt-6 pb-24 lg:py-12";
+
 export const formPageClassName =
-  "mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-12 text-zinc-900 dark:text-zinc-50";
+  `mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 ${appCenteredPagePaddingClassName} text-zinc-900 dark:text-zinc-50`;
