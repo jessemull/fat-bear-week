@@ -85,9 +85,9 @@ describe("admin forms", () => {
     );
 
     expect(screen.getByRole("columnheader", { name: "Year" })).toBeInTheDocument();
-    expect(screen.getByText("2026")).toBeInTheDocument();
-    expect(screen.getByText("Live")).toBeInTheDocument();
-    expect(screen.getByText("2025")).toBeInTheDocument();
+    expect(screen.getAllByText("2026").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Live").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("2025").length).toBeGreaterThan(0);
     expect(screen.getAllByText("—").length).toBeGreaterThan(0);
 
     const row = screen.getByRole("link", { name: "Open tournament 2026" });
@@ -279,9 +279,11 @@ describe("admin forms", () => {
       />,
     );
 
-    expect(screen.getByRole("columnheader", { name: "Name" })).toBeInTheDocument();
-    expect(screen.getByText("Otis")).toBeInTheDocument();
-    expect(screen.getByText("Boss")).toBeInTheDocument();
+    const table = screen.getByRole("table");
+
+    expect(within(table).getByRole("columnheader", { name: "Name" })).toBeInTheDocument();
+    expect(within(table).getByText("Otis")).toBeInTheDocument();
+    expect(within(table).getByText("Boss")).toBeInTheDocument();
 
     await user.click(screen.getByRole("link", { name: "Open bear Otis" }));
 
@@ -415,6 +417,11 @@ describe("admin forms", () => {
 
     expect(await axe(container)).toHaveNoViolations();
     expect(screen.getByLabelText("Status")).toHaveTextContent("Draft");
+    expect(screen.getByLabelText("Status").closest("div.flex")).toHaveClass(
+      "@container",
+      "w-full",
+      "max-w-lg",
+    );
 
     await user.click(screen.getByLabelText("Status"));
     await user.click(screen.getByRole("option", { name: "Live" }));

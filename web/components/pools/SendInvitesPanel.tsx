@@ -13,6 +13,7 @@ import {
 
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
+import { FormShell } from "@/components/FormShell";
 import {
   InviteCsvUploadDialog,
   type ParsedInviteRow,
@@ -21,7 +22,7 @@ import { InviteLinkFallback } from "@/components/pools/InviteLinkFallback";
 import { useToast } from "@/components/Toast";
 import { MAX_BULK_INVITES } from "@/lib/auth-schemas";
 import {
-  formActionsClassName,
+  formActionsClassNames,
   formButtonPrimaryClassName,
   formButtonSecondaryClassName,
   formErrorClassName,
@@ -277,7 +278,7 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
   }
 
   return (
-    <div className="flex w-full max-w-2xl flex-col gap-4">
+    <FormShell>
       <AdminPageHeader
         action={
           <button
@@ -297,10 +298,10 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
       />
       <form className="flex w-full flex-col gap-4" onSubmit={onSubmit}>
         <div className="flex flex-col gap-3">
-          <div className="flex items-end justify-between gap-3">
+          <div className="flex flex-col gap-2 @min-[512px]:flex-row @min-[512px]:items-end @min-[512px]:justify-between @min-[512px]:gap-3">
             <p className={formLabelClassName}>Invitees</p>
             <button
-              className={formButtonSecondaryClassName}
+              className={`${formButtonSecondaryClassName} w-full @min-[512px]:w-auto`}
               disabled={pending}
               type="button"
               onClick={() => setRows((current) => [...current, createRow()])}
@@ -322,9 +323,9 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
             {rows.map((row, index) => (
               <div
                 key={row.id}
-                className="flex flex-col gap-2 rounded-sm border border-zinc-300 p-3 dark:border-zinc-600 sm:flex-row sm:items-end"
+                className="flex flex-col gap-2 rounded-sm border border-zinc-300 p-3 dark:border-zinc-600 @min-[512px]:flex-row @min-[512px]:items-end"
               >
-                <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:gap-3">
+                <div className="flex min-w-0 flex-1 flex-col gap-2 @min-[512px]:flex-row @min-[512px]:gap-3">
                   <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                     <label
                       className={`text-sm ${formLabelClassName}`}
@@ -403,7 +404,7 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
             ))}
           </div>
         ) : null}
-        <div className={formActionsClassName} ref={actionsRef}>
+        <div className={formActionsClassNames.lg} ref={actionsRef}>
           <button
             className={`${formButtonSecondaryClassName} w-full justify-center`}
             disabled={pending}
@@ -443,6 +444,6 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
           );
         }}
       />
-    </div>
+    </FormShell>
   );
 }

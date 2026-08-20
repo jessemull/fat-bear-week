@@ -124,5 +124,9 @@ describe("AdminSidebar", () => {
 
     expect(screen.queryByRole("button", { name: "Admin menu" })).toBeNull();
     expect(screen.getByRole("navigation", { name: "Admin" })).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Admin" }).closest("aside")).toHaveClass(
+      "pl-5",
+      "lg:pl-6",
+    );
   });
 });

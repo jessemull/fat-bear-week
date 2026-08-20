@@ -5,6 +5,7 @@ import { type FormEvent, useState } from "react";
 
 import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
 import { FormSelect } from "@/components/FormSelect";
+import { FormShell } from "@/components/FormShell";
 import { useToast } from "@/components/Toast";
 import {
   formActionsClassName,
@@ -195,7 +196,7 @@ export function PoolForm({ mode, pool, tournaments }: PoolFormProps) {
     mode === "create" ? "pool-show-brackets" : "edit-pool-show-brackets";
 
   return (
-    <form className="flex w-full max-w-lg flex-col gap-4" onSubmit={onSubmit}>
+    <FormShell as="form" onSubmit={onSubmit}>
       <div className="flex flex-col gap-2">
         <label className={formLabelClassName} htmlFor={nameId}>
           Pool name
@@ -317,6 +318,6 @@ export function PoolForm({ mode, pool, tournaments }: PoolFormProps) {
           )}
         </button>
       </div>
-    </form>
+    </FormShell>
   );
 }

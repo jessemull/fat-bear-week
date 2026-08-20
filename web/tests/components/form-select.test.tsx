@@ -24,6 +24,8 @@ describe("FormSelect", () => {
     );
 
     expect(screen.getByLabelText("Status")).toHaveTextContent("draft");
+    expect(screen.getByLabelText("Status")).toHaveClass("w-full");
+    expect(screen.getByLabelText("Status").parentElement).toHaveClass("w-full");
     expect(await axe(container)).toHaveNoViolations();
 
     await user.click(screen.getByLabelText("Status"));

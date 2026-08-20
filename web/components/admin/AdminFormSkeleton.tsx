@@ -1,3 +1,6 @@
+import { FormShell } from "@/components/FormShell";
+import { formActionsClassName } from "@/lib/form-styles";
+
 interface AdminFormSkeletonProps {
   fields?: number;
 }
@@ -7,10 +10,9 @@ const pulseClassName =
 
 export function AdminFormSkeleton({ fields = 4 }: AdminFormSkeletonProps) {
   return (
-    <div
+    <FormShell
       aria-busy="true"
       aria-live="polite"
-      className="flex w-full max-w-lg flex-col gap-4"
       role="status"
     >
       <span className="sr-only">Loading…</span>
@@ -26,10 +28,10 @@ export function AdminFormSkeleton({ fields = 4 }: AdminFormSkeletonProps) {
           </div>
         ))}
       </div>
-      <div className="mt-2 grid w-full grid-cols-2 gap-2">
+      <div className={formActionsClassName}>
         <div className={`h-8 w-full ${pulseClassName}`} />
         <div className={`h-8 w-full ${pulseClassName}`} />
       </div>
-    </div>
+    </FormShell>
   );
 }

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
 import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
+import { FormShell } from "@/components/FormShell";
 import { useToast } from "@/components/Toast";
 import {
   formActionsClassName,
@@ -87,7 +88,7 @@ export function InviteForm({ invite, poolId }: InviteFormProps) {
   }
 
   return (
-    <form className="flex w-full flex-col gap-4" onSubmit={onSubmit}>
+    <FormShell as="form" onSubmit={onSubmit}>
       <div className="flex flex-col gap-2">
         <label className={formLabelClassName} htmlFor="invite-email">
           Invitee email
@@ -104,7 +105,7 @@ export function InviteForm({ invite, poolId }: InviteFormProps) {
           onChange={(event) => setEmail(event.target.value)}
         />
       </div>
-      <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-end">
+      <div className="flex w-full flex-col gap-4 @min-[512px]:flex-row @min-[512px]:items-end">
         <div className="flex min-w-0 flex-1 flex-col gap-2">
           <label className={formLabelClassName} htmlFor="invite-name-hint">
             Name Hint
@@ -119,7 +120,7 @@ export function InviteForm({ invite, poolId }: InviteFormProps) {
             onChange={(event) => setNameHint(event.target.value)}
           />
         </div>
-        <div className="flex w-full flex-col gap-2 sm:w-28 sm:shrink-0">
+        <div className="flex w-full flex-col gap-2 @min-[512px]:w-28 @min-[512px]:shrink-0">
           <label className={formLabelClassName} htmlFor="invite-status">
             Status
           </label>
@@ -165,6 +166,6 @@ export function InviteForm({ invite, poolId }: InviteFormProps) {
           )}
         </button>
       </div>
-    </form>
+    </FormShell>
   );
 }

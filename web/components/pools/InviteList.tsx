@@ -1,10 +1,14 @@
 "use client";
 
-import { ExternalLink } from "lucide-react";
+import { ChevronRight, ExternalLink } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { type KeyboardEvent } from "react";
 
-import { formMutedClassName } from "@/lib/form-styles";
+import { Card, CardField, CardFields, CardList } from "@/components/Card";
+import {
+  formHeadingClassName,
+  formMutedClassName,
+} from "@/lib/form-styles";
 
 interface InviteListItem {
   email: null | string;
@@ -63,63 +67,92 @@ export function InviteList({ invites, poolId }: InviteListProps) {
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[28rem] border-collapse text-left text-sm">
-        <thead>
-          <tr className="border-b border-zinc-300 dark:border-zinc-600">
-            <th className={`py-2 pl-3 pr-4 font-medium ${formMutedClassName}`}>
-              Email
-            </th>
-            <th className={`py-2 pr-4 font-medium ${formMutedClassName}`}>
-              Name Hint
-            </th>
-            <th className={`py-2 pr-4 font-medium ${formMutedClassName}`}>
-              Status
-            </th>
-            <th className={`py-2 pr-4 font-medium ${formMutedClassName}`}>
-              Expires
-            </th>
-            <th className="w-10 py-2 pr-3">
-              <span className="sr-only">Open</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {invites.map((invite) => (
-            <tr
-              key={invite.id}
-              aria-label={`Open invite ${invite.email ?? invite.id}`}
-              className="group cursor-pointer border-b border-zinc-200 transition-colors hover:bg-amber-50/80 focus-visible:bg-amber-50/80 dark:border-zinc-700 dark:hover:bg-zinc-900 dark:focus-visible:bg-zinc-900"
-              role="link"
-              tabIndex={0}
-              onClick={() => openInvite(invite.id)}
-              onKeyDown={(event) => onRowKeyDown(event, invite.id)}
-            >
-              <td className="py-3 pl-3 pr-4 font-medium text-zinc-900 dark:text-zinc-50">
-                {invite.email ?? "No email"}
-              </td>
-              <td className={`py-3 pr-4 ${formMutedClassName}`}>
-                {invite.nameHint ?? "—"}
-              </td>
-              <td className="py-3 pr-4 text-zinc-700 dark:text-zinc-300">
-                {formatStatus(invite.status)}
-              </td>
-              <td className={`py-3 pr-4 ${formMutedClassName}`}>
-                {formatExpires(invite.expiresAt)}
-              </td>
-              <td className="py-3 pr-3">
-                <span className="flex justify-end">
-                  <ExternalLink
-                    aria-hidden="true"
-                    className="size-4 text-amber-800 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 dark:text-amber-400"
-                    strokeWidth={1.75}
-                  />
-                </span>
-              </td>
+    <>
+      <CardList className="md:hidden">
+        {invites.map((invite) => (
+          <li key={invite.id}>
+            <Card href={`/admin/pools/${poolId}/invites/${invite.id}`}>
+              <div className="flex items-start justify-between gap-3">
+                <h2 className={`min-w-0 text-lg ${formHeadingClassName}`}>
+                  {invite.email ?? "No email"}
+                </h2>
+                <ChevronRight
+                  aria-hidden="true"
+                  className="size-5 shrink-0 text-amber-800 dark:text-amber-400"
+                  strokeWidth={1.75}
+                />
+              </div>
+              <CardFields>
+                <CardField label="Name Hint" value={invite.nameHint ?? "—"} />
+                <CardField label="Status" value={formatStatus(invite.status)} />
+                <CardField
+                  label="Expires"
+                  value={formatExpires(invite.expiresAt)}
+                />
+              </CardFields>
+            </Card>
+          </li>
+        ))}
+      </CardList>
+
+      <div className="hidden overflow-x-auto md:block">
+        <table className="w-full min-w-[28rem] border-collapse text-left text-sm">
+          <thead>
+            <tr className="border-b border-zinc-300 dark:border-zinc-600">
+              <th className={`py-2 pl-3 pr-4 font-medium ${formMutedClassName}`}>
+                Email
+              </th>
+              <th className={`py-2 pr-4 font-medium ${formMutedClassName}`}>
+                Name Hint
+              </th>
+              <th className={`py-2 pr-4 font-medium ${formMutedClassName}`}>
+                Status
+              </th>
+              <th className={`py-2 pr-4 font-medium ${formMutedClassName}`}>
+                Expires
+              </th>
+              <th className="w-10 py-2 pr-3">
+                <span className="sr-only">Open</span>
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {invites.map((invite) => (
+              <tr
+                key={invite.id}
+                aria-label={`Open invite ${invite.email ?? invite.id}`}
+                className="group cursor-pointer border-b border-zinc-200 transition-colors hover:bg-amber-50/80 focus-visible:bg-amber-50/80 dark:border-zinc-700 dark:hover:bg-zinc-900 dark:focus-visible:bg-zinc-900"
+                role="link"
+                tabIndex={0}
+                onClick={() => openInvite(invite.id)}
+                onKeyDown={(event) => onRowKeyDown(event, invite.id)}
+              >
+                <td className="py-3 pl-3 pr-4 font-medium text-zinc-900 dark:text-zinc-50">
+                  {invite.email ?? "No email"}
+                </td>
+                <td className={`py-3 pr-4 ${formMutedClassName}`}>
+                  {invite.nameHint ?? "—"}
+                </td>
+                <td className="py-3 pr-4 text-zinc-700 dark:text-zinc-300">
+                  {formatStatus(invite.status)}
+                </td>
+                <td className={`py-3 pr-4 ${formMutedClassName}`}>
+                  {formatExpires(invite.expiresAt)}
+                </td>
+                <td className="py-3 pr-3">
+                  <span className="flex justify-end">
+                    <ExternalLink
+                      aria-hidden="true"
+                      className="size-4 text-amber-800 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 dark:text-amber-400"
+                      strokeWidth={1.75}
+                    />
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { FormSelect } from "@/components/FormSelect";
+import { FormShell } from "@/components/FormShell";
 import { useToast } from "@/components/Toast";
 import { formErrorClassName } from "@/lib/form-styles";
 import {
@@ -73,7 +74,7 @@ export function TournamentStatusControls({
       }));
 
   return (
-    <div className="flex max-w-xs flex-col gap-3">
+    <FormShell>
       <FormSelect
         disabled={pending}
         id="tournament-status"
@@ -89,6 +90,6 @@ export function TournamentStatusControls({
           {error}
         </p>
       ) : null}
-    </div>
+    </FormShell>
   );
 }

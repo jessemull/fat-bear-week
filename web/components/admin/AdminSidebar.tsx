@@ -254,7 +254,7 @@ export function AdminSidebar({ pools, tournaments }: AdminSidebarProps) {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden w-56 shrink-0 lg:block">
+    <aside className="hidden w-56 shrink-0 pl-5 lg:block lg:pl-6">
       <nav aria-label="Admin" className="sticky top-24">
         <AdminNavBody
           pathname={pathname}

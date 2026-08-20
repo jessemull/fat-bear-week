@@ -19,13 +19,19 @@ export function AdminPageHeader({
   title,
 }: AdminPageHeaderProps) {
   return (
-    <header className="flex flex-col gap-2">
-      <div className="flex items-start justify-between gap-4">
-        <h1 className={`min-w-0 text-3xl ${formHeadingClassName}`}>{title}</h1>
-        {action ? <div className="shrink-0 pt-1">{action}</div> : null}
-      </div>
-      <p className={`text-sm ${formMutedClassName}`}>{description}</p>
-      {children}
+    <header className="@container grid w-full grid-cols-1 gap-2 @min-[512px]:grid-cols-[minmax(0,1fr)_auto] @min-[512px]:items-start @min-[512px]:gap-x-4">
+      <h1 className={`min-w-0 text-3xl ${formHeadingClassName}`}>{title}</h1>
+      <p
+        className={`text-sm @min-[512px]:col-start-1 @min-[512px]:row-start-2 ${formMutedClassName}`}
+      >
+        {description}
+      </p>
+      {action ? (
+        <div className="w-full @min-[512px]:col-start-2 @min-[512px]:row-start-1 @min-[512px]:w-auto @min-[512px]:shrink-0 @min-[512px]:pt-1 [&>a]:flex [&>a]:w-full [&>button]:flex [&>button]:w-full @min-[512px]:[&>a]:w-auto @min-[512px]:[&>button]:w-auto">
+          {action}
+        </div>
+      ) : null}
+      {children ? <div className="@min-[512px]:col-span-2">{children}</div> : null}
     </header>
   );
 }

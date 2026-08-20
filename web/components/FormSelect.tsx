@@ -62,7 +62,7 @@ export function FormSelect({
   const selected = options.find((option) => option.value === value);
 
   return (
-    <div className="relative" ref={rootRef}>
+    <div className="relative w-full" ref={rootRef}>
       <button
         aria-controls={listboxId}
         aria-expanded={open}

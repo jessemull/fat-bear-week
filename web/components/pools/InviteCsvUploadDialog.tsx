@@ -4,12 +4,15 @@ import { useEffect, useId, useRef, useState } from "react";
 
 import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
 import { MAX_BULK_INVITES } from "@/lib/auth-schemas";
+import { cn } from "@/lib/cn";
 import {
+  formActionsMdClassName,
   formButtonPrimaryClassName,
   formButtonSecondaryClassName,
   formErrorClassName,
   formHeadingClassName,
   formMutedClassName,
+  formWidthMdShellClassName,
 } from "@/lib/form-styles";
 
 export interface ParsedInviteRow {
@@ -337,7 +340,7 @@ export function InviteCsvUploadDialog({
         aria-describedby={descriptionId}
         aria-labelledby={titleId}
         aria-modal="true"
-        className="relative z-10 w-full max-w-md rounded-md border border-zinc-300 bg-white p-5 shadow-xl dark:border-zinc-600 dark:bg-zinc-950"
+        className={`relative z-10 rounded-md border border-zinc-300 bg-white p-5 shadow-xl dark:border-zinc-600 dark:bg-zinc-950 ${formWidthMdShellClassName}`}
         ref={dialogRef}
         role="dialog"
       >
@@ -369,9 +372,9 @@ export function InviteCsvUploadDialog({
               onFileChange(event.target.files?.[0] ?? null);
             }}
           />
-          <div className="flex min-w-0 items-center gap-3">
+          <div className="flex min-w-0 flex-col gap-2 @min-[448px]:flex-row @min-[448px]:items-center @min-[448px]:gap-3">
             <button
-              className={`${formButtonPrimaryClassName} shrink-0`}
+              className={`${formButtonPrimaryClassName} w-full @min-[448px]:w-auto @min-[448px]:shrink-0`}
               disabled={pending}
               type="button"
               onClick={() => fileRef.current?.click()}
@@ -390,7 +393,7 @@ export function InviteCsvUploadDialog({
             </p>
           ) : null}
         </div>
-        <div className="mt-5 grid w-full grid-cols-2 gap-2">
+        <div className={cn(formActionsMdClassName, "mt-5")}>
           <button
             className={`${formButtonSecondaryClassName} w-full justify-center`}
             disabled={pending}

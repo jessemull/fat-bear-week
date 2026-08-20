@@ -812,7 +812,7 @@ describe("pool components", () => {
     expect(
       screen.queryByRole("link", { name: "Open Friends" }),
     ).not.toBeInTheDocument();
-    expect(screen.getByText("Friends")).toBeInTheDocument();
+    expect(within(screen.getByRole("table")).getByText("Friends")).toBeInTheDocument();
   });
 
   it("should render empty InviteList status", async () => {
@@ -862,7 +862,7 @@ describe("pool components", () => {
     expect(
       screen.getByRole("link", { name: "Open invite inv-1" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Used")).toBeInTheDocument();
+    expect(within(screen.getByRole("table")).getByText("Used")).toBeInTheDocument();
   });
 
   it("should delete a pool after confirm", async () => {

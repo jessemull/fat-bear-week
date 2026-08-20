@@ -5,21 +5,23 @@ import { useState } from "react";
 
 import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { FormStandaloneAction } from "@/components/FormShell";
 import { useToast } from "@/components/Toast";
 import {
   formButtonDangerClassName,
   formErrorClassName,
+  formStandaloneActionButtonClassNames,
 } from "@/lib/form-styles";
 
 interface DeleteBearButtonProps {
   bearId: string;
-  name: string;
+  bearName: string;
   tournamentId: string;
 }
 
 export function DeleteBearButton({
   bearId,
-  name,
+  bearName,
   tournamentId,
 }: DeleteBearButtonProps) {
   const router = useRouter();
@@ -57,9 +59,9 @@ export function DeleteBearButton({
   }
 
   return (
-    <div className="flex w-fit flex-col items-start gap-3">
+    <FormStandaloneAction>
       <button
-        className={formButtonDangerClassName}
+        className={`${formButtonDangerClassName} ${formStandaloneActionButtonClassNames.lg}`}
         disabled={pending}
         type="button"
         onClick={() => setConfirmOpen(true)}
@@ -77,7 +79,7 @@ export function DeleteBearButton({
       ) : null}
       <ConfirmDialog
         confirmLabel="Delete Bear"
-        description={`Delete bear ${name}? This cannot be undone. Bears used in matchups cannot be deleted.`}
+        description={`Delete bear ${bearName}? This cannot be undone.`}
         open={confirmOpen}
         pending={pending}
         title="Delete bear"
@@ -85,6 +87,6 @@ export function DeleteBearButton({
         onCancel={() => setConfirmOpen(false)}
         onConfirm={() => void onConfirmDelete()}
       />
-    </div>
+    </FormStandaloneAction>
   );
 }

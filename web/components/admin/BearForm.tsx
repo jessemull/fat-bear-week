@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
 import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
+import { FormShell } from "@/components/FormShell";
 import { useToast } from "@/components/Toast";
 import {
   formActionsClassName,
@@ -115,7 +116,7 @@ export function BearForm({ bear, mode, tournamentId }: BearFormProps) {
   }
 
   return (
-    <form className="flex w-full max-w-lg flex-col gap-4" onSubmit={onSubmit}>
+    <FormShell as="form" onSubmit={onSubmit}>
       <div className="flex flex-col gap-2">
         <label className={formLabelClassName} htmlFor="bear-name">
           Name
@@ -199,6 +200,6 @@ export function BearForm({ bear, mode, tournamentId }: BearFormProps) {
           )}
         </button>
       </div>
-    </form>
+    </FormShell>
   );
 }
