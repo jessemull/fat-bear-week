@@ -1,8 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 
-import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { InviteForm } from "@/components/pools/InviteForm";
-import { ResendInviteButton } from "@/components/pools/ResendInviteButton";
+import { InviteEditHeader } from "@/components/pools/ResendInviteButton";
 import { getInviteForPool } from "@/lib/invites.server";
 import { getPool, userCanManagePool } from "@/lib/pools.server";
 import { getSession } from "@/lib/sessions.server";
@@ -49,16 +48,16 @@ export default async function AdminEditInvitePage({
 
   return (
     <div className="flex w-full max-w-lg flex-col gap-4">
-      <AdminPageHeader
-        action={
-          invite.status === "unused" || invite.status === "expired" ? (
-            <ResendInviteButton inviteId={invite.id} poolId={poolId} />
-          ) : undefined
-        }
+      <InviteEditHeader
         description={
           invite.status === "expired"
             ? "Resend to revive this invite with a fresh link and expiry."
             : "Update the invitee or resend the invite email."
+        }
+        inviteId={invite.id}
+        poolId={poolId}
+        showResend={
+          invite.status === "unused" || invite.status === "expired"
         }
         title={invite.email ?? "Invite"}
       />

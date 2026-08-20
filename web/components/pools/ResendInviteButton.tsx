@@ -1,21 +1,38 @@
 "use client";
 
+import { RefreshCw } from "lucide-react";
 import { useState } from "react";
 
-import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
+import {
+  AdminPageHeader,
+  AdminPageHeaderButtonAction,
+} from "@/components/admin/AdminPageHeader";
 import { InviteLinkFallback } from "@/components/pools/InviteLinkFallback";
 import { useToast } from "@/components/Toast";
-import { formButtonPrimaryClassName } from "@/lib/form-styles";
+
+interface InviteEditHeaderProps {
+  description: string;
+  inviteId: string;
+  poolId: string;
+  showResend: boolean;
+  title: string;
+}
 
 interface ResendInviteButtonProps {
   inviteId: string;
   poolId: string;
 }
 
-export function ResendInviteButton({
+interface ResendInviteState {
+  inviteUrl: null | string;
+  onResend: () => Promise<void>;
+  pending: boolean;
+}
+
+function useResendInvite({
   inviteId,
   poolId,
-}: ResendInviteButtonProps) {
+}: ResendInviteButtonProps): ResendInviteState {
   const { toast } = useToast();
   const [inviteUrl, setInviteUrl] = useState<null | string>(null);
   const [pending, setPending] = useState(false);
@@ -58,21 +75,73 @@ export function ResendInviteButton({
     }
   }
 
+  return {
+    inviteUrl,
+    onResend,
+    pending,
+  };
+}
+
+function ResendInviteHeaderAction({
+  onResend,
+  pending,
+}: Pick<ResendInviteState, "onResend" | "pending">) {
   return (
-    <div className="flex w-full flex-col gap-3">
-      <button
-        className={formButtonPrimaryClassName}
-        disabled={pending}
-        type="button"
-        onClick={() => void onResend()}
-      >
-        {pending ? (
-          <ButtonPendingLabel>Sending…</ButtonPendingLabel>
-        ) : (
-          "Resend Invite"
-        )}
-      </button>
+    <AdminPageHeaderButtonAction
+      disabled={pending}
+      icon={RefreshCw}
+      label={pending ? "Sending…" : "Resend Invite"}
+      onClick={() => {
+        void onResend();
+      }}
+    />
+  );
+}
+
+export function InviteEditHeader({
+  description,
+  inviteId,
+  poolId,
+  showResend,
+  title,
+}: InviteEditHeaderProps) {
+  const { inviteUrl, onResend, pending } = useResendInvite({
+    inviteId,
+    poolId,
+  });
+
+  return (
+    <>
+      <AdminPageHeader
+        action={
+          showResend ? (
+            <ResendInviteHeaderAction
+              pending={pending}
+              onResend={onResend}
+            />
+          ) : undefined
+        }
+        description={description}
+        title={title}
+      />
       {inviteUrl ? <InviteLinkFallback inviteUrl={inviteUrl} /> : null}
-    </div>
+    </>
+  );
+}
+
+export function ResendInviteButton({
+  inviteId,
+  poolId,
+}: ResendInviteButtonProps) {
+  const { inviteUrl, onResend, pending } = useResendInvite({
+    inviteId,
+    poolId,
+  });
+
+  return (
+    <>
+      <ResendInviteHeaderAction pending={pending} onResend={onResend} />
+      {inviteUrl ? <InviteLinkFallback inviteUrl={inviteUrl} /> : null}
+    </>
   );
 }

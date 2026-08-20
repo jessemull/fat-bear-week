@@ -145,10 +145,14 @@ export const formButtonPrimaryClassName =
 
 /** Admin list headers: circular icon with cards (below md), text button with tables. */
 export const adminHeaderPrimaryActionClassName =
-  "inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full bg-amber-700 p-0 text-sm font-medium text-white transition-colors hover:bg-amber-800 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-500 dark:disabled:hover:bg-amber-600 md:h-8 md:w-auto md:rounded-md md:px-3";
+  "inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full bg-amber-700 p-0 text-sm font-medium leading-none text-white transition-colors hover:bg-amber-800 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-500 dark:disabled:hover:bg-amber-600 md:h-8 md:w-auto md:rounded-md md:px-3 [&_svg]:block";
 
 export const formButtonSecondaryClassName =
   "inline-flex h-8 cursor-pointer items-center justify-center rounded-md border border-zinc-300 px-2.5 text-sm text-zinc-900 transition-colors hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-transparent dark:border-zinc-600 dark:text-zinc-100 dark:hover:bg-zinc-800 dark:disabled:hover:bg-transparent";
+
+/** Compact circular outline control below md; text button from md up. */
+export const formIconButtonSecondaryClassName =
+  "inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full border border-zinc-300 p-0 text-sm leading-none text-zinc-900 transition-colors hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-transparent dark:border-zinc-600 dark:text-zinc-100 dark:hover:bg-zinc-800 dark:disabled:hover:bg-transparent md:h-8 md:w-auto md:rounded-md md:px-2.5 [&_svg]:block";
 
 export const formButtonDangerClassName =
   "inline-flex h-8 cursor-pointer items-center justify-center rounded-md border border-red-600/40 px-2.5 text-sm text-red-600 transition-colors hover:bg-red-600/10 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-transparent dark:border-red-600/50 dark:text-red-600 dark:hover:bg-red-600/10 dark:disabled:hover:bg-transparent";

@@ -22,7 +22,10 @@ import { InviteForm } from "@/components/pools/InviteForm";
 import { InviteList } from "@/components/pools/InviteList";
 import { PoolForm } from "@/components/pools/PoolForm";
 import { PoolList } from "@/components/pools/PoolList";
-import { ResendInviteButton } from "@/components/pools/ResendInviteButton";
+import {
+  InviteEditHeader,
+  ResendInviteButton,
+} from "@/components/pools/ResendInviteButton";
 import { SendInvitesPanel } from "@/components/pools/SendInvitesPanel";
 import { ToastProvider } from "@/components/Toast";
 
@@ -338,6 +341,25 @@ describe("pool components", () => {
     await user.click(screen.getByRole("button", { name: "Resend Invite" }));
 
     expect(screen.getByRole("status")).toHaveTextContent("Invite resent.");
+  });
+
+  it("should render the invite edit header with a truncated title", async () => {
+    const email = "jessemull@gmail.com";
+    const { container } = renderWithToast(
+      <InviteEditHeader
+        description="Update the invitee or resend the invite email."
+        inviteId="inv-1"
+        poolId="pool-1"
+        showResend
+        title={email}
+      />,
+    );
+
+    expect(screen.getByRole("heading", { level: 1, name: email })).toHaveClass(
+      "truncate",
+    );
+    expect(screen.getByRole("button", { name: "Resend Invite" })).toBeInTheDocument();
+    expect(await axe(container)).toHaveNoViolations();
   });
 
   it("should toast when resend email delivery fails", async () => {

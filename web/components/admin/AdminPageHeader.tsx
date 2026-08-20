@@ -42,7 +42,8 @@ export function AdminPageHeader({
     <header className="relative flex w-full flex-col gap-2">
       <div className="flex items-center justify-between gap-3">
         <h1
-          className={`min-w-0 flex-1 text-3xl ${action ? "pr-10 md:pr-0" : ""} ${formHeadingClassName}`}
+          className={`min-w-0 flex-1 truncate text-3xl ${action ? "pr-10 md:pr-0" : ""} ${formHeadingClassName}`}
+          title={typeof title === "string" ? title : undefined}
         >
           {title}
         </h1>

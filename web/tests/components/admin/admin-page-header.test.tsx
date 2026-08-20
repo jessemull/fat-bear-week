@@ -23,7 +23,12 @@ describe("AdminPageHeader", () => {
     );
 
     expect(screen.getByRole("heading", { level: 1, name: "Title" })).toHaveClass(
+      "truncate",
       "text-3xl",
+    );
+    expect(screen.getByRole("heading", { level: 1, name: "Title" })).toHaveAttribute(
+      "title",
+      "Title",
     );
     expect(container.querySelector("header")).toHaveClass("flex", "flex-col");
     expect(screen.getByText("Helper copy for the page.")).toHaveClass("text-sm");
@@ -38,6 +43,25 @@ describe("AdminPageHeader", () => {
       "href",
       "/admin/example",
     );
+    expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it("should ellipsize a long title next to the header action", async () => {
+    const email = "jessemull@gmail.com";
+    const { container } = render(
+      <AdminPageHeader
+        action={
+          <AdminPageHeaderLinkAction href="/admin/new" label="Resend Invite" />
+        }
+        description="Update the invitee or resend the invite email."
+        title={email}
+      />,
+    );
+
+    const heading = screen.getByRole("heading", { level: 1, name: email });
+
+    expect(heading).toHaveClass("truncate");
+    expect(heading).toHaveAttribute("title", email);
     expect(await axe(container)).toHaveNoViolations();
   });
 });

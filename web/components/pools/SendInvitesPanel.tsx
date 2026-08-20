@@ -29,6 +29,7 @@ import {
   formButtonPrimaryClassName,
   formButtonSecondaryClassName,
   formErrorClassName,
+  formIconButtonSecondaryClassName,
   formInputClassName,
   formLabelClassName,
 } from "@/lib/form-styles";
@@ -299,21 +300,27 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
       />
       <form className="flex w-full flex-col gap-4" onSubmit={onSubmit}>
         <div className="flex flex-col gap-3">
-          <div className="flex flex-col gap-2 @min-[512px]:flex-row @min-[512px]:items-end @min-[512px]:justify-between @min-[512px]:gap-3">
+          <div className="flex items-center justify-between gap-3">
             <p className={formLabelClassName}>Invitees</p>
             <button
-              className={`${formButtonSecondaryClassName} w-full @min-[512px]:w-auto`}
+              aria-label="Add"
+              className={formIconButtonSecondaryClassName}
               disabled={pending}
               type="button"
               onClick={() => setRows((current) => [...current, createRow()])}
             >
-              <span className="inline-flex items-center gap-1">
+              <Plus
+                aria-hidden="true"
+                className="size-5 md:hidden"
+                strokeWidth={1.75}
+              />
+              <span className="hidden items-center gap-1 md:inline-flex">
+                Add
                 <Plus
                   aria-hidden="true"
                   className="size-3.5"
                   strokeWidth={1.75}
                 />
-                Add
               </span>
             </button>
           </div>
@@ -324,56 +331,52 @@ export function SendInvitesPanel({ poolId }: SendInvitesPanelProps) {
             {rows.map((row, index) => (
               <div
                 key={row.id}
-                className="flex flex-col gap-2 rounded-sm border border-zinc-300 p-3 dark:border-zinc-600 @min-[512px]:flex-row @min-[512px]:items-end"
+                className="flex items-start gap-2 rounded-sm border border-zinc-300 p-3 dark:border-zinc-600"
               >
-                <div className="flex min-w-0 flex-1 flex-col gap-2 @min-[512px]:flex-row @min-[512px]:gap-3">
-                  <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                    <label
-                      className={`text-sm ${formLabelClassName}`}
-                      htmlFor={`${baseId}-email-${row.id}`}
-                    >
-                      Email
-                    </label>
-                    <input
-                      aria-label={`Email ${index + 1}`}
-                      className={`${formInputClassName} w-full min-w-0`}
-                      disabled={pending}
-                      id={`${baseId}-email-${row.id}`}
-                      name={`email-${row.id}`}
-                      placeholder="Enter an email..."
-                      type="email"
-                      value={row.email}
-                      onChange={(event) =>
-                        updateRow(row.id, { email: event.target.value })
-                      }
-                    />
-                  </div>
-                  <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                    <label
-                      className={`text-sm ${formLabelClassName}`}
-                      htmlFor={`${baseId}-name-${row.id}`}
-                    >
-                      Name Hint
-                    </label>
-                    <input
-                      aria-label={`Name Hint ${index + 1}`}
-                      className={`${formInputClassName} w-full min-w-0`}
-                      disabled={pending}
-                      id={`${baseId}-name-${row.id}`}
-                      name={`nameHint-${row.id}`}
-                      placeholder="Optional display name..."
-                      type="text"
-                      value={row.nameHint}
-                      onChange={(event) =>
-                        updateRow(row.id, { nameHint: event.target.value })
-                      }
-                    />
-                  </div>
+                <div className="grid min-w-0 flex-1 grid-cols-1 gap-2 @min-[512px]:grid-cols-[auto_1fr] @min-[512px]:items-center @min-[512px]:gap-x-3">
+                  <label
+                    className={`text-sm ${formLabelClassName}`}
+                    htmlFor={`${baseId}-email-${row.id}`}
+                  >
+                    Email
+                  </label>
+                  <input
+                    aria-label={`Email ${index + 1}`}
+                    className={`${formInputClassName} w-full min-w-0`}
+                    disabled={pending}
+                    id={`${baseId}-email-${row.id}`}
+                    name={`email-${row.id}`}
+                    placeholder="Enter an email..."
+                    type="email"
+                    value={row.email}
+                    onChange={(event) =>
+                      updateRow(row.id, { email: event.target.value })
+                    }
+                  />
+                  <label
+                    className={`text-sm ${formLabelClassName}`}
+                    htmlFor={`${baseId}-name-${row.id}`}
+                  >
+                    Name Hint
+                  </label>
+                  <input
+                    aria-label={`Name Hint ${index + 1}`}
+                    className={`${formInputClassName} w-full min-w-0`}
+                    disabled={pending}
+                    id={`${baseId}-name-${row.id}`}
+                    name={`nameHint-${row.id}`}
+                    placeholder="Optional display name..."
+                    type="text"
+                    value={row.nameHint}
+                    onChange={(event) =>
+                      updateRow(row.id, { nameHint: event.target.value })
+                    }
+                  />
                 </div>
                 {rows.length > 1 ? (
                   <button
                     aria-label={`Remove invitee ${index + 1}`}
-                    className={`${formButtonSecondaryClassName} shrink-0 self-end px-2`}
+                    className={`${formButtonSecondaryClassName} shrink-0 self-start px-2`}
                     disabled={pending}
                     type="button"
                     onClick={() =>
