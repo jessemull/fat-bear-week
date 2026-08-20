@@ -72,7 +72,7 @@ export function ConfirmDialog({
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <button
         aria-label="Dismiss confirmation"
-        className="absolute inset-0 cursor-pointer bg-zinc-950/60"
+        className="absolute inset-0 cursor-pointer bg-black/85"
         disabled={pending}
         type="button"
         onClick={onCancel}
