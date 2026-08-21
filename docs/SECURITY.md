@@ -43,8 +43,9 @@
 - Forgot password: email + Turnstile; always-success copy (do not reveal whether
   the address has an account). Reset tokens are unguessable, SHA-256 hashed at
   rest, ~1 hour TTL, and single-use. A successful email reset revokes **all**
-  sessions, then creates a new one. Logged-in password change keeps the current
-  session and revokes the others.
+  sessions **before** storing the new hash, then creates a new one. Logged-in
+  password change keeps the current session and revokes the others before the
+  hash write. Do not log Resend error strings (they can include the recipient).
 - Sessions via HTTP-only cookies (or equivalent); validate server-side on protected routes and mutations.
 - Sign-out revokes **only the current session cookie** (not every device).
 - Invite tokens must be unguessable; store SHA-256 hashes at rest (raw token only in email/URL).

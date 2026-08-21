@@ -164,7 +164,8 @@ export async function issuePasswordReset(
  * Consume a valid reset token, set the new password, and revoke every session.
  *
  * Mark the token used first (unused + unexpired only) so a race cannot apply
- * two password writes against the same link.
+ * two password writes against the same link. Revoke sessions before storing
+ * the new hash so a revoke failure cannot leave old cookies valid.
  */
 export async function consumePasswordReset(params: {
   password: string;
@@ -205,8 +206,6 @@ export async function consumePasswordReset(params: {
     throw new Error("reset_token_used");
   }
 
-  const passwordHash = await hashPassword(params.password);
-
   const { data: user, error: userError } = await supabase
     .from("users")
     .select("id, name")
@@ -217,6 +216,9 @@ export async function consumePasswordReset(params: {
     throw new Error("invalid_reset_token");
   }
 
+  await revokeSessionsForUser({ userId: lookup.userId });
+
+  const passwordHash = await hashPassword(params.password);
   const { error: updateError } = await supabase
     .from("users")
     .update({ password_hash: passwordHash })
@@ -225,8 +227,6 @@ export async function consumePasswordReset(params: {
   if (updateError) {
     throw new Error(`Failed to update password: ${updateError.message}`);
   }
-
-  await revokeSessionsForUser({ userId: lookup.userId });
 
   return {
     userId: user.id as string,

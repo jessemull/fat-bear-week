@@ -163,6 +163,42 @@ describe("account.server", () => {
 
     expect(hashPassword).toHaveBeenCalledWith("password2");
     expect(revokeOtherSessions).toHaveBeenCalledWith("user-1");
+    expect(revokeOtherSessions.mock.invocationCallOrder[0]).toBeLessThan(
+      hashPassword.mock.invocationCallOrder[0] ?? Number.POSITIVE_INFINITY,
+    );
+  });
+
+  it("should not write a new hash when revoking other sessions fails", async () => {
+    const updateEq = vi.fn();
+
+    fromMock.mockReturnValue({
+      select: () => ({
+        eq: () => ({
+          maybeSingle: () =>
+            Promise.resolve({
+              data: { password_hash: "scrypt$old" },
+              error: null,
+            }),
+        }),
+      }),
+      update: () => ({
+        eq: updateEq,
+      }),
+    });
+    verifyPassword.mockResolvedValue(true);
+    revokeOtherSessions.mockRejectedValue(new Error("Failed to revoke other sessions: boom"));
+
+    const { changeAccountPassword } = await import("@/lib/account.server");
+
+    await expect(
+      changeAccountPassword({
+        currentPassword: "password1",
+        newPassword: "password2",
+        userId: "user-1",
+      }),
+    ).rejects.toThrow("Failed to revoke other sessions");
+    expect(hashPassword).not.toHaveBeenCalled();
+    expect(updateEq).not.toHaveBeenCalled();
   });
 
   it("should parse account error codes", async () => {

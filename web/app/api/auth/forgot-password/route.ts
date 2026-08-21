@@ -85,7 +85,7 @@ export async function POST(request: Request) {
       });
 
       if (!result.emailSent) {
-        console.error("forgot-password send failed", result.errorMessage);
+        console.error("forgot-password send failed");
       }
     }
   } catch (error) {

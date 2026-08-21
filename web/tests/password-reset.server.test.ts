@@ -228,6 +228,9 @@ describe("password-reset.server data access", () => {
 
     expect(result).toEqual({ userId: "user-1", userName: "Otis" });
     expect(revokeSessionsForUser).toHaveBeenCalledWith({ userId: "user-1" });
+    expect(revokeSessionsForUser.mock.invocationCallOrder[0]).toBeLessThan(
+      hashPassword.mock.invocationCallOrder[0] ?? Number.POSITIVE_INFINITY,
+    );
   });
 
   it("should fail closed when the consume update matches zero rows", async () => {
@@ -322,11 +325,13 @@ describe("password-reset.server data access", () => {
     expect(revokeSessionsForUser).not.toHaveBeenCalled();
   });
 
-  it("should fail closed when session revoke fails after a reset", async () => {
+  it("should fail closed when session revoke fails before writing the new hash", async () => {
     hashPassword.mockResolvedValue("scrypt$new");
     revokeSessionsForUser.mockRejectedValue(
       new Error("Failed to revoke user sessions: boom"),
     );
+    let passwordUpdated = false;
+
     fromMock.mockImplementation((table: string) => {
       if (table === "password_reset_tokens") {
         return {
@@ -373,7 +378,11 @@ describe("password-reset.server data access", () => {
           }),
         }),
         update: () => ({
-          eq: () => Promise.resolve({ error: null }),
+          eq: () => {
+            passwordUpdated = true;
+
+            return Promise.resolve({ error: null });
+          },
         }),
       };
     });
@@ -383,6 +392,8 @@ describe("password-reset.server data access", () => {
     await expect(
       consumePasswordReset({ password: "password1", token: "t".repeat(32) }),
     ).rejects.toThrow("Failed to revoke user sessions");
+    expect(hashPassword).not.toHaveBeenCalled();
+    expect(passwordUpdated).toBe(false);
   });
 
   it("should reject used reset tokens", async () => {

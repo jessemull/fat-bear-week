@@ -45,17 +45,56 @@ export function AccountMenu({
 
     firstItem?.focus();
 
-    function onPointerDown(event: PointerEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        setOpen(false);
+    function closeMenu() {
+      setOpen(false);
+      buttonRef.current?.focus();
+    }
+
+    function menuItems(): HTMLElement[] {
+      if (!menuRef.current) {
+        return [];
       }
+
+      return Array.from(
+        menuRef.current.querySelectorAll<HTMLElement>("[role='menuitem']"),
+      );
     }
 
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         event.preventDefault();
-        setOpen(false);
-        buttonRef.current?.focus();
+        closeMenu();
+        return;
+      }
+
+      if (event.key !== "ArrowDown" && event.key !== "ArrowUp") {
+        return;
+      }
+
+      const items = menuItems();
+
+      if (items.length === 0) {
+        return;
+      }
+
+      event.preventDefault();
+
+      const currentIndex = items.findIndex(
+        (item) => item === document.activeElement,
+      );
+      const delta = event.key === "ArrowDown" ? 1 : -1;
+      const nextIndex =
+        currentIndex < 0
+          ? 0
+          : (currentIndex + delta + items.length) % items.length;
+
+      items[nextIndex]?.focus();
+    }
+
+    function onPointerDown(event: PointerEvent) {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        event.preventDefault();
+        closeMenu();
       }
     }
 

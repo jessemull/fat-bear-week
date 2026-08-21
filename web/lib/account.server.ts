@@ -82,7 +82,8 @@ export async function updateAccountName(params: {
 }
 
 /**
- * Verify the current password and set a new hash. Revokes other sessions.
+ * Verify the current password and set a new hash. Revokes other sessions
+ * before storing the hash so a revoke failure cannot leave those cookies valid.
  */
 export async function changeAccountPassword(params: {
   currentPassword: string;
@@ -110,8 +111,9 @@ export async function changeAccountPassword(params: {
     throw new Error("invalid_credentials");
   }
 
-  const passwordHash = await hashPassword(params.newPassword);
+  await revokeOtherSessions(params.userId);
 
+  const passwordHash = await hashPassword(params.newPassword);
   const { error: updateError } = await supabase
     .from("users")
     .update({ password_hash: passwordHash })
@@ -120,8 +122,6 @@ export async function changeAccountPassword(params: {
   if (updateError) {
     throw new Error(`Failed to update password: ${updateError.message}`);
   }
-
-  await revokeOtherSessions(params.userId);
 }
 
 export function parseAccountErrorMessage(

@@ -202,7 +202,8 @@ describe("forgot / reset / account routes", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(errorSpy).toHaveBeenCalled();
+    expect(errorSpy).toHaveBeenCalledWith("forgot-password send failed");
+    expect(errorSpy.mock.calls.flat()).not.toContain("boom");
     errorSpy.mockRestore();
   });
 
@@ -395,6 +396,28 @@ describe("forgot / reset / account routes", () => {
 
   it("should return 429 when account password IP rate limit denies", async () => {
     consumeRateLimit.mockReturnValue(false);
+
+    const { POST } = await import("@/app/api/account/password/route");
+    const response = await POST(
+      new Request("http://localhost/api/account/password", {
+        body: JSON.stringify({
+          currentPassword: "password1",
+          password: "password2",
+          passwordConfirm: "password2",
+        }),
+        headers: originHeaders,
+        method: "POST",
+      }),
+    );
+
+    expect(response.status).toBe(429);
+    expect(changeAccountPassword).not.toHaveBeenCalled();
+  });
+
+  it("should return 429 when account password user rate limit denies", async () => {
+    consumeRateLimit.mockImplementation((params: { key: string }) => {
+      return !params.key.startsWith("auth:account-password:user:");
+    });
 
     const { POST } = await import("@/app/api/account/password/route");
     const response = await POST(

@@ -155,6 +155,48 @@ describe("SiteHeader", () => {
     expect(menuButton).toHaveFocus();
   });
 
+  it("should restore focus when the account menu closes from outside click", async () => {
+    const user = userEvent.setup();
+
+    renderHeader(<SiteHeader isSignedIn={true} userName="Otis" />);
+
+    const menuButton = screen.getByRole("button", {
+      name: "Account menu for Otis",
+    });
+
+    await user.click(menuButton);
+    expect(screen.getByRole("menu")).toBeInTheDocument();
+
+    await user.click(document.body);
+
+    expect(screen.queryByRole("menu")).toBeNull();
+    expect(menuButton).toHaveFocus();
+  });
+
+  it("should move account menu focus with arrow keys", async () => {
+    const user = userEvent.setup();
+
+    renderHeader(<SiteHeader isSignedIn={true} userName="Otis" />);
+
+    await user.click(
+      screen.getByRole("button", { name: "Account menu for Otis" }),
+    );
+
+    const accountItem = screen.getByRole("menuitem", { name: "Account" });
+    const signOutItem = screen.getByRole("menuitem", { name: "Sign out" });
+
+    expect(accountItem).toHaveFocus();
+
+    await user.keyboard("{ArrowDown}");
+    expect(signOutItem).toHaveFocus();
+
+    await user.keyboard("{ArrowDown}");
+    expect(accountItem).toHaveFocus();
+
+    await user.keyboard("{ArrowUp}");
+    expect(signOutItem).toHaveFocus();
+  });
+
   it("should not redirect when sign-out fails", async () => {
     const user = userEvent.setup();
 
