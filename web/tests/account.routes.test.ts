@@ -207,6 +207,29 @@ describe("forgot / reset / account routes", () => {
     errorSpy.mockRestore();
   });
 
+  it("should still return success when issuing a reset throws", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    issuePasswordReset.mockRejectedValue(new Error("otis@example.com boom"));
+
+    const { POST } = await import("@/app/api/auth/forgot-password/route");
+    const response = await POST(
+      new Request("http://localhost/api/auth/forgot-password", {
+        body: JSON.stringify({
+          email: "otis@example.com",
+          turnstileToken: "token",
+        }),
+        headers: originHeaders,
+        method: "POST",
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(errorSpy).toHaveBeenCalledWith("forgot-password issue failed");
+    expect(errorSpy.mock.calls.flat()).not.toContain("otis@example.com boom");
+    errorSpy.mockRestore();
+  });
+
   it("should consume a reset token and create a session", async () => {
     consumePasswordReset.mockResolvedValue({
       userId: "user-1",

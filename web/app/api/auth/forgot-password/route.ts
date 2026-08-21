@@ -88,8 +88,8 @@ export async function POST(request: Request) {
         console.error("forgot-password send failed");
       }
     }
-  } catch (error) {
-    console.error("forgot-password issue failed", error);
+  } catch {
+    console.error("forgot-password issue failed");
   }
 
   return jsonData(GENERIC_OK);

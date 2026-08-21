@@ -93,8 +93,7 @@ export function AccountMenu({
 
     function onPointerDown(event: PointerEvent) {
       if (!rootRef.current?.contains(event.target as Node)) {
-        event.preventDefault();
-        closeMenu();
+        setOpen(false);
       }
     }
 

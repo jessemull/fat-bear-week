@@ -155,22 +155,28 @@ describe("SiteHeader", () => {
     expect(menuButton).toHaveFocus();
   });
 
-  it("should restore focus when the account menu closes from outside click", async () => {
+  it("should let an outside click reach its target after closing the menu", async () => {
     const user = userEvent.setup();
+    const onOutside = vi.fn();
 
-    renderHeader(<SiteHeader isSignedIn={true} userName="Otis" />);
+    render(
+      <ToastProvider>
+        <SiteHeader isSignedIn={true} userName="Otis" />
+        <button type="button" onClick={onOutside}>
+          Outside
+        </button>
+      </ToastProvider>,
+    );
 
-    const menuButton = screen.getByRole("button", {
-      name: "Account menu for Otis",
-    });
-
-    await user.click(menuButton);
+    await user.click(
+      screen.getByRole("button", { name: "Account menu for Otis" }),
+    );
     expect(screen.getByRole("menu")).toBeInTheDocument();
 
-    await user.click(document.body);
+    await user.click(screen.getByRole("button", { name: "Outside" }));
 
     expect(screen.queryByRole("menu")).toBeNull();
-    expect(menuButton).toHaveFocus();
+    expect(onOutside).toHaveBeenCalled();
   });
 
   it("should move account menu focus with arrow keys", async () => {
