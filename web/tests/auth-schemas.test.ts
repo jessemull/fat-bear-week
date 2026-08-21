@@ -116,7 +116,7 @@ describe("auth-schemas", () => {
     ).toHaveLength(32);
   });
 
-  it("should reject @-free name updates only at the schema length layer", () => {
+  it("should reject display names that include @", () => {
     expect(
       updateAccountNameBodySchema.parse({ name: "  Otis  " }).name,
     ).toBe("Otis");
@@ -124,6 +124,10 @@ describe("auth-schemas", () => {
     expect(updateAccountNameBodySchema.safeParse({ name: "" }).success).toBe(
       false,
     );
+
+    expect(
+      updateAccountNameBodySchema.safeParse({ name: "otis@friends" }).success,
+    ).toBe(false);
   });
 
   it("should reject mismatched change-password confirmation", () => {
@@ -142,6 +146,16 @@ describe("auth-schemas", () => {
         passwordConfirm: "password2",
       }).password,
     ).toBe("password2");
+  });
+
+  it("should reject a new password equal to the current password", () => {
+    expect(
+      changePasswordBodySchema.safeParse({
+        currentPassword: "password1",
+        password: "password1",
+        passwordConfirm: "password1",
+      }).success,
+    ).toBe(false);
   });
 
   it("should require email when minting invites", () => {

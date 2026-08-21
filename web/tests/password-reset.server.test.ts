@@ -187,7 +187,19 @@ describe("password-reset.server data access", () => {
             }),
           }),
           update: () => ({
-            eq: () => Promise.resolve({ error: null }),
+            eq: () => ({
+              is: () => ({
+                gt: () => ({
+                  select: () => ({
+                    maybeSingle: () =>
+                      Promise.resolve({
+                        data: { user_id: "user-1" },
+                        error: null,
+                      }),
+                  }),
+                }),
+              }),
+            }),
           }),
         };
       }
@@ -216,6 +228,161 @@ describe("password-reset.server data access", () => {
 
     expect(result).toEqual({ userId: "user-1", userName: "Otis" });
     expect(revokeSessionsForUser).toHaveBeenCalledWith({ userId: "user-1" });
+  });
+
+  it("should fail closed when the consume update matches zero rows", async () => {
+    fromMock.mockImplementation((table: string) => {
+      if (table === "password_reset_tokens") {
+        return {
+          select: () => ({
+            eq: () => ({
+              maybeSingle: () =>
+                Promise.resolve({
+                  data: {
+                    expires_at: new Date(Date.now() + 60_000).toISOString(),
+                    id: "prt-1",
+                    used_at: null,
+                    user_id: "user-1",
+                  },
+                  error: null,
+                }),
+            }),
+          }),
+          update: () => ({
+            eq: () => ({
+              is: () => ({
+                gt: () => ({
+                  select: () => ({
+                    maybeSingle: () =>
+                      Promise.resolve({ data: null, error: null }),
+                  }),
+                }),
+              }),
+            }),
+          }),
+        };
+      }
+
+      return {};
+    });
+
+    const { consumePasswordReset } = await import("@/lib/password-reset.server");
+
+    await expect(
+      consumePasswordReset({ password: "password1", token: "t".repeat(32) }),
+    ).rejects.toThrow("reset_token_used");
+    expect(hashPassword).not.toHaveBeenCalled();
+    expect(revokeSessionsForUser).not.toHaveBeenCalled();
+  });
+
+  it("should fail closed when marking the token used errors", async () => {
+    fromMock.mockImplementation((table: string) => {
+      if (table === "password_reset_tokens") {
+        return {
+          select: () => ({
+            eq: () => ({
+              maybeSingle: () =>
+                Promise.resolve({
+                  data: {
+                    expires_at: new Date(Date.now() + 60_000).toISOString(),
+                    id: "prt-1",
+                    used_at: null,
+                    user_id: "user-1",
+                  },
+                  error: null,
+                }),
+            }),
+          }),
+          update: () => ({
+            eq: () => ({
+              is: () => ({
+                gt: () => ({
+                  select: () => ({
+                    maybeSingle: () =>
+                      Promise.resolve({
+                        data: null,
+                        error: { message: "write failed" },
+                      }),
+                  }),
+                }),
+              }),
+            }),
+          }),
+        };
+      }
+
+      return {};
+    });
+
+    const { consumePasswordReset } = await import("@/lib/password-reset.server");
+
+    await expect(
+      consumePasswordReset({ password: "password1", token: "t".repeat(32) }),
+    ).rejects.toThrow("Failed to consume reset token");
+    expect(revokeSessionsForUser).not.toHaveBeenCalled();
+  });
+
+  it("should fail closed when session revoke fails after a reset", async () => {
+    hashPassword.mockResolvedValue("scrypt$new");
+    revokeSessionsForUser.mockRejectedValue(
+      new Error("Failed to revoke user sessions: boom"),
+    );
+    fromMock.mockImplementation((table: string) => {
+      if (table === "password_reset_tokens") {
+        return {
+          select: () => ({
+            eq: () => ({
+              maybeSingle: () =>
+                Promise.resolve({
+                  data: {
+                    expires_at: new Date(Date.now() + 60_000).toISOString(),
+                    id: "prt-1",
+                    used_at: null,
+                    user_id: "user-1",
+                  },
+                  error: null,
+                }),
+            }),
+          }),
+          update: () => ({
+            eq: () => ({
+              is: () => ({
+                gt: () => ({
+                  select: () => ({
+                    maybeSingle: () =>
+                      Promise.resolve({
+                        data: { user_id: "user-1" },
+                        error: null,
+                      }),
+                  }),
+                }),
+              }),
+            }),
+          }),
+        };
+      }
+
+      return {
+        select: () => ({
+          eq: () => ({
+            maybeSingle: () =>
+              Promise.resolve({
+                data: { id: "user-1", name: "Otis" },
+                error: null,
+              }),
+          }),
+        }),
+        update: () => ({
+          eq: () => Promise.resolve({ error: null }),
+        }),
+      };
+    });
+
+    const { consumePasswordReset } = await import("@/lib/password-reset.server");
+
+    await expect(
+      consumePasswordReset({ password: "password1", token: "t".repeat(32) }),
+    ).rejects.toThrow("Failed to revoke user sessions");
   });
 
   it("should reject used reset tokens", async () => {

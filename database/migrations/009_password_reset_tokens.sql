@@ -13,6 +13,10 @@ CREATE TABLE password_reset_tokens (
 CREATE INDEX password_reset_tokens_user_id_idx
   ON password_reset_tokens (user_id);
 
+CREATE UNIQUE INDEX password_reset_tokens_user_id_unused_idx
+  ON password_reset_tokens (user_id)
+  WHERE used_at IS NULL;
+
 CREATE INDEX password_reset_tokens_expires_at_idx
   ON password_reset_tokens (expires_at);
 

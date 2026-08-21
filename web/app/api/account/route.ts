@@ -40,6 +40,10 @@ export async function PATCH(request: Request) {
     const code = parseAccountErrorMessage(message) ?? message;
 
     if (code === "invalid_name") {
+      return jsonError("Enter a display name.", { status: 400 });
+    }
+
+    if (code === "name_has_at") {
       return jsonError("Display names cannot include @.", { status: 400 });
     }
 

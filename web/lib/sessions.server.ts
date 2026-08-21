@@ -204,7 +204,7 @@ export async function revokeSessionsForUser(params: {
     .eq("user_id", params.userId);
 
   if (error) {
-    console.error("Failed to revoke user sessions:", error.message);
+    throw new Error(`Failed to revoke user sessions: ${error.message}`);
   }
 }
 
@@ -228,7 +228,7 @@ export async function revokeOtherSessions(userId: string): Promise<void> {
     .neq("token_hash", hashSessionToken(token));
 
   if (error) {
-    console.error("Failed to revoke other sessions:", error.message);
+    throw new Error(`Failed to revoke other sessions: ${error.message}`);
   }
 }
 

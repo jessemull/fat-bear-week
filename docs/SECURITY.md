@@ -54,8 +54,8 @@
 - CSRF: cookie-session mutations require matching Origin or Referer (SameSite=Lax cookies;
   fail closed when both headers are missing).
 - Turnstile: verify `turnstileToken` server-side via Cloudflare siteverify before join/sign-in/forgot-password/reset-password.
-- Rate limit join, sign-in, and password-reset by IP (and sign-in identifier /
-  reset email) in addition to Turnstile.
+- Rate limit join, sign-in, password-reset, and signed-in password change by IP
+  (and sign-in identifier / reset email / user id) in addition to Turnstile.
   Limits are in-memory per Node process / Vercel isolate (not durable across
   instances) — a soft companion to Turnstile, not a shared global limiter.
 - `NEXT_PUBLIC_SITE_URL` is required for minting invite and password-reset links (no silent production fallback).

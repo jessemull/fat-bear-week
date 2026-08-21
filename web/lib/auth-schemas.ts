@@ -58,7 +58,16 @@ export const updateAccountNameBodySchema = z
   .object({
     name: z.string().trim().min(1).max(80),
   })
-  .strict();
+  .strict()
+  .superRefine((value, ctx) => {
+    if (value.name.includes("@")) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Display names cannot include @.",
+        path: ["name"],
+      });
+    }
+  });
 
 export const changePasswordBodySchema = z
   .object({
@@ -73,6 +82,14 @@ export const changePasswordBodySchema = z
         code: "custom",
         message: "Passwords do not match.",
         path: ["passwordConfirm"],
+      });
+    }
+
+    if (value.password === value.currentPassword) {
+      ctx.addIssue({
+        code: "custom",
+        message: "New password must be different from the current password.",
+        path: ["password"],
       });
     }
   });

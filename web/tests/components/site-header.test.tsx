@@ -115,7 +115,7 @@ describe("SiteHeader", () => {
       screen.getByRole("button", { name: "Account menu for Otis" }),
     );
 
-    const signOut = screen.getByRole("button", { name: "Sign out" });
+    const signOut = screen.getByRole("menuitem", { name: "Sign out" });
 
     await user.click(signOut);
 
@@ -130,20 +130,29 @@ describe("SiteHeader", () => {
   it("should link Account from the desktop menu and close on Escape", async () => {
     const user = userEvent.setup();
 
-    renderHeader(<SiteHeader isSignedIn={true} userName="Otis" />);
-
-    await user.click(
-      screen.getByRole("button", { name: "Account menu for Otis" }),
+    const { container } = renderHeader(
+      <SiteHeader isSignedIn={true} userName="Otis" />,
     );
 
-    expect(screen.getByRole("link", { name: "Account" })).toHaveAttribute(
+    const menuButton = screen.getByRole("button", {
+      name: "Account menu for Otis",
+    });
+
+    await user.click(menuButton);
+
+    expect(menuButton).toHaveAttribute("aria-haspopup", "menu");
+    expect(screen.getByRole("menu")).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Account" })).toHaveAttribute(
       "href",
       "/settings",
     );
+    expect(screen.getByRole("menuitem", { name: "Account" })).toHaveFocus();
+    expect(await axe(container)).toHaveNoViolations();
 
     await user.keyboard("{Escape}");
 
-    expect(screen.queryByRole("link", { name: "Account" })).toBeNull();
+    expect(screen.queryByRole("menu")).toBeNull();
+    expect(menuButton).toHaveFocus();
   });
 
   it("should not redirect when sign-out fails", async () => {
@@ -162,7 +171,7 @@ describe("SiteHeader", () => {
     await user.click(
       screen.getByRole("button", { name: "Account menu for Otis" }),
     );
-    await user.click(screen.getByRole("button", { name: "Sign out" }));
+    await user.click(screen.getByRole("menuitem", { name: "Sign out" }));
 
     expect(push).not.toHaveBeenCalled();
     expect(refresh).not.toHaveBeenCalled();
@@ -181,7 +190,7 @@ describe("SiteHeader", () => {
     await user.click(
       screen.getByRole("button", { name: "Account menu for Otis" }),
     );
-    await user.click(screen.getByRole("button", { name: "Sign out" }));
+    await user.click(screen.getByRole("menuitem", { name: "Sign out" }));
 
     expect(push).not.toHaveBeenCalled();
     expect(screen.getByRole("status")).toHaveTextContent(

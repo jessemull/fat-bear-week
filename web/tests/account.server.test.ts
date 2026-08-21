@@ -60,7 +60,7 @@ describe("account.server", () => {
 
     await expect(
       updateAccountName({ name: "otis@friends", userId: "user-1" }),
-    ).rejects.toThrow("invalid_name");
+    ).rejects.toThrow("name_has_at");
     expect(fromMock).not.toHaveBeenCalled();
   });
 
@@ -169,6 +169,7 @@ describe("account.server", () => {
     const { parseAccountErrorMessage } = await import("@/lib/account.server");
 
     expect(parseAccountErrorMessage("name_taken")).toBe("name_taken");
+    expect(parseAccountErrorMessage("name_has_at")).toBe("name_has_at");
     expect(parseAccountErrorMessage("invalid_name")).toBe("invalid_name");
     expect(parseAccountErrorMessage("other")).toBeNull();
   });

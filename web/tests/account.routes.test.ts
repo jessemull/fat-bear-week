@@ -43,6 +43,10 @@ vi.mock("@/lib/sessions.server", () => ({
 vi.mock("@/lib/account.server", () => ({
   changeAccountPassword: (...args: unknown[]) => changeAccountPassword(...args),
   parseAccountErrorMessage: (message: string) => {
+    if (message.includes("name_has_at")) {
+      return "name_has_at";
+    }
+
     if (message.includes("name_taken")) {
       return "name_taken";
     }
@@ -227,8 +231,6 @@ describe("forgot / reset / account routes", () => {
     await expect(response.json()).resolves.toEqual({
       data: {
         needsSignIn: false,
-        userId: "user-1",
-        userName: "Otis",
       },
     });
   });
@@ -259,8 +261,6 @@ describe("forgot / reset / account routes", () => {
     await expect(response.json()).resolves.toEqual({
       data: {
         needsSignIn: true,
-        userId: "user-1",
-        userName: "Otis",
       },
     });
   });
@@ -322,6 +322,42 @@ describe("forgot / reset / account routes", () => {
     });
   });
 
+  it("should map name_has_at from the helper", async () => {
+    updateAccountName.mockRejectedValue(new Error("name_has_at"));
+
+    const { PATCH } = await import("@/app/api/account/route");
+    const response = await PATCH(
+      new Request("http://localhost/api/account", {
+        body: JSON.stringify({ name: "Otis" }),
+        headers: originHeaders,
+        method: "PATCH",
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: "Display names cannot include @.",
+    });
+  });
+
+  it("should return 400 for a blank display name from the helper", async () => {
+    updateAccountName.mockRejectedValue(new Error("invalid_name"));
+
+    const { PATCH } = await import("@/app/api/account/route");
+    const response = await PATCH(
+      new Request("http://localhost/api/account", {
+        body: JSON.stringify({ name: "Otis" }),
+        headers: originHeaders,
+        method: "PATCH",
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: "Enter a display name.",
+    });
+  });
+
   it("should return 409 when the display name is taken", async () => {
     updateAccountName.mockRejectedValue(new Error("name_taken"));
 
@@ -355,6 +391,26 @@ describe("forgot / reset / account routes", () => {
 
     expect(response.status).toBe(200);
     expect(changeAccountPassword).toHaveBeenCalled();
+  });
+
+  it("should return 429 when account password IP rate limit denies", async () => {
+    consumeRateLimit.mockReturnValue(false);
+
+    const { POST } = await import("@/app/api/account/password/route");
+    const response = await POST(
+      new Request("http://localhost/api/account/password", {
+        body: JSON.stringify({
+          currentPassword: "password1",
+          password: "password2",
+          passwordConfirm: "password2",
+        }),
+        headers: originHeaders,
+        method: "POST",
+      }),
+    );
+
+    expect(response.status).toBe(429);
+    expect(changeAccountPassword).not.toHaveBeenCalled();
   });
 
   it("should return 401 for an incorrect current password", async () => {

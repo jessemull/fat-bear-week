@@ -331,6 +331,20 @@ describe("sessions.server cookie flow", () => {
     expect(deleteEq).toHaveBeenCalledWith("user_id", "user-1");
   });
 
+  it("should throw when revoking user sessions fails", async () => {
+    fromMock.mockReturnValue({
+      delete: () => ({
+        eq: () => Promise.resolve({ error: { message: "delete failed" } }),
+      }),
+    });
+
+    const { revokeSessionsForUser } = await import("@/lib/sessions.server");
+
+    await expect(revokeSessionsForUser({ userId: "user-1" })).rejects.toThrow(
+      "Failed to revoke user sessions: delete failed",
+    );
+  });
+
   it("should revoke other sessions except the current cookie", async () => {
     cookieStore.get.mockReturnValue({ value: "raw-token-value" });
     const neq = vi.fn().mockResolvedValue({ error: null });

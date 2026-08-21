@@ -69,15 +69,11 @@ export async function POST(request: Request) {
 
       return jsonData({
         needsSignIn: true,
-        userId: result.userId,
-        userName: result.userName,
       });
     }
 
     return jsonData({
       needsSignIn: false,
-      userId: result.userId,
-      userName: result.userName,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "reset_failed";

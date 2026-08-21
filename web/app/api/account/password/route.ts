@@ -6,7 +6,12 @@ import {
   parseJsonBody,
 } from "@/lib/api.server";
 import { changePasswordBodySchema } from "@/lib/auth-schemas";
+import { consumeRateLimit } from "@/lib/rate-limit.server";
 import { getSession } from "@/lib/sessions.server";
+import { getClientIp } from "@/lib/turnstile.server";
+
+const CHANGE_LIMIT = 10;
+const CHANGE_WINDOW_MS = 60_000;
 
 export async function POST(request: Request) {
   if (!assertSameOrigin(request)) {
@@ -19,10 +24,36 @@ export async function POST(request: Request) {
     return jsonError("Not signed in.", { status: 401 });
   }
 
+  const clientIp = getClientIp(request) ?? "unknown";
+
+  if (
+    !consumeRateLimit({
+      key: `auth:account-password:ip:${clientIp}`,
+      limit: CHANGE_LIMIT,
+      windowMs: CHANGE_WINDOW_MS,
+    })
+  ) {
+    return jsonError("Too many password changes. Try again shortly.", {
+      status: 429,
+    });
+  }
+
   const parsed = await parseJsonBody(request, changePasswordBodySchema);
 
   if ("error" in parsed) {
     return parsed.error;
+  }
+
+  if (
+    !consumeRateLimit({
+      key: `auth:account-password:user:${session.id}`,
+      limit: 5,
+      windowMs: CHANGE_WINDOW_MS,
+    })
+  ) {
+    return jsonError("Too many password changes. Try again shortly.", {
+      status: 429,
+    });
   }
 
   try {

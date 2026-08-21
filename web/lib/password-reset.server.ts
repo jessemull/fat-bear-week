@@ -162,6 +162,9 @@ export async function issuePasswordReset(
 
 /**
  * Consume a valid reset token, set the new password, and revoke every session.
+ *
+ * Mark the token used first (unused + unexpired only) so a race cannot apply
+ * two password writes against the same link.
  */
 export async function consumePasswordReset(params: {
   password: string;
@@ -183,6 +186,25 @@ export async function consumePasswordReset(params: {
 
   const supabase = getServiceSupabase();
   const tokenHash = hashPasswordResetToken(params.token.trim());
+  const nowIso = new Date().toISOString();
+
+  const { data: consumed, error: consumeError } = await supabase
+    .from("password_reset_tokens")
+    .update({ used_at: nowIso })
+    .eq("token_hash", tokenHash)
+    .is("used_at", null)
+    .gt("expires_at", nowIso)
+    .select("user_id")
+    .maybeSingle();
+
+  if (consumeError) {
+    throw new Error(`Failed to consume reset token: ${consumeError.message}`);
+  }
+
+  if (!consumed) {
+    throw new Error("reset_token_used");
+  }
+
   const passwordHash = await hashPassword(params.password);
 
   const { data: user, error: userError } = await supabase
@@ -202,15 +224,6 @@ export async function consumePasswordReset(params: {
 
   if (updateError) {
     throw new Error(`Failed to update password: ${updateError.message}`);
-  }
-
-  const { error: consumeError } = await supabase
-    .from("password_reset_tokens")
-    .update({ used_at: new Date().toISOString() })
-    .eq("token_hash", tokenHash);
-
-  if (consumeError) {
-    console.error("Failed to mark reset token used:", consumeError.message);
   }
 
   await revokeSessionsForUser({ userId: lookup.userId });

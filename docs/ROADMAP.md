@@ -144,7 +144,7 @@ features in phases below; check items off as they ship.
 - [ ] Before/after statistics presentation
 - [ ] Historical bear performance across years
 - [ ] Scenario / “what if?” simulator (leaderboard if X wins)
-- [ ] Optional email magic-link or password reset (only if needed)
+- [ ] Optional email magic-link (password reset shipped in Phase 1)
 - [ ] Notifications (deadline reminders, result published)
 - [ ] Shared invite link mode (in addition to individual tokens) — only if
       operationally useful; keep abuse controls

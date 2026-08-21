@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import Link from "next/link";
 
 import { ResetPasswordPanel } from "@/components/auth/ResetPasswordPanel";
@@ -10,6 +12,10 @@ import {
 import { getPasswordResetByToken } from "@/lib/password-reset.server";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  referrer: "no-referrer",
+};
 
 interface ResetPasswordPageProps {
   params: Promise<{

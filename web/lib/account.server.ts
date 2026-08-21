@@ -10,7 +10,10 @@ export interface AccountRecord {
   name: string;
 }
 
-export type UpdateAccountNameErrorCode = "invalid_name" | "name_taken";
+export type UpdateAccountNameErrorCode =
+  | "invalid_name"
+  | "name_has_at"
+  | "name_taken";
 
 /**
  * Load the signed-in user's account fields for settings.
@@ -51,7 +54,7 @@ export async function updateAccountName(params: {
   }
 
   if (name.includes("@")) {
-    throw new Error("invalid_name");
+    throw new Error("name_has_at");
   }
 
   const supabase = getServiceSupabase();
@@ -72,7 +75,7 @@ export async function updateAccountName(params: {
   }
 
   if (!data) {
-    throw new Error("invalid_name");
+    throw new Error("user_missing");
   }
 
   return { name: data.name as string };
@@ -124,6 +127,10 @@ export async function changeAccountPassword(params: {
 export function parseAccountErrorMessage(
   message: string,
 ): null | UpdateAccountNameErrorCode {
+  if (message.includes("name_has_at")) {
+    return "name_has_at";
+  }
+
   if (message.includes("name_taken")) {
     return "name_taken";
   }

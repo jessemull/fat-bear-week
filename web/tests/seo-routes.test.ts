@@ -26,6 +26,27 @@ describe("robots metadata route", () => {
   });
 });
 
+describe("reset password referrer policy", () => {
+  it("should send no-referrer on reset-password paths", async () => {
+    const { default: nextConfig } = await import("../next.config");
+    const headers = await nextConfig.headers?.();
+
+    expect(headers).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          headers: [
+            {
+              key: "Referrer-Policy",
+              value: "no-referrer",
+            },
+          ],
+          source: "/reset-password/:path*",
+        }),
+      ]),
+    );
+  });
+});
+
 describe("sitemap metadata route", () => {
   it("should list the canonical www origin by default", async () => {
     vi.resetModules();
