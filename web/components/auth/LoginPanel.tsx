@@ -45,6 +45,11 @@ export function LoginPanel({ joined = false }: LoginPanelProps) {
           onBotCheckReset={onBotCheckReset}
         />
         <p className={`text-center text-sm ${formMutedClassName}`}>
+          <Link className={formLinkClassName} href="/forgot-password">
+            Forgot password?
+          </Link>
+        </p>
+        <p className={`text-center text-sm ${formMutedClassName}`}>
           <Link className={formLinkClassName} href="/">
             Back home
           </Link>

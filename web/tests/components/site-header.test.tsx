@@ -109,7 +109,11 @@ describe("SiteHeader", () => {
   it("should show Sign out when signed in", async () => {
     const user = userEvent.setup();
 
-    renderHeader(<SiteHeader isSignedIn={true} />);
+    renderHeader(<SiteHeader isSignedIn={true} userName="Otis" />);
+
+    await user.click(
+      screen.getByRole("button", { name: "Account menu for Otis" }),
+    );
 
     const signOut = screen.getByRole("button", { name: "Sign out" });
 
@@ -123,6 +127,25 @@ describe("SiteHeader", () => {
     expect(refresh).toHaveBeenCalled();
   });
 
+  it("should link Account from the desktop menu and close on Escape", async () => {
+    const user = userEvent.setup();
+
+    renderHeader(<SiteHeader isSignedIn={true} userName="Otis" />);
+
+    await user.click(
+      screen.getByRole("button", { name: "Account menu for Otis" }),
+    );
+
+    expect(screen.getByRole("link", { name: "Account" })).toHaveAttribute(
+      "href",
+      "/settings",
+    );
+
+    await user.keyboard("{Escape}");
+
+    expect(screen.queryByRole("link", { name: "Account" })).toBeNull();
+  });
+
   it("should not redirect when sign-out fails", async () => {
     const user = userEvent.setup();
 
@@ -134,8 +157,11 @@ describe("SiteHeader", () => {
       }),
     );
 
-    renderHeader(<SiteHeader isSignedIn={true} />);
+    renderHeader(<SiteHeader isSignedIn={true} userName="Otis" />);
 
+    await user.click(
+      screen.getByRole("button", { name: "Account menu for Otis" }),
+    );
     await user.click(screen.getByRole("button", { name: "Sign out" }));
 
     expect(push).not.toHaveBeenCalled();
@@ -150,8 +176,11 @@ describe("SiteHeader", () => {
 
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network")));
 
-    renderHeader(<SiteHeader isSignedIn={true} />);
+    renderHeader(<SiteHeader isSignedIn={true} userName="Otis" />);
 
+    await user.click(
+      screen.getByRole("button", { name: "Account menu for Otis" }),
+    );
     await user.click(screen.getByRole("button", { name: "Sign out" }));
 
     expect(push).not.toHaveBeenCalled();
@@ -237,8 +266,10 @@ describe("SiteHeader", () => {
       within(mobileNav).getByRole("link", { name: "Home" }),
     ).toBeInTheDocument();
     expect(
-      within(mobileNav).queryByRole("link", { name: "Admin" }),
-    ).toBeNull();
+      within(mobileNav).getByRole("link", { name: "Account" }),
+    ).toHaveAttribute("href", "/settings");
+    expect(within(mobileNav).getByRole("button", { name: "Sign out" })).toBeInTheDocument();
+    expect(within(mobileNav).queryByRole("link", { name: "Admin" })).toBeNull();
     expect(
       await within(mobileNav).findByRole("link", { name: "All Tournaments" }),
     ).toHaveAttribute("href", "/admin/tournaments");

@@ -18,6 +18,7 @@ import type {
   AdminSidebarTournament,
 } from "@/components/admin/AdminSidebar";
 
+import { AccountMenu } from "@/components/account/AccountMenu";
 import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
 import { useToast } from "@/components/Toast";
 
@@ -34,6 +35,7 @@ interface SiteHeaderProps {
   } | null;
   isCommissioner?: boolean;
   isSignedIn: boolean;
+  userName?: string;
 }
 
 interface NavItem {
@@ -113,6 +115,7 @@ export function SiteHeader({
   adminNav = null,
   isCommissioner = false,
   isSignedIn,
+  userName = "",
 }: SiteHeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -284,18 +287,11 @@ export function SiteHeader({
 
           <div className="ml-auto hidden lg:block">
             {isSignedIn ? (
-              <button
-                className={authLinkClassName}
-                disabled={signOutPending}
-                type="button"
-                onClick={() => void onSignOut()}
-              >
-                {signOutPending ? (
-                  <ButtonPendingLabel>Signing out…</ButtonPendingLabel>
-                ) : (
-                  "Sign out"
-                )}
-              </button>
+              <AccountMenu
+                signOutPending={signOutPending}
+                userName={userName}
+                onSignOut={() => void onSignOut()}
+              />
             ) : (
               <Link className={authLinkClassName} href="/login">
                 Sign In
@@ -327,18 +323,27 @@ export function SiteHeader({
                 onNavigate={closeMenu}
               />
               {isSignedIn ? (
-                <button
-                  className={`${authLinkClassName} text-left`}
-                  disabled={signOutPending}
-                  type="button"
-                  onClick={() => void onSignOut()}
-                >
-                  {signOutPending ? (
-                    <ButtonPendingLabel>Signing out…</ButtonPendingLabel>
-                  ) : (
-                    "Sign out"
-                  )}
-                </button>
+                <>
+                  <Link
+                    className={authLinkClassName}
+                    href="/settings"
+                    onClick={closeMenu}
+                  >
+                    Account
+                  </Link>
+                  <button
+                    className={`${authLinkClassName} text-left`}
+                    disabled={signOutPending}
+                    type="button"
+                    onClick={() => void onSignOut()}
+                  >
+                    {signOutPending ? (
+                      <ButtonPendingLabel>Signing out…</ButtonPendingLabel>
+                    ) : (
+                      "Sign out"
+                    )}
+                  </button>
+                </>
               ) : (
                 <Link
                   className={authLinkClassName}

@@ -10,5 +10,7 @@ TRUNCATE TABLE
   bears,
   pools,
   tournaments,
+  password_reset_tokens,
+  sessions,
   users
 CASCADE;

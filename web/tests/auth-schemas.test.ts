@@ -1,11 +1,15 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  changePasswordBodySchema,
   createPoolBodySchema,
+  forgotPasswordBodySchema,
   joinBodySchema,
   mintInviteBodySchema,
   mintInvitesBodySchema,
+  resetPasswordBodySchema,
   signInBodySchema,
+  updateAccountNameBodySchema,
   updateInviteBodySchema,
 } from "@/lib/auth-schemas";
 
@@ -74,6 +78,70 @@ describe("auth-schemas", () => {
         turnstileToken: "turnstile-ok",
       }),
     ).toMatchObject({ identifier: "otis@example.com" });
+  });
+
+  it("should accept a forgot-password body", () => {
+    expect(
+      forgotPasswordBodySchema.parse({
+        email: "otis@example.com",
+        turnstileToken: "turnstile-ok",
+      }).email,
+    ).toBe("otis@example.com");
+
+    expect(
+      forgotPasswordBodySchema.safeParse({
+        email: "not-an-email",
+        turnstileToken: "turnstile-ok",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("should reject mismatched reset passwords", () => {
+    expect(
+      resetPasswordBodySchema.safeParse({
+        password: "password1",
+        passwordConfirm: "password2",
+        token: "a".repeat(32),
+        turnstileToken: "turnstile-ok",
+      }).success,
+    ).toBe(false);
+
+    expect(
+      resetPasswordBodySchema.parse({
+        password: "password1",
+        passwordConfirm: "password1",
+        token: "a".repeat(32),
+        turnstileToken: "turnstile-ok",
+      }).token,
+    ).toHaveLength(32);
+  });
+
+  it("should reject @-free name updates only at the schema length layer", () => {
+    expect(
+      updateAccountNameBodySchema.parse({ name: "  Otis  " }).name,
+    ).toBe("Otis");
+
+    expect(updateAccountNameBodySchema.safeParse({ name: "" }).success).toBe(
+      false,
+    );
+  });
+
+  it("should reject mismatched change-password confirmation", () => {
+    expect(
+      changePasswordBodySchema.safeParse({
+        currentPassword: "password1",
+        password: "password2",
+        passwordConfirm: "password3",
+      }).success,
+    ).toBe(false);
+
+    expect(
+      changePasswordBodySchema.parse({
+        currentPassword: "password1",
+        password: "password2",
+        passwordConfirm: "password2",
+      }).password,
+    ).toBe("password2");
   });
 
   it("should require email when minting invites", () => {

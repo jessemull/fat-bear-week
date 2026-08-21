@@ -46,12 +46,13 @@ features in phases below; check items off as they ship.
 - [x] Enforce one bracket (entry) per person per pool
 - [x] Cap at `max_players`
 - [x] Multiple pools per person (invite-based join for an existing account)
-- [ ] Forgot password / reset via email (Resend + single-use token;
+- [x] Forgot password / reset via email (Resend + single-use token;
       Turnstile on request + reset forms)
-- [ ] Account settings / profile page (`/settings` or `/profile`): display
-      name, email (read-only from invite), password change, optional avatar
-- [ ] Nav avatar / account menu (opens profile; scores & history later when
-      scoring ships)
+- [x] Account settings / profile page (`/settings`): display name,
+      email (read-only from invite), password change; nav avatar is
+      initials from display name (photo upload deferred)
+- [x] Nav avatar / account menu (opens `/settings`; scores & history
+      later when scoring ships)
 
 ### Tournament data (admin)
 

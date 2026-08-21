@@ -191,6 +191,48 @@ export async function revokeSession(): Promise<void> {
 }
 
 /**
+ * Revoke every session for a user (password reset via email).
+ */
+export async function revokeSessionsForUser(params: {
+  userId: string;
+}): Promise<void> {
+  const supabase = getServiceSupabase();
+
+  const { error } = await supabase
+    .from("sessions")
+    .delete()
+    .eq("user_id", params.userId);
+
+  if (error) {
+    console.error("Failed to revoke user sessions:", error.message);
+  }
+}
+
+/**
+ * Revoke sessions for this user except the current cookie (logged-in password change).
+ */
+export async function revokeOtherSessions(userId: string): Promise<void> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  const supabase = getServiceSupabase();
+
+  if (!token) {
+    await revokeSessionsForUser({ userId });
+    return;
+  }
+
+  const { error } = await supabase
+    .from("sessions")
+    .delete()
+    .eq("user_id", userId)
+    .neq("token_hash", hashSessionToken(token));
+
+  if (error) {
+    console.error("Failed to revoke other sessions:", error.message);
+  }
+}
+
+/**
  * Clear the session cookie without deleting DB sessions.
  * Use when join succeeded but createSession failed — avoid wiping an
  * unrelated prior session row while still forcing a fresh sign-in UX.

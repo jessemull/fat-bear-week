@@ -29,6 +29,54 @@ export const signInBodySchema = z
   })
   .strict();
 
+export const forgotPasswordBodySchema = z
+  .object({
+    email: z.string().trim().email().max(254),
+    turnstileToken: z.string().trim().min(1).max(2048),
+  })
+  .strict();
+
+export const resetPasswordBodySchema = z
+  .object({
+    password: z.string().min(8).max(128),
+    passwordConfirm: z.string().min(8).max(128),
+    token: z.string().min(20).max(200),
+    turnstileToken: z.string().trim().min(1).max(2048),
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    if (value.password !== value.passwordConfirm) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Passwords do not match.",
+        path: ["passwordConfirm"],
+      });
+    }
+  });
+
+export const updateAccountNameBodySchema = z
+  .object({
+    name: z.string().trim().min(1).max(80),
+  })
+  .strict();
+
+export const changePasswordBodySchema = z
+  .object({
+    currentPassword: z.string().min(8).max(128),
+    password: z.string().min(8).max(128),
+    passwordConfirm: z.string().min(8).max(128),
+  })
+  .strict()
+  .superRefine((value, ctx) => {
+    if (value.password !== value.passwordConfirm) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Passwords do not match.",
+        path: ["passwordConfirm"],
+      });
+    }
+  });
+
 export const createPoolBodySchema = z
   .object({
     bracketDeadline: z.string().datetime().nullable().optional(),
@@ -87,10 +135,14 @@ export const updateInviteBodySchema = z
   })
   .strict();
 
+export type ChangePasswordBody = z.infer<typeof changePasswordBodySchema>;
 export type CreatePoolBody = z.infer<typeof createPoolBodySchema>;
+export type ForgotPasswordBody = z.infer<typeof forgotPasswordBodySchema>;
 export type JoinBody = z.infer<typeof joinBodySchema>;
 export type MintInviteBody = z.infer<typeof mintInviteBodySchema>;
 export type MintInvitesBody = z.infer<typeof mintInvitesBodySchema>;
+export type ResetPasswordBody = z.infer<typeof resetPasswordBodySchema>;
 export type SignInBody = z.infer<typeof signInBodySchema>;
+export type UpdateAccountNameBody = z.infer<typeof updateAccountNameBodySchema>;
 export type UpdateInviteBody = z.infer<typeof updateInviteBodySchema>;
 export type UpdatePoolBody = z.infer<typeof updatePoolBodySchema>;

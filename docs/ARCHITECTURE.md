@@ -12,7 +12,8 @@ Browser → Vercel (Next.js App Router + API)
                 ▼
          Supabase PostgreSQL
      (pools, invites, tournaments,
-      bears, matchups, entries, picks)
+      bears, matchups, entries, picks,
+      sessions, password_reset_tokens)
 ```
 
 - **Preview:** push to `main` → Vercel Preview + **dev** Supabase

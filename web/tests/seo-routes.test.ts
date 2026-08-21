@@ -11,7 +11,16 @@ describe("robots metadata route", () => {
     expect(result.sitemap).toBe("https://www.fatbearweek.net/sitemap.xml");
     expect(result.rules).toMatchObject({
       allow: "/",
-      disallow: ["/admin/", "/api/", "/invite/", "/login", "/pools/"],
+      disallow: [
+        "/admin/",
+        "/api/",
+        "/forgot-password",
+        "/invite/",
+        "/login",
+        "/pools/",
+        "/reset-password/",
+        "/settings",
+      ],
       userAgent: "*",
     });
   });

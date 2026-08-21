@@ -74,6 +74,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
             adminNav={adminNav}
             isCommissioner={Boolean(session?.isCommissioner)}
             isSignedIn={Boolean(session)}
+            userName={session?.name}
           />
           {children}
         </AppProviders>

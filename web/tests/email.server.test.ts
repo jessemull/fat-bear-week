@@ -136,4 +136,41 @@ describe("email.server", () => {
     expect(result.emailSent).toBe(false);
     expect(result.errorMessage).toBe("network down");
   });
+
+  it("should report when email is not configured", async () => {
+    vi.stubEnv("RESEND_API_KEY", "");
+    vi.stubEnv("EMAIL_FROM", "");
+
+    const { isEmailConfigured } = await import("@/lib/email.server");
+
+    expect(isEmailConfigured()).toBe(false);
+  });
+
+  it("should send a password reset email when configured", async () => {
+    vi.stubEnv("RESEND_API_KEY", "re_test");
+    vi.stubEnv("EMAIL_FROM", "Fat Bear Week <invites@fatbearweek.net>");
+    sendMock.mockResolvedValue({ data: { id: "msg_1" }, error: null });
+
+    const { isEmailConfigured, sendPasswordResetEmail } = await import(
+      "@/lib/email.server"
+    );
+
+    expect(isEmailConfigured()).toBe(true);
+
+    const result = await sendPasswordResetEmail({
+      expiresAt: "2026-08-25T00:00:00.000Z",
+      name: "Jess <script>",
+      resetUrl: "http://localhost:3000/reset-password/tokentoken",
+      to: "friend@example.com",
+    });
+
+    expect(result.emailSent).toBe(true);
+    expect(sendMock.mock.calls[0][0].subject).toBe(
+      "Reset your Fat Bear Week password",
+    );
+    expect(sendMock.mock.calls[0][0].html).toContain("Jess &lt;script&gt;");
+    expect(sendMock.mock.calls[0][0].text).toContain(
+      "http://localhost:3000/reset-password/tokentoken",
+    );
+  });
 });
