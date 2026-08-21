@@ -428,6 +428,10 @@ describe("auth forms", () => {
     expect(
       screen.getByRole("link", { name: "Forgot password?" }),
     ).toHaveAttribute("href", "/forgot-password");
+    expect(screen.getByRole("link", { name: "Back home" })).toHaveAttribute(
+      "href",
+      "/",
+    );
     expect(await axe(loginContainer)).toHaveNoViolations();
   });
 });

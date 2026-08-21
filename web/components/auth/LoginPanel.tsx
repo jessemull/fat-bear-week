@@ -40,20 +40,20 @@ export function LoginPanel({ joined = false }: LoginPanelProps) {
         )}
       </div>
       <div className="flex flex-col gap-6">
-        <SignInForm
-          turnstileToken={turnstileToken}
-          onBotCheckReset={onBotCheckReset}
-        />
-        <p className={`text-center text-sm ${formMutedClassName}`}>
-          <Link className={formLinkClassName} href="/forgot-password">
-            Forgot password?
-          </Link>
-        </p>
-        <p className={`text-center text-sm ${formMutedClassName}`}>
-          <Link className={formLinkClassName} href="/">
-            Back home
-          </Link>
-        </p>
+        <div className="flex flex-col gap-4">
+          <SignInForm
+            turnstileToken={turnstileToken}
+            onBotCheckReset={onBotCheckReset}
+          />
+          <div className="flex justify-between text-sm">
+            <Link className={formLinkClassName} href="/">
+              Back home
+            </Link>
+            <Link className={formLinkClassName} href="/forgot-password">
+              Forgot password?
+            </Link>
+          </div>
+        </div>
         <div className="mt-1 flex justify-center">
           <TurnstileWidget
             resetNonce={resetNonce}
