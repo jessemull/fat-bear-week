@@ -5,7 +5,7 @@ import { InviteLinkFallback } from "@/components/pools/InviteLinkFallback";
 import {
   ResendInviteHeaderAction,
   useResendInvite,
-} from "@/components/pools/ResendInviteButton";
+} from "@/components/pools/useResendInvite";
 
 interface InviteEditHeaderProps {
   description: string;

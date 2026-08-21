@@ -81,7 +81,7 @@ describe("AdminSidebar", () => {
       name: "Bears",
     });
 
-    expect(bearsLinks[1]).toHaveClass("text-amber-800");
+    expect(bearsLinks[1]).toHaveClass("text-amber-800", "dark:text-amber-400");
     expect(bearsLinks[0]).not.toHaveClass("text-amber-800");
   });
 

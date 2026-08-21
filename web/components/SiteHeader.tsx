@@ -3,15 +3,29 @@
 import { Menu, PawPrint, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useId, useRef, useState } from "react";
-
 import {
-  AdminNavBody,
-  type AdminSidebarPool,
-  type AdminSidebarTournament,
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react";
+
+import type {
+  AdminSidebarPool,
+  AdminSidebarTournament,
 } from "@/components/admin/AdminSidebar";
+
 import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
 import { useToast } from "@/components/Toast";
+
+const AdminNavBody = lazy(() =>
+  import("@/components/admin/AdminSidebar").then((mod) => ({
+    default: mod.AdminNavBody,
+  })),
+);
 
 interface SiteHeaderProps {
   adminNav?: {
@@ -136,9 +150,34 @@ export function SiteHeader({
     }
   }
 
-  function closeMenu() {
-    setMenuOpen(false);
-  }
+  const closeMenu = useCallback(() => {
+    setMenuOpen((open) => {
+      if (open) {
+        window.requestAnimationFrame(() => {
+          menuToggleRef.current?.focus();
+        });
+      }
+
+      return false;
+    });
+  }, []);
+
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 1024px)");
+
+    function onViewportChange() {
+      if (media.matches) {
+        setMenuOpen(false);
+      }
+    }
+
+    onViewportChange();
+    media.addEventListener("change", onViewportChange);
+
+    return () => {
+      media.removeEventListener("change", onViewportChange);
+    };
+  }, []);
 
   useEffect(() => {
     if (!menuOpen) {
@@ -162,7 +201,7 @@ export function SiteHeader({
 
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
-        setMenuOpen(false);
+        closeMenu();
         return;
       }
 
@@ -198,7 +237,7 @@ export function SiteHeader({
       document.removeEventListener("keydown", onKeyDown);
       document.body.classList.remove("overflow-hidden");
     };
-  }, [menuOpen]);
+  }, [closeMenu, menuOpen]);
 
   return (
     <>
@@ -223,6 +262,7 @@ export function SiteHeader({
           <Link
             className="flex items-center gap-2.5 text-zinc-900 dark:text-zinc-50"
             href="/"
+            tabIndex={menuOpen ? -1 : undefined}
             onClick={closeMenu}
           >
             <PawPrint
@@ -274,7 +314,7 @@ export function SiteHeader({
               onClick={closeMenu}
             />
             <div
-              aria-label="Mobile"
+              aria-label="Menu"
               aria-modal="true"
               className={`fixed inset-x-0 ${siteHeaderMobileTopClassName} bottom-0 z-50 flex flex-col gap-3 overflow-y-auto bg-zinc-50 px-5 pb-[max(1rem,env(safe-area-inset-bottom,0px))] pt-2 sm:px-6 lg:hidden dark:bg-zinc-950`}
               id={menuId}
@@ -313,12 +353,14 @@ export function SiteHeader({
                   <p className="px-2 pb-2 text-xs font-semibold tracking-[0.14em] text-zinc-500 uppercase">
                     Admin
                   </p>
-                  <AdminNavBody
-                    pathname={pathname}
-                    pools={adminNav.pools}
-                    tournaments={adminNav.tournaments}
-                    onNavigate={closeMenu}
-                  />
+                  <Suspense fallback={null}>
+                    <AdminNavBody
+                      pathname={pathname}
+                      pools={adminNav.pools}
+                      tournaments={adminNav.tournaments}
+                      onNavigate={closeMenu}
+                    />
+                  </Suspense>
                 </div>
               ) : null}
             </div>

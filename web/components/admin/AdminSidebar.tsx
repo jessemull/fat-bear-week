@@ -25,12 +25,14 @@ interface AdminSidebarProps {
   tournaments: AdminSidebarTournament[];
 }
 
-const childLinkActiveClassName = "bg-amber-500/15 font-medium text-amber-800";
+const childLinkActiveClassName =
+  "bg-amber-500/15 font-medium text-amber-800 dark:text-amber-400";
 const childLinkClassName =
   "block rounded-md px-2 py-1.5 text-sm text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100";
 const childLinkInactiveClassName = "font-normal";
 
-const nestedLinkActiveClassName = "bg-amber-500/15 font-medium text-amber-800";
+const nestedLinkActiveClassName =
+  "bg-amber-500/15 font-medium text-amber-800 dark:text-amber-400";
 const nestedLinkClassName =
   "block rounded-md px-2 py-1 text-sm text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200";
 const nestedLinkInactiveClassName = "font-normal";

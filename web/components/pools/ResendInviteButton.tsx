@@ -1,92 +1,14 @@
 "use client";
 
-import { RefreshCw } from "lucide-react";
-import { useState } from "react";
-
-import { AdminPageHeaderButtonAction } from "@/components/admin/AdminPageHeader";
 import { InviteLinkFallback } from "@/components/pools/InviteLinkFallback";
-import { useToast } from "@/components/Toast";
+import {
+  ResendInviteHeaderAction,
+  useResendInvite,
+} from "@/components/pools/useResendInvite";
 
-export interface ResendInviteButtonProps {
+interface ResendInviteButtonProps {
   inviteId: string;
   poolId: string;
-}
-
-interface ResendInviteState {
-  inviteUrl: null | string;
-  onResend: () => Promise<void>;
-  pending: boolean;
-}
-
-export function useResendInvite({
-  inviteId,
-  poolId,
-}: ResendInviteButtonProps): ResendInviteState {
-  const { toast } = useToast();
-  const [inviteUrl, setInviteUrl] = useState<null | string>(null);
-  const [pending, setPending] = useState(false);
-
-  async function onResend() {
-    setPending(true);
-    setInviteUrl(null);
-
-    try {
-      const response = await fetch(
-        `/api/pools/${poolId}/invites/${inviteId}/resend`,
-        {
-          method: "POST",
-        },
-      );
-      const json = (await response.json()) as {
-        data?: { emailSent: boolean; inviteUrl?: string };
-        error?: string;
-      };
-
-      if (!response.ok) {
-        toast(json.error ?? "Unable to resend invite.", "error");
-        return;
-      }
-
-      if (json.data && !json.data.emailSent) {
-        if (json.data.inviteUrl) {
-          setInviteUrl(json.data.inviteUrl);
-        }
-
-        toast("Invite ready, but email could not be sent.", "error");
-        return;
-      }
-
-      toast("Invite resent.");
-    } catch {
-      toast("Unable to resend invite right now.", "error");
-    } finally {
-      setPending(false);
-    }
-  }
-
-  return {
-    inviteUrl,
-    onResend,
-    pending,
-  };
-}
-
-export function ResendInviteHeaderAction({
-  onResend,
-  pending,
-}: Pick<ResendInviteState, "onResend" | "pending">) {
-  return (
-    <AdminPageHeaderButtonAction
-      disabled={pending}
-      icon={RefreshCw}
-      label="Resend Invite"
-      pending={pending}
-      pendingLabel="Sending…"
-      onClick={() => {
-        void onResend();
-      }}
-    />
-  );
 }
 
 export function ResendInviteButton({
