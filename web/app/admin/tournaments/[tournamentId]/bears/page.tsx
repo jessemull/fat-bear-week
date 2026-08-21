@@ -1,10 +1,11 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import {
+  AdminPageHeader,
+  AdminPageHeaderLinkAction,
+} from "@/components/admin/AdminPageHeader";
 import { BearList } from "@/components/admin/BearList";
 import { listBearsForTournament } from "@/lib/bears.server";
-import { formButtonPrimaryClassName } from "@/lib/form-styles";
 import { getTournament } from "@/lib/tournament.server";
 
 export const dynamic = "force-dynamic";
@@ -30,12 +31,10 @@ export default async function TournamentBearsPage({
   return (
     <AdminPageHeader
       action={
-        <Link
-          className={formButtonPrimaryClassName}
+        <AdminPageHeaderLinkAction
           href={`/admin/tournaments/${tournament.id}/bears/new`}
-        >
-          Create Bear
-        </Link>
+          label="Create Bear"
+        />
       }
       description="Shared catalog of bears for this tournament year."
       title={`Bears · ${tournament.year}`}

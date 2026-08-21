@@ -5,7 +5,9 @@ import {
   type ReactNode,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -17,24 +19,92 @@ interface ToastItem {
 
 interface ToastContextValue {
   toast: (message: string, tone?: "default" | "error") => void;
+  toastAfterNavigation: (message: string, tone?: "default" | "error") => void;
 }
 
 const ToastContext = createContext<null | ToastContextValue>(null);
 
+const TOAST_DURATION_MS = 4000;
+
+/** How often to check that client navigation updated the URL. */
+const TOAST_NAVIGATION_POLL_MS = 50;
+
+/** Give up waiting for a route change so intervals do not leak. */
+const TOAST_NAVIGATION_TIMEOUT_MS = 8000;
+
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const navigationWaitRef = useRef<{
+    intervalId: number;
+    timeoutId: number;
+  } | null>(null);
 
-  const toast = useCallback((message: string, tone: "default" | "error" = "default") => {
-    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const clearNavigationWait = useCallback(() => {
+    if (!navigationWaitRef.current) {
+      return;
+    }
 
-    setToasts((current) => [...current, { id, message, tone }]);
-
-    window.setTimeout(() => {
-      setToasts((current) => current.filter((item) => item.id !== id));
-    }, 4000);
+    window.clearInterval(navigationWaitRef.current.intervalId);
+    window.clearTimeout(navigationWaitRef.current.timeoutId);
+    navigationWaitRef.current = null;
   }, []);
 
-  const value = useMemo(() => ({ toast }), [toast]);
+  const showToast = useCallback(
+    (message: string, tone: "default" | "error" = "default") => {
+      const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+      setToasts((current) => [...current, { id, message, tone }]);
+
+      window.setTimeout(() => {
+        setToasts((current) => current.filter((item) => item.id !== id));
+      }, TOAST_DURATION_MS);
+    },
+    [],
+  );
+
+  const toast = useCallback(
+    (message: string, tone: "default" | "error" = "default") => {
+      showToast(message, tone);
+    },
+    [showToast],
+  );
+
+  const toastAfterNavigation = useCallback(
+    (message: string, tone: "default" | "error" = "default") => {
+      clearNavigationWait();
+
+      // Capture before router.push so we can wait for the destination URL.
+      const fromPath = window.location.pathname;
+
+      const intervalId = window.setInterval(() => {
+        if (window.location.pathname === fromPath) {
+          return;
+        }
+
+        clearNavigationWait();
+        showToast(message, tone);
+      }, TOAST_NAVIGATION_POLL_MS);
+
+      const timeoutId = window.setTimeout(() => {
+        clearNavigationWait();
+        showToast(message, tone);
+      }, TOAST_NAVIGATION_TIMEOUT_MS);
+
+      navigationWaitRef.current = { intervalId, timeoutId };
+    },
+    [clearNavigationWait, showToast],
+  );
+
+  useEffect(() => {
+    return () => {
+      clearNavigationWait();
+    };
+  }, [clearNavigationWait]);
+
+  const value = useMemo(
+    () => ({ toast, toastAfterNavigation }),
+    [toast, toastAfterNavigation],
+  );
 
   return (
     <ToastContext.Provider value={value}>

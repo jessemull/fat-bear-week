@@ -10,6 +10,10 @@ describe("admin skeletons", () => {
     const table = render(<AdminTableSkeleton />);
 
     expect(screen.getByRole("status")).toHaveTextContent("Loading…");
+    expect(screen.getByRole("list")).toHaveClass("md:hidden");
+    expect(
+      screen.getByRole("status").querySelector(".hidden.md\\:block"),
+    ).toBeInTheDocument();
     expect(await axe(table.container)).toHaveNoViolations();
 
     table.unmount();

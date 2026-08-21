@@ -5,10 +5,12 @@ import { useState } from "react";
 
 import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { FormStandaloneAction } from "@/components/FormShell";
 import { useToast } from "@/components/Toast";
 import {
   formButtonDangerClassName,
   formErrorClassName,
+  formStandaloneActionButtonClassNames,
 } from "@/lib/form-styles";
 
 interface DeleteTournamentButtonProps {
@@ -21,7 +23,7 @@ export function DeleteTournamentButton({
   year,
 }: DeleteTournamentButtonProps) {
   const router = useRouter();
-  const { toast } = useToast();
+  const { toastAfterNavigation } = useToast();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [error, setError] = useState<null | string>(null);
   const [pending, setPending] = useState(false);
@@ -43,7 +45,7 @@ export function DeleteTournamentButton({
       }
 
       setConfirmOpen(false);
-      toast("Tournament deleted.");
+      toastAfterNavigation("Tournament deleted.");
       router.push("/admin/tournaments");
       router.refresh();
     } catch {
@@ -55,9 +57,9 @@ export function DeleteTournamentButton({
   }
 
   return (
-    <div className="flex w-fit flex-col items-start gap-3">
+    <FormStandaloneAction>
       <button
-        className={formButtonDangerClassName}
+        className={`${formButtonDangerClassName} ${formStandaloneActionButtonClassNames.lg}`}
         disabled={pending}
         type="button"
         onClick={() => setConfirmOpen(true)}
@@ -83,6 +85,6 @@ export function DeleteTournamentButton({
         onCancel={() => setConfirmOpen(false)}
         onConfirm={() => void onConfirmDelete()}
       />
-    </div>
+    </FormStandaloneAction>
   );
 }

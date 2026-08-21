@@ -1,13 +1,16 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const push = vi.fn();
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
-    push,
+    push: (href: string) => {
+      push(href);
+      window.history.pushState({}, "", href);
+    },
     refresh: vi.fn(),
     replace: vi.fn(),
   }),
@@ -18,6 +21,7 @@ import type { ReactElement } from "react";
 import { CreatePoolForm } from "@/components/pools/CreatePoolForm";
 import { DeletePoolButton } from "@/components/pools/DeletePoolButton";
 import { parseInviteCsv } from "@/components/pools/InviteCsvUploadDialog";
+import { InviteEditHeader } from "@/components/pools/InviteEditHeader";
 import { InviteForm } from "@/components/pools/InviteForm";
 import { InviteList } from "@/components/pools/InviteList";
 import { PoolForm } from "@/components/pools/PoolForm";
@@ -57,6 +61,15 @@ function mockFetchWithTournaments(
       }
     }
 
+    if (url === "/api/pools") {
+      return {
+        json: async () => ({
+          data: { pool: { id: "11111111-1111-4111-8111-111111111111" } },
+        }),
+        ok: true,
+      };
+    }
+
     return {
       json: async () => ({
         data: {
@@ -78,12 +91,16 @@ function mockFetchWithTournaments(
 }
 
 describe("pool components", () => {
+  beforeEach(() => {
+    push.mockClear();
+    window.history.pushState({}, "", "/admin/pools/pool-1/invites/inv-1");
+  });
+
   it("should submit CreatePoolForm and SendInvitesPanel", async () => {
     const user = userEvent.setup();
     const fetchMock = mockFetchWithTournaments();
 
     vi.stubGlobal("fetch", fetchMock);
-    push.mockClear();
 
     const { rerender } = renderWithToast(<CreatePoolForm tournaments={[{ id: tournamentId, status: "draft", year: 2026 }]} />);
 
@@ -98,6 +115,7 @@ describe("pool components", () => {
       "/api/pools",
       expect.objectContaining({ method: "POST" }),
     );
+    expect(push).toHaveBeenCalledWith("/admin/pools");
 
     rerender(
       <ToastProvider>
@@ -225,7 +243,8 @@ describe("pool components", () => {
       "/api/pools/pool-1/invites/inv-1",
       expect.objectContaining({ method: "PATCH" }),
     );
-    expect(screen.getByRole("status")).toHaveTextContent(
+    expect(push).toHaveBeenCalledWith("/admin/pools/pool-1/invites");
+    expect(await screen.findByRole("status")).toHaveTextContent(
       "Invite saved. The old link is invalid — use Resend Invite for the new address.",
     );
   });
@@ -265,7 +284,8 @@ describe("pool components", () => {
     await user.type(screen.getByLabelText("Name Hint"), "Alexandra");
     await user.click(screen.getByRole("button", { name: "Save Invite" }));
 
-    expect(screen.getByRole("status")).toHaveTextContent("Invite saved.");
+    expect(push).toHaveBeenCalledWith("/admin/pools/pool-1/invites");
+    expect(await screen.findByRole("status")).toHaveTextContent("Invite saved.");
   });
 
   it("should show InviteForm API errors", async () => {
@@ -338,6 +358,25 @@ describe("pool components", () => {
     await user.click(screen.getByRole("button", { name: "Resend Invite" }));
 
     expect(screen.getByRole("status")).toHaveTextContent("Invite resent.");
+  });
+
+  it("should render the invite edit header with a truncated title", async () => {
+    const email = "jessemull@gmail.com";
+    const { container } = renderWithToast(
+      <InviteEditHeader
+        description="Update the invitee or resend the invite email."
+        inviteId="inv-1"
+        poolId="pool-1"
+        showResend
+        title={email}
+      />,
+    );
+
+    expect(screen.getByRole("heading", { level: 1, name: email })).toHaveClass(
+      "truncate",
+    );
+    expect(screen.getByRole("button", { name: "Resend Invite" })).toBeInTheDocument();
+    expect(await axe(container)).toHaveNoViolations();
   });
 
   it("should toast when resend email delivery fails", async () => {
@@ -792,6 +831,7 @@ describe("pool components", () => {
       "/api/pools",
       expect.objectContaining({ method: "POST" }),
     );
+    expect(push).toHaveBeenCalledWith("/admin/pools");
   });
 
   it("should omit open link for member pools", () => {
@@ -812,7 +852,7 @@ describe("pool components", () => {
     expect(
       screen.queryByRole("link", { name: "Open Friends" }),
     ).not.toBeInTheDocument();
-    expect(screen.getByText("Friends")).toBeInTheDocument();
+    expect(within(screen.getByRole("table")).getByText("Friends")).toBeInTheDocument();
   });
 
   it("should render empty InviteList status", async () => {
@@ -862,7 +902,7 @@ describe("pool components", () => {
     expect(
       screen.getByRole("link", { name: "Open invite inv-1" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Used")).toBeInTheDocument();
+    expect(within(screen.getByRole("table")).getByText("Used")).toBeInTheDocument();
   });
 
   it("should delete a pool after confirm", async () => {
@@ -934,6 +974,7 @@ describe("pool components", () => {
       "/api/pools/pool-1",
       expect.objectContaining({ method: "PATCH" }),
     );
+    expect(push).toHaveBeenCalledWith("/admin/pools");
   });
 
   it("should show delete pool errors", async () => {

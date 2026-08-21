@@ -5,10 +5,12 @@ import { useState } from "react";
 
 import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { FormStandaloneAction } from "@/components/FormShell";
 import { useToast } from "@/components/Toast";
 import {
   formButtonDangerClassName,
   formErrorClassName,
+  formStandaloneActionButtonClassNames,
 } from "@/lib/form-styles";
 
 interface DeletePoolButtonProps {
@@ -18,7 +20,7 @@ interface DeletePoolButtonProps {
 
 export function DeletePoolButton({ name, poolId }: DeletePoolButtonProps) {
   const router = useRouter();
-  const { toast } = useToast();
+  const { toastAfterNavigation } = useToast();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [error, setError] = useState<null | string>(null);
   const [pending, setPending] = useState(false);
@@ -40,7 +42,7 @@ export function DeletePoolButton({ name, poolId }: DeletePoolButtonProps) {
       }
 
       setConfirmOpen(false);
-      toast("Pool deleted.");
+      toastAfterNavigation("Pool deleted.");
       router.push("/admin/pools");
       router.refresh();
     } catch {
@@ -52,9 +54,9 @@ export function DeletePoolButton({ name, poolId }: DeletePoolButtonProps) {
   }
 
   return (
-    <div className="flex w-fit flex-col items-start gap-3">
+    <FormStandaloneAction>
       <button
-        className={formButtonDangerClassName}
+        className={`${formButtonDangerClassName} ${formStandaloneActionButtonClassNames.lg}`}
         disabled={pending}
         type="button"
         onClick={() => setConfirmOpen(true)}
@@ -80,6 +82,6 @@ export function DeletePoolButton({ name, poolId }: DeletePoolButtonProps) {
         onCancel={() => setConfirmOpen(false)}
         onConfirm={() => void onConfirmDelete()}
       />
-    </div>
+    </FormStandaloneAction>
   );
 }

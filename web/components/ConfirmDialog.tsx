@@ -3,12 +3,15 @@
 import { useEffect, useId, useRef } from "react";
 
 import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
+import { cn } from "@/lib/cn";
 import {
+  formActionsMdClassName,
   formButtonDangerClassName,
   formButtonPrimaryClassName,
   formButtonSecondaryClassName,
   formHeadingClassName,
   formMutedClassName,
+  formWidthMdShellClassName,
 } from "@/lib/form-styles";
 
 interface ConfirmDialogProps {
@@ -69,7 +72,7 @@ export function ConfirmDialog({
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <button
         aria-label="Dismiss confirmation"
-        className="absolute inset-0 cursor-pointer bg-zinc-950/60"
+        className="absolute inset-0 cursor-pointer bg-black/85"
         disabled={pending}
         type="button"
         onClick={onCancel}
@@ -78,7 +81,7 @@ export function ConfirmDialog({
         aria-describedby={descriptionId}
         aria-labelledby={titleId}
         aria-modal="true"
-        className="relative z-10 w-full max-w-md rounded-md border border-zinc-300 bg-white p-5 shadow-xl dark:border-zinc-600 dark:bg-zinc-950"
+        className={`relative z-10 rounded-md border border-zinc-300 bg-white p-5 shadow-xl dark:border-zinc-600 dark:bg-zinc-950 ${formWidthMdShellClassName}`}
         role="dialog"
       >
         <div className="flex flex-col gap-2">
@@ -89,7 +92,7 @@ export function ConfirmDialog({
             {description}
           </p>
         </div>
-        <div className="mt-5 grid grid-cols-2 gap-2">
+        <div className={cn(formActionsMdClassName, "mt-5")}>
           <button
             className={`${formButtonSecondaryClassName} w-full justify-center`}
             disabled={pending}

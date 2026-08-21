@@ -5,6 +5,7 @@ import { type FormEvent, useState } from "react";
 
 import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
 import { FormSelect } from "@/components/FormSelect";
+import { FormShell } from "@/components/FormShell";
 import { useToast } from "@/components/Toast";
 import {
   formActionsClassName,
@@ -64,7 +65,7 @@ function toDatetimeLocalValue(iso: null | string): string {
 
 export function PoolForm({ mode, pool, tournaments }: PoolFormProps) {
   const router = useRouter();
-  const { toast } = useToast();
+  const { toastAfterNavigation } = useToast();
   const [bracketDeadline, setBracketDeadline] = useState(
     toDatetimeLocalValue(pool?.bracketDeadline ?? null),
   );
@@ -146,22 +147,19 @@ export function PoolForm({ mode, pool, tournaments }: PoolFormProps) {
       }
 
       if (mode === "create") {
-        const poolId = json.data?.pool?.id;
-
-        if (poolId) {
-          toast("Pool created.");
-          router.push(`/admin/pools/${poolId}`);
-          router.refresh();
+        if (!json.data?.pool?.id) {
+          setError("Unable to create pool.");
           return;
         }
 
-        toast("Pool created.");
+        toastAfterNavigation("Pool created.");
         router.push("/admin/pools");
         router.refresh();
         return;
       }
 
-      toast("Pool saved.");
+      toastAfterNavigation("Pool saved.");
+      router.push("/admin/pools");
       router.refresh();
     } catch {
       setError(
@@ -195,7 +193,7 @@ export function PoolForm({ mode, pool, tournaments }: PoolFormProps) {
     mode === "create" ? "pool-show-brackets" : "edit-pool-show-brackets";
 
   return (
-    <form className="flex w-full max-w-lg flex-col gap-4" onSubmit={onSubmit}>
+    <FormShell as="form" onSubmit={onSubmit}>
       <div className="flex flex-col gap-2">
         <label className={formLabelClassName} htmlFor={nameId}>
           Pool name
@@ -297,7 +295,7 @@ export function PoolForm({ mode, pool, tournaments }: PoolFormProps) {
           className={`${formButtonSecondaryClassName} w-full justify-center`}
           disabled={pending}
           type="button"
-          onClick={() => router.back()}
+          onClick={() => router.push("/admin/pools")}
         >
           Cancel
         </button>
@@ -317,6 +315,6 @@ export function PoolForm({ mode, pool, tournaments }: PoolFormProps) {
           )}
         </button>
       </div>
-    </form>
+    </FormShell>
   );
 }

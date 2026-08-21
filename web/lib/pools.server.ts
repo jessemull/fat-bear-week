@@ -2,6 +2,8 @@ import "server-only";
 
 import type { NextResponse } from "next/server";
 
+import { cache } from "react";
+
 import { jsonError } from "@/lib/api.server";
 import { getSession, type SessionUser } from "@/lib/sessions.server";
 import { getServiceSupabase } from "@/lib/supabase.server";
@@ -231,8 +233,10 @@ export interface PoolNavItem {
 
 /**
  * Lightweight pool list for admin sidebar (no per-pool entry counts).
+ *
+ * Cached per request so root layout + admin layout share one query.
  */
-export async function listPoolsForSidebar(): Promise<PoolNavItem[]> {
+export const listPoolsForSidebar = cache(async (): Promise<PoolNavItem[]> => {
   const supabase = getServiceSupabase();
 
   const { data, error } = await supabase
@@ -248,7 +252,7 @@ export async function listPoolsForSidebar(): Promise<PoolNavItem[]> {
     id: pool.id as string,
     name: pool.name as string,
   }));
-}
+});
 
 /**
  * Update pool settings.

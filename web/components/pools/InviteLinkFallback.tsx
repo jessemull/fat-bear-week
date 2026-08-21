@@ -32,9 +32,9 @@ export function InviteLinkFallback({
   }
 
   return (
-    <div className="flex w-full flex-col gap-2" role="status">
+    <div className="@container flex w-full flex-col gap-2" role="status">
       <p className="text-sm text-red-600/80 dark:text-red-600/80">{message}</p>
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-2 @min-[512px]:flex-row @min-[512px]:items-center">
         <input
           aria-label="Invite link"
           className={formInputClassName}
@@ -43,7 +43,7 @@ export function InviteLinkFallback({
           onFocus={(event) => event.currentTarget.select()}
         />
         <button
-          className={`${formButtonSecondaryClassName} w-full justify-center sm:w-auto`}
+          className={`${formButtonSecondaryClassName} w-full justify-center @min-[512px]:w-auto`}
           type="button"
           onClick={() => void onCopy()}
         >

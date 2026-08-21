@@ -1,9 +1,10 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
-import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import {
+  AdminPageHeader,
+  AdminPageHeaderLinkAction,
+} from "@/components/admin/AdminPageHeader";
 import { InviteList } from "@/components/pools/InviteList";
-import { formButtonPrimaryClassName } from "@/lib/form-styles";
 import { listInvitesForPool } from "@/lib/invites.server";
 import { getPool, userCanManagePool } from "@/lib/pools.server";
 import { getSession } from "@/lib/sessions.server";
@@ -46,12 +47,10 @@ export default async function AdminPoolInvitesPage({
   return (
     <AdminPageHeader
       action={
-        <Link
-          className={formButtonPrimaryClassName}
+        <AdminPageHeaderLinkAction
           href={`/admin/pools/${poolId}/invites/new`}
-        >
-          Send Invites
-        </Link>
+          label="Send Invites"
+        />
       }
       description="Individual invite links. Unused emails stay unique per pool."
       title={`${pool.name} invites`}
