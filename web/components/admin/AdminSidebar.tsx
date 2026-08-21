@@ -1,9 +1,8 @@
 "use client";
 
-import { PanelLeft, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useId, useState } from "react";
+import { useId } from "react";
 
 import {
   formatTournamentStatus,
@@ -26,19 +25,21 @@ interface AdminSidebarProps {
   tournaments: AdminSidebarTournament[];
 }
 
-const childLinkActiveClassName = "bg-amber-500/15 font-medium text-amber-800";
+const childLinkActiveClassName =
+  "bg-amber-500/15 font-medium text-amber-800 dark:text-amber-400";
 const childLinkClassName =
-  "block rounded-md px-2 py-1.5 text-sm text-zinc-400 transition-colors hover:bg-zinc-900 hover:text-zinc-100";
+  "block rounded-md px-2 py-1.5 text-sm text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100";
 const childLinkInactiveClassName = "font-normal";
 
-const nestedLinkActiveClassName = "bg-amber-500/15 font-medium text-amber-800";
+const nestedLinkActiveClassName =
+  "bg-amber-500/15 font-medium text-amber-800 dark:text-amber-400";
 const nestedLinkClassName =
-  "block rounded-md px-2 py-1 text-sm text-zinc-500 transition-colors hover:bg-zinc-900 hover:text-zinc-200";
+  "block rounded-md px-2 py-1 text-sm text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200";
 const nestedLinkInactiveClassName = "font-normal";
 
-const sectionLinkActiveClassName = "text-amber-400";
+const sectionLinkActiveClassName = "text-amber-800 dark:text-amber-400";
 const sectionLinkClassName =
-  "block px-2 text-xs font-semibold tracking-[0.14em] text-zinc-50 uppercase transition-colors hover:text-white";
+  "block px-2 text-xs font-semibold tracking-[0.14em] text-zinc-700 uppercase transition-colors hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-white";
 const sectionLinkInactiveClassName = "";
 
 function linkClassName(
@@ -50,7 +51,7 @@ function linkClassName(
   return `${base} ${active ? activeClass : inactiveClass}`;
 }
 
-function NavBody({
+export function AdminNavBody({
   onNavigate,
   pathname,
   pools,
@@ -61,10 +62,13 @@ function NavBody({
   pools: AdminSidebarPool[];
   tournaments: AdminSidebarTournament[];
 }) {
+  const poolsHeadingId = useId();
+  const tournamentsHeadingId = useId();
+
   return (
     <div className="space-y-6">
-      <section aria-labelledby="admin-nav-tournaments">
-        <h2 className="sr-only" id="admin-nav-tournaments">
+      <section aria-labelledby={tournamentsHeadingId}>
+        <h2 className="sr-only" id={tournamentsHeadingId}>
           Tournaments
         </h2>
         <Link
@@ -117,7 +121,7 @@ function NavBody({
 
             return (
               <li key={tournament.id} className="pt-2">
-                <p className="px-2 py-1 text-sm font-medium text-zinc-200">
+                <p className="px-2 py-1 text-sm font-medium text-zinc-800 dark:text-zinc-200">
                   {tournament.year} · {formatTournamentStatus(tournament.status)}
                 </p>
                 <ul className="mt-0.5 space-y-0.5 pl-3">
@@ -156,8 +160,8 @@ function NavBody({
         </ul>
       </section>
 
-      <section aria-labelledby="admin-nav-pools">
-        <h2 className="sr-only" id="admin-nav-pools">
+      <section aria-labelledby={poolsHeadingId}>
+        <h2 className="sr-only" id={poolsHeadingId}>
           Pools
         </h2>
         <Link
@@ -210,7 +214,7 @@ function NavBody({
 
             return (
               <li key={pool.id} className="pt-2">
-                <p className="px-2 py-1 text-sm font-medium text-zinc-200">
+                <p className="px-2 py-1 text-sm font-medium text-zinc-800 dark:text-zinc-200">
                   {pool.name}
                 </p>
                 <ul className="mt-0.5 space-y-0.5 pl-3">
@@ -253,52 +257,17 @@ function NavBody({
 }
 
 export function AdminSidebar({ pools, tournaments }: AdminSidebarProps) {
-  const menuId = useId();
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
 
   return (
-    <>
-      <div className="mb-6 lg:hidden">
-        <button
-          aria-controls={menuId}
-          aria-expanded={open}
-          className="inline-flex items-center gap-2 rounded-md border border-zinc-800 px-3 py-2 text-sm text-zinc-200 transition-colors hover:border-zinc-600 hover:bg-zinc-900"
-          type="button"
-          onClick={() => setOpen((current) => !current)}
-        >
-          {open ? (
-            <X aria-hidden="true" className="h-4 w-4" />
-          ) : (
-            <PanelLeft aria-hidden="true" className="h-4 w-4" />
-          )}
-          Admin menu
-        </button>
-        {open ? (
-          <nav
-            aria-label="Admin"
-            className="mt-3 rounded-md border border-zinc-800 bg-black p-3"
-            id={menuId}
-          >
-            <NavBody
-              pathname={pathname}
-              pools={pools}
-              tournaments={tournaments}
-              onNavigate={() => setOpen(false)}
-            />
-          </nav>
-        ) : null}
-      </div>
-
-      <aside className="hidden w-56 shrink-0 lg:block">
-        <nav aria-label="Admin" className="sticky top-24">
-          <NavBody
-            pathname={pathname}
-            pools={pools}
-            tournaments={tournaments}
-          />
-        </nav>
-      </aside>
-    </>
+    <aside className="hidden w-56 shrink-0 pl-5 lg:block lg:pl-6">
+      <nav aria-label="Admin" className="sticky top-24">
+        <AdminNavBody
+          pathname={pathname}
+          pools={pools}
+          tournaments={tournaments}
+        />
+      </nav>
+    </aside>
   );
 }

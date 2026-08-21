@@ -33,7 +33,7 @@ export function JoinForm({
   turnstileToken,
 }: JoinFormProps) {
   const router = useRouter();
-  const { toast } = useToast();
+  const { toastAfterNavigation } = useToast();
   const [error, setError] = useState<null | string>(null);
   const [name, setName] = useState(existingName ?? nameHint ?? "");
   const [password, setPassword] = useState("");
@@ -85,7 +85,7 @@ export function JoinForm({
       }
 
       if (json.data?.needsSignIn) {
-        toast("Account ready — sign in to continue.");
+        toastAfterNavigation("Account ready — sign in to continue.");
         router.push("/login?joined=1");
         router.refresh();
         return;

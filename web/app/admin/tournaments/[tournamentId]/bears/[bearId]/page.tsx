@@ -69,7 +69,7 @@ export default async function EditBearPage({ params }: EditBearPageProps) {
           <div className="mt-2">
             <DeleteBearButton
               bearId={bear.id}
-              name={bear.name}
+              bearName={bear.name}
               tournamentId={tournament.id}
             />
           </div>

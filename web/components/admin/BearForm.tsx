@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
 import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
+import { FormShell } from "@/components/FormShell";
 import { useToast } from "@/components/Toast";
 import {
   formActionsClassName,
@@ -40,7 +41,7 @@ interface BearMutationResponse {
 
 export function BearForm({ bear, mode, tournamentId }: BearFormProps) {
   const router = useRouter();
-  const { toast } = useToast();
+  const { toastAfterNavigation } = useToast();
   const [biography, setBiography] = useState(bear?.biography ?? "");
   const [error, setError] = useState<null | string>(null);
   const [identification, setIdentification] = useState(
@@ -95,13 +96,14 @@ export function BearForm({ bear, mode, tournamentId }: BearFormProps) {
           return;
         }
 
-        router.push(`/admin/tournaments/${tournamentId}/bears/${bearId}`);
+        toastAfterNavigation("Bear created.");
+        router.push(`/admin/tournaments/${tournamentId}/bears`);
         router.refresh();
-        toast("Bear created.");
         return;
       }
 
-      toast("Bear saved.");
+      toastAfterNavigation("Bear saved.");
+      router.push(`/admin/tournaments/${tournamentId}/bears`);
       router.refresh();
     } catch {
       setError(
@@ -115,7 +117,7 @@ export function BearForm({ bear, mode, tournamentId }: BearFormProps) {
   }
 
   return (
-    <form className="flex w-full max-w-lg flex-col gap-4" onSubmit={onSubmit}>
+    <FormShell as="form" onSubmit={onSubmit}>
       <div className="flex flex-col gap-2">
         <label className={formLabelClassName} htmlFor="bear-name">
           Name
@@ -179,7 +181,9 @@ export function BearForm({ bear, mode, tournamentId }: BearFormProps) {
           className={`${formButtonSecondaryClassName} w-full justify-center`}
           disabled={pending}
           type="button"
-          onClick={() => router.back()}
+          onClick={() =>
+            router.push(`/admin/tournaments/${tournamentId}/bears`)
+          }
         >
           Cancel
         </button>
@@ -199,6 +203,6 @@ export function BearForm({ bear, mode, tournamentId }: BearFormProps) {
           )}
         </button>
       </div>
-    </form>
+    </FormShell>
   );
 }

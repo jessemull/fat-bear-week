@@ -6,12 +6,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const push = vi.fn();
 const refresh = vi.fn();
-const back = vi.fn();
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
-    back,
-    push,
+    push: (href: string) => {
+      push(href);
+      window.history.pushState({}, "", href);
+    },
     refresh,
     replace: vi.fn(),
   }),
@@ -35,9 +36,9 @@ function renderWithToast(ui: ReactElement) {
 
 describe("admin forms", () => {
   beforeEach(() => {
-    back.mockReset();
     push.mockReset();
     refresh.mockReset();
+    window.history.pushState({}, "", "/admin/tournaments/new");
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -85,9 +86,9 @@ describe("admin forms", () => {
     );
 
     expect(screen.getByRole("columnheader", { name: "Year" })).toBeInTheDocument();
-    expect(screen.getByText("2026")).toBeInTheDocument();
-    expect(screen.getByText("Live")).toBeInTheDocument();
-    expect(screen.getByText("2025")).toBeInTheDocument();
+    expect(screen.getAllByText("2026").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Live").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("2025").length).toBeGreaterThan(0);
     expect(screen.getAllByText("—").length).toBeGreaterThan(0);
 
     const row = screen.getByRole("link", { name: "Open tournament 2026" });
@@ -150,7 +151,7 @@ describe("admin forms", () => {
       "/api/admin/tournaments",
       expect.objectContaining({ method: "POST" }),
     );
-    expect(push).toHaveBeenCalledWith(`/admin/tournaments/${tournamentId}`);
+    expect(push).toHaveBeenCalledWith("/admin/tournaments");
     expect(refresh).toHaveBeenCalled();
 
     vi.stubGlobal(
@@ -178,14 +179,16 @@ describe("admin forms", () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 
-  it("should go back when Cancel is clicked on BearForm", async () => {
+  it("should return to the bears list when Cancel is clicked on BearForm", async () => {
     const user = userEvent.setup();
 
     renderWithToast(<BearForm mode="create" tournamentId={tournamentId} />);
 
     await user.click(screen.getByRole("button", { name: "Cancel" }));
 
-    expect(back).toHaveBeenCalled();
+    expect(push).toHaveBeenCalledWith(
+      `/admin/tournaments/${tournamentId}/bears`,
+    );
   });
 
   it("should submit BearForm create and redirect", async () => {
@@ -220,7 +223,7 @@ describe("admin forms", () => {
       );
     });
     expect(push).toHaveBeenCalledWith(
-      `/admin/tournaments/${tournamentId}/bears/${bearAId}`,
+      `/admin/tournaments/${tournamentId}/bears`,
     );
     expect(refresh).toHaveBeenCalled();
   });
@@ -252,6 +255,9 @@ describe("admin forms", () => {
         expect.objectContaining({ method: "PATCH" }),
       );
     });
+    expect(push).toHaveBeenCalledWith(
+      `/admin/tournaments/${tournamentId}/bears`,
+    );
     expect(refresh).toHaveBeenCalled();
   });
 
@@ -279,9 +285,11 @@ describe("admin forms", () => {
       />,
     );
 
-    expect(screen.getByRole("columnheader", { name: "Name" })).toBeInTheDocument();
-    expect(screen.getByText("Otis")).toBeInTheDocument();
-    expect(screen.getByText("Boss")).toBeInTheDocument();
+    const table = screen.getByRole("table");
+
+    expect(within(table).getByRole("columnheader", { name: "Name" })).toBeInTheDocument();
+    expect(within(table).getByText("Otis")).toBeInTheDocument();
+    expect(within(table).getByText("Boss")).toBeInTheDocument();
 
     await user.click(screen.getByRole("link", { name: "Open bear Otis" }));
 
@@ -352,7 +360,7 @@ describe("admin forms", () => {
     renderWithToast(
       <DeleteBearButton
         bearId={bearAId}
-        name="Otis"
+        bearName="Otis"
         tournamentId={tournamentId}
       />,
     );
@@ -387,7 +395,7 @@ describe("admin forms", () => {
     renderWithToast(
       <DeleteBearButton
         bearId={bearAId}
-        name="Otis"
+        bearName="Otis"
         tournamentId={tournamentId}
       />,
     );
@@ -415,6 +423,11 @@ describe("admin forms", () => {
 
     expect(await axe(container)).toHaveNoViolations();
     expect(screen.getByLabelText("Status")).toHaveTextContent("Draft");
+    expect(screen.getByLabelText("Status").closest("div.flex")).toHaveClass(
+      "@container",
+      "w-full",
+      "max-w-lg",
+    );
 
     await user.click(screen.getByLabelText("Status"));
     await user.click(screen.getByRole("option", { name: "Live" }));

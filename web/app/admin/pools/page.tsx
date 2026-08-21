@@ -1,9 +1,10 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import {
+  AdminPageHeader,
+  AdminPageHeaderLinkAction,
+} from "@/components/admin/AdminPageHeader";
 import { PoolList } from "@/components/pools/PoolList";
-import { formButtonPrimaryClassName } from "@/lib/form-styles";
 import { listPoolsForUser } from "@/lib/pools.server";
 import { getSession } from "@/lib/sessions.server";
 
@@ -24,12 +25,10 @@ export default async function AdminPoolsPage() {
   return (
     <AdminPageHeader
       action={
-        <Link
-          className={formButtonPrimaryClassName}
+        <AdminPageHeaderLinkAction
           href="/admin/pools/new"
-        >
-          Create Pool
-        </Link>
+          label="Create Pool"
+        />
       }
       description="One pool per tournament for v1. Manage invites from each pool."
       title="Pools"

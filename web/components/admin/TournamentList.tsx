@@ -6,6 +6,7 @@ import { type KeyboardEvent } from "react";
 
 import type { TournamentRecord } from "@/lib/tournament-types";
 
+import { Card, CardBadge, CardHeader, CardList, CardMeta } from "@/components/Card";
 import { formMutedClassName } from "@/lib/form-styles";
 import { formatTournamentStatus } from "@/lib/tournament-types";
 
@@ -13,7 +14,46 @@ interface TournamentListProps {
   tournaments: TournamentRecord[];
 }
 
-function formatDate(value: null | string): string {
+function formatDate(value: null | string): null | string {
+  if (!value) {
+    return null;
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return date.toLocaleDateString("en-US", {
+    day: "numeric",
+    month: "short",
+  });
+}
+
+function formatDateRange(
+  startsAt: null | string,
+  endsAt: null | string,
+): string {
+  const starts = formatDate(startsAt);
+  const ends = formatDate(endsAt);
+
+  if (starts && ends) {
+    return `Tournament · ${starts} – ${ends}`;
+  }
+
+  if (starts) {
+    return `Tournament · Starts ${starts}`;
+  }
+
+  if (ends) {
+    return `Tournament · Ends ${ends}`;
+  }
+
+  return "Tournament · No dates set";
+}
+
+function formatTableDate(value: null | string): string {
   if (!value) {
     return "—";
   }
@@ -29,6 +69,20 @@ function formatDate(value: null | string): string {
     month: "short",
     year: "numeric",
   });
+}
+
+function statusTone(
+  status: TournamentRecord["status"],
+): "accent" | "default" | "muted" {
+  if (status === "live") {
+    return "accent";
+  }
+
+  if (status === "complete" || status === "draft") {
+    return "muted";
+  }
+
+  return "default";
 }
 
 export function TournamentList({ tournaments }: TournamentListProps) {
@@ -57,63 +111,85 @@ export function TournamentList({ tournaments }: TournamentListProps) {
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[28rem] border-collapse text-left text-sm">
-        <thead>
-          <tr className="border-b border-zinc-300 dark:border-zinc-600">
-            <th className={`py-2 pl-3 pr-4 font-medium ${formMutedClassName}`}>
-              Year
-            </th>
-            <th className={`py-2 pr-4 font-medium ${formMutedClassName}`}>
-              Status
-            </th>
-            <th className={`py-2 pr-4 font-medium ${formMutedClassName}`}>
-              Starts
-            </th>
-            <th className={`py-2 pr-4 font-medium ${formMutedClassName}`}>
-              Ends
-            </th>
-            <th className="w-10 py-2 pr-3">
-              <span className="sr-only">Open</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {tournaments.map((tournament) => (
-            <tr
-              key={tournament.id}
-              aria-label={`Open tournament ${tournament.year}`}
-              className="group cursor-pointer border-b border-zinc-200 transition-colors hover:bg-amber-50/80 focus-visible:bg-amber-50/80 dark:border-zinc-700 dark:hover:bg-zinc-900 dark:focus-visible:bg-zinc-900"
-              role="link"
-              tabIndex={0}
-              onClick={() => openTournament(tournament.id)}
-              onKeyDown={(event) => onRowKeyDown(event, tournament.id)}
-            >
-              <td className="py-3 pl-3 pr-4 font-medium text-zinc-900 dark:text-zinc-50">
-                {tournament.year}
-              </td>
-              <td className="py-3 pr-4 text-zinc-700 dark:text-zinc-300">
-                {formatTournamentStatus(tournament.status)}
-              </td>
-              <td className={`py-3 pr-4 ${formMutedClassName}`}>
-                {formatDate(tournament.startsAt)}
-              </td>
-              <td className={`py-3 pr-4 ${formMutedClassName}`}>
-                {formatDate(tournament.endsAt)}
-              </td>
-              <td className="py-3 pr-3">
-                <span className="flex justify-end">
-                  <ExternalLink
-                    aria-hidden="true"
-                    className="size-4 text-amber-800 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 dark:text-amber-400"
-                    strokeWidth={1.75}
-                  />
-                </span>
-              </td>
+    <>
+      <CardList className="md:hidden">
+        {tournaments.map((tournament) => (
+          <li key={tournament.id}>
+            <Card href={`/admin/tournaments/${tournament.id}`}>
+              <CardHeader
+                badge={
+                  <CardBadge tone={statusTone(tournament.status)}>
+                    {formatTournamentStatus(tournament.status)}
+                  </CardBadge>
+                }
+                title={tournament.year}
+              />
+              <CardMeta>
+                {formatDateRange(tournament.startsAt, tournament.endsAt)}
+              </CardMeta>
+            </Card>
+          </li>
+        ))}
+      </CardList>
+
+      <div className="hidden overflow-x-auto md:block">
+        <table className="w-full min-w-[28rem] border-collapse text-left text-sm">
+          <thead>
+            <tr className="border-b border-zinc-300 dark:border-zinc-600">
+              <th className={`py-2 pl-3 pr-4 font-medium ${formMutedClassName}`}>
+                Year
+              </th>
+              <th className={`py-2 pr-4 font-medium ${formMutedClassName}`}>
+                Status
+              </th>
+              <th className={`py-2 pr-4 font-medium ${formMutedClassName}`}>
+                Starts
+              </th>
+              <th className={`py-2 pr-4 font-medium ${formMutedClassName}`}>
+                Ends
+              </th>
+              <th className="w-10 py-2 pr-3">
+                <span className="sr-only">Open</span>
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {tournaments.map((tournament) => (
+              <tr
+                key={tournament.id}
+                aria-label={`Open tournament ${tournament.year}`}
+                className="group cursor-pointer border-b border-zinc-200 transition-colors hover:bg-amber-50/80 focus-visible:bg-amber-50/80 dark:border-zinc-700 dark:hover:bg-zinc-900 dark:focus-visible:bg-zinc-900"
+                role="link"
+                tabIndex={0}
+                onClick={() => openTournament(tournament.id)}
+                onKeyDown={(event) => onRowKeyDown(event, tournament.id)}
+              >
+                <td className="py-3 pl-3 pr-4 font-medium text-zinc-900 dark:text-zinc-50">
+                  {tournament.year}
+                </td>
+                <td className="py-3 pr-4 text-zinc-700 dark:text-zinc-300">
+                  {formatTournamentStatus(tournament.status)}
+                </td>
+                <td className={`py-3 pr-4 ${formMutedClassName}`}>
+                  {formatTableDate(tournament.startsAt)}
+                </td>
+                <td className={`py-3 pr-4 ${formMutedClassName}`}>
+                  {formatTableDate(tournament.endsAt)}
+                </td>
+                <td className="py-3 pr-3">
+                  <span className="flex justify-end">
+                    <ExternalLink
+                      aria-hidden="true"
+                      className="size-4 text-amber-800 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 dark:text-amber-400"
+                      strokeWidth={1.75}
+                    />
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }

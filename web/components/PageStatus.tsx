@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 
 import {
+  appCenteredPagePaddingClassName,
   formHeadingClassName,
   formMutedClassName,
 } from "@/lib/form-styles";
@@ -24,7 +25,9 @@ export function PageStatus({
   title,
 }: PageStatusProps) {
   return (
-    <main className="flex flex-1 flex-col items-center justify-center px-6 py-12 pb-24 text-center">
+    <main
+      className={`flex flex-1 flex-col items-center justify-center ${appCenteredPagePaddingClassName} text-center`}
+    >
       <div className="flex max-w-sm flex-col items-center gap-3">
         <Icon
           aria-hidden="true"

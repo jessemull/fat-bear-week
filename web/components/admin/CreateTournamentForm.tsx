@@ -4,9 +4,10 @@ import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
 import { ButtonPendingLabel } from "@/components/ButtonPendingLabel";
+import { FormShell } from "@/components/FormShell";
 import { useToast } from "@/components/Toast";
 import {
-  formActionsClassName,
+  formActionsClassNames,
   formButtonPrimaryClassName,
   formButtonSecondaryClassName,
   formErrorClassName,
@@ -25,7 +26,7 @@ interface CreateTournamentResponse {
 
 export function CreateTournamentForm() {
   const router = useRouter();
-  const { toast } = useToast();
+  const { toastAfterNavigation } = useToast();
   const [error, setError] = useState<null | string>(null);
   const [pending, setPending] = useState(false);
   const [year, setYear] = useState(String(new Date().getFullYear()));
@@ -63,9 +64,9 @@ export function CreateTournamentForm() {
         return;
       }
 
-      router.push(`/admin/tournaments/${tournamentId}`);
+      toastAfterNavigation("Tournament created.");
+      router.push("/admin/tournaments");
       router.refresh();
-      toast("Tournament created.");
     } catch {
       setError("Unable to create tournament right now.");
     } finally {
@@ -74,7 +75,7 @@ export function CreateTournamentForm() {
   }
 
   return (
-    <form className="flex w-full max-w-sm flex-col gap-4" onSubmit={onSubmit}>
+    <FormShell as="form" onSubmit={onSubmit}>
       <div className="flex flex-col gap-2">
         <label className={formLabelClassName} htmlFor="tournament-year">
           Year
@@ -97,12 +98,12 @@ export function CreateTournamentForm() {
           {error}
         </p>
       ) : null}
-      <div className={formActionsClassName}>
+      <div className={formActionsClassNames.lg}>
         <button
           className={`${formButtonSecondaryClassName} w-full justify-center`}
           disabled={pending}
           type="button"
-          onClick={() => router.back()}
+          onClick={() => router.push("/admin/tournaments")}
         >
           Cancel
         </button>
@@ -118,6 +119,6 @@ export function CreateTournamentForm() {
           )}
         </button>
       </div>
-    </form>
+    </FormShell>
   );
 }
