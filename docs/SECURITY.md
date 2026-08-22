@@ -10,7 +10,8 @@
 - Required server vars: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`.
 - Invite email (server-only): `RESEND_API_KEY`, `EMAIL_FROM`.
 - Bot check (server-only secret): `TURNSTILE_SECRET_KEY`; public site key
-  `NEXT_PUBLIC_TURNSTILE_SITE_KEY` (Cloudflare Turnstile on join / sign-in).
+  `NEXT_PUBLIC_TURNSTILE_SITE_KEY` (Cloudflare Turnstile on join / sign-in /
+  forgot-password / reset-password).
 - Commissioner access: `users.is_commissioner` (not an env allowlist).
 - Public vars: `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_SUPABASE_URL`,
   `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_TURNSTILE_SITE_KEY` only.
@@ -39,6 +40,12 @@
     another pool with that account’s password (multi-pool; display name is not
     changed).
 - Sign in with **email or display name** + password + Turnstile (no public signup).
+- Forgot password: email + Turnstile; always-success copy (do not reveal whether
+  the address has an account). Reset tokens are unguessable, SHA-256 hashed at
+  rest, ~1 hour TTL, and single-use. A successful email reset revokes **all**
+  sessions **before** storing the new hash, then creates a new one. Logged-in
+  password change keeps the current session and revokes the others before the
+  hash write. Do not log Resend error strings (they can include the recipient).
 - Sessions via HTTP-only cookies (or equivalent); validate server-side on protected routes and mutations.
 - Sign-out revokes **only the current session cookie** (not every device).
 - Invite tokens must be unguessable; store SHA-256 hashes at rest (raw token only in email/URL).
@@ -47,11 +54,12 @@
 - Changing an unused invite’s email rotates the token so the prior link cannot join.
 - CSRF: cookie-session mutations require matching Origin or Referer (SameSite=Lax cookies;
   fail closed when both headers are missing).
-- Turnstile: verify `turnstileToken` server-side via Cloudflare siteverify before join/sign-in.
-- Rate limit join and sign-in by IP (and sign-in identifier) in addition to Turnstile.
+- Turnstile: verify `turnstileToken` server-side via Cloudflare siteverify before join/sign-in/forgot-password/reset-password.
+- Rate limit join, sign-in, password-reset, and signed-in password change by IP
+  (and sign-in identifier / reset email / user id) in addition to Turnstile.
   Limits are in-memory per Node process / Vercel isolate (not durable across
   instances) — a soft companion to Turnstile, not a shared global limiter.
-- `NEXT_PUBLIC_SITE_URL` is required for minting invite links (no silent production fallback).
+- `NEXT_PUBLIC_SITE_URL` is required for minting invite and password-reset links (no silent production fallback).
 
 ---
 

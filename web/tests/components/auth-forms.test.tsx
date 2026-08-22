@@ -425,6 +425,13 @@ describe("auth forms", () => {
     const { container: loginContainer } = renderWithToast(<LoginPanel />);
 
     expect(screen.getByRole("heading", { name: "Sign In" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Forgot password?" }),
+    ).toHaveAttribute("href", "/forgot-password");
+    expect(screen.getByRole("link", { name: "Back home" })).toHaveAttribute(
+      "href",
+      "/",
+    );
     expect(await axe(loginContainer)).toHaveNoViolations();
   });
 });

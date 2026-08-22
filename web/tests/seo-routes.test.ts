@@ -11,9 +11,39 @@ describe("robots metadata route", () => {
     expect(result.sitemap).toBe("https://www.fatbearweek.net/sitemap.xml");
     expect(result.rules).toMatchObject({
       allow: "/",
-      disallow: ["/admin/", "/api/", "/invite/", "/login", "/pools/"],
+      disallow: [
+        "/admin/",
+        "/api/",
+        "/forgot-password",
+        "/invite/",
+        "/login",
+        "/pools/",
+        "/reset-password/",
+        "/settings",
+      ],
       userAgent: "*",
     });
+  });
+});
+
+describe("reset password referrer policy", () => {
+  it("should send no-referrer on reset-password paths", async () => {
+    const { default: nextConfig } = await import("../next.config");
+    const headers = await nextConfig.headers?.();
+
+    expect(headers).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          headers: [
+            {
+              key: "Referrer-Policy",
+              value: "no-referrer",
+            },
+          ],
+          source: "/reset-password/:path*",
+        }),
+      ]),
+    );
   });
 });
 

@@ -314,4 +314,56 @@ describe("sessions.server cookie flow", () => {
 
     errorSpy.mockRestore();
   });
+
+  it("should revoke every session for a user", async () => {
+    const deleteEq = vi.fn().mockResolvedValue({ error: null });
+
+    fromMock.mockReturnValue({
+      delete: () => ({
+        eq: deleteEq,
+      }),
+    });
+
+    const { revokeSessionsForUser } = await import("@/lib/sessions.server");
+
+    await revokeSessionsForUser({ userId: "user-1" });
+
+    expect(deleteEq).toHaveBeenCalledWith("user_id", "user-1");
+  });
+
+  it("should throw when revoking user sessions fails", async () => {
+    fromMock.mockReturnValue({
+      delete: () => ({
+        eq: () => Promise.resolve({ error: { message: "delete failed" } }),
+      }),
+    });
+
+    const { revokeSessionsForUser } = await import("@/lib/sessions.server");
+
+    await expect(revokeSessionsForUser({ userId: "user-1" })).rejects.toThrow(
+      "Failed to revoke user sessions: delete failed",
+    );
+  });
+
+  it("should revoke other sessions except the current cookie", async () => {
+    cookieStore.get.mockReturnValue({ value: "raw-token-value" });
+    const neq = vi.fn().mockResolvedValue({ error: null });
+
+    fromMock.mockReturnValue({
+      delete: () => ({
+        eq: () => ({
+          neq,
+        }),
+      }),
+    });
+
+    const { revokeOtherSessions } = await import("@/lib/sessions.server");
+
+    await revokeOtherSessions("user-1");
+
+    expect(neq).toHaveBeenCalledWith(
+      "token_hash",
+      expect.stringMatching(/^[a-f0-9]{64}$/),
+    );
+  });
 });

@@ -12,7 +12,16 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       allow: "/",
-      disallow: ["/admin/", "/api/", "/invite/", "/login", "/pools/"],
+      disallow: [
+        "/admin/",
+        "/api/",
+        "/forgot-password",
+        "/invite/",
+        "/login",
+        "/pools/",
+        "/reset-password/",
+        "/settings",
+      ],
 
       userAgent: "*",
     },

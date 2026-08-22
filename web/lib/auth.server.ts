@@ -188,6 +188,45 @@ export async function findUserByName(name: string): Promise<{
   };
 }
 
+export interface AuthUserRecord {
+  email: null | string;
+  id: string;
+  name: string;
+  passwordHash: string;
+}
+
+/**
+ * Find a user by stored email (lowercased exact match, matching sign-in).
+ */
+export async function findUserByEmail(
+  email: string,
+): Promise<AuthUserRecord | null> {
+  const trimmed = email.trim().toLowerCase();
+
+  if (!trimmed || !trimmed.includes("@")) {
+    return null;
+  }
+
+  const supabase = getServiceSupabase();
+
+  const { data, error } = await supabase
+    .from("users")
+    .select("email, id, name, password_hash")
+    .eq("email", trimmed)
+    .maybeSingle();
+
+  if (error || !data?.email) {
+    return null;
+  }
+
+  return {
+    email: data.email as string,
+    id: data.id as string,
+    name: data.name as string,
+    passwordHash: data.password_hash as string,
+  };
+}
+
 /**
  * Find a user by email (case-insensitive) or display name for sign-in.
  * Identifiers with `@` try email first (exact lowercased match), then name.
@@ -204,23 +243,13 @@ export async function findUserByLoginIdentifier(identifier: string): Promise<{
   }
 
   if (trimmed.includes("@")) {
-    const supabase = getServiceSupabase();
+    const byEmail = await findUserByEmail(trimmed);
 
-    const { data, error } = await supabase
-      .from("users")
-      .select("id, name, password_hash, email")
-      .eq("email", trimmed.toLowerCase())
-      .maybeSingle();
-
-    if (error) {
-      return null;
-    }
-
-    if (data?.email) {
+    if (byEmail) {
       return {
-        id: data.id as string,
-        name: data.name as string,
-        passwordHash: data.password_hash as string,
+        id: byEmail.id,
+        name: byEmail.name,
+        passwordHash: byEmail.passwordHash,
       };
     }
   }

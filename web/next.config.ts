@@ -14,6 +14,15 @@ const nextConfig: NextConfig = {
         ],
         source: "/invite/:path*",
       },
+      {
+        headers: [
+          {
+            key: "Referrer-Policy",
+            value: "no-referrer",
+          },
+        ],
+        source: "/reset-password/:path*",
+      },
     ];
   },
   images: {

@@ -16,6 +16,13 @@ export interface SendInviteEmailResult {
   errorMessage?: string;
 }
 
+export interface SendPasswordResetEmailInput {
+  expiresAt: string;
+  name?: null | string;
+  resetUrl: string;
+  to: string;
+}
+
 function getResendClient(): null | Resend {
   const apiKey = process.env.RESEND_API_KEY;
 
@@ -24,6 +31,17 @@ function getResendClient(): null | Resend {
   }
 
   return new Resend(apiKey);
+}
+
+/**
+ * True when Resend + From are configured. Used to fail closed before lookup
+ * so a 503 cannot leak whether an email has an account.
+ */
+export function isEmailConfigured(): boolean {
+  const apiKey = process.env.RESEND_API_KEY?.trim() ?? "";
+  const from = process.env.EMAIL_FROM?.trim() ?? "";
+
+  return Boolean(from && apiKey);
 }
 
 function buildInviteEmailBody(input: SendInviteEmailInput): {
@@ -128,4 +146,90 @@ export function buildInviteUrl(token: string): string {
   const base = requireSiteUrl().replace(/\/$/, "");
 
   return `${base}/invite/${token}`;
+}
+
+function buildPasswordResetEmailBody(input: SendPasswordResetEmailInput): {
+  html: string;
+  subject: string;
+  text: string;
+} {
+  const safeName = input.name
+    ? escapeHtml(input.name.replace(/[\r\n]+/g, " ").trim())
+    : null;
+  const textName = input.name
+    ? input.name.replace(/[\r\n]+/g, " ").trim()
+    : null;
+  const greeting = safeName ? `Hi ${safeName},` : "Hi,";
+  const textGreeting = textName ? `Hi ${textName},` : "Hi,";
+  const expiresLabel = new Date(input.expiresAt).toLocaleString("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+
+  const subject = "Reset your Fat Bear Week password";
+
+  const text = [
+    textGreeting,
+    "",
+    "We received a request to reset the password for your Fat Bear Week account.",
+    "",
+    `Reset your password: ${input.resetUrl}`,
+    "",
+    `This link expires on ${expiresLabel}. If you did not request a reset, you can ignore this email.`,
+  ].join("\n");
+
+  const html = `
+    <p>${greeting}</p>
+    <p>We received a request to reset the password for your Fat Bear Week account.</p>
+    <p><a href="${escapeHtml(input.resetUrl)}">Reset your password</a></p>
+    <p>This link expires on ${escapeHtml(expiresLabel)}. If you did not request a reset, you can ignore this email.</p>
+  `.trim();
+
+  return { html, subject, text };
+}
+
+/**
+ * Send a password-reset email via Resend.
+ */
+export async function sendPasswordResetEmail(
+  input: SendPasswordResetEmailInput,
+): Promise<SendInviteEmailResult> {
+  const from = process.env.EMAIL_FROM;
+  const resend = getResendClient();
+
+  if (!from || !resend) {
+    return {
+      emailSent: false,
+      errorMessage: "Email is not configured (RESEND_API_KEY / EMAIL_FROM).",
+    };
+  }
+
+  const { html, subject, text } = buildPasswordResetEmailBody(input);
+
+  try {
+    const { error } = await resend.emails.send({
+      from,
+      html,
+      subject,
+      text,
+      to: input.to,
+    });
+
+    if (error) {
+      return {
+        emailSent: false,
+        errorMessage: error.message,
+      };
+    }
+
+    return { emailSent: true };
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to send reset email.";
+
+    return {
+      emailSent: false,
+      errorMessage: message,
+    };
+  }
 }

@@ -69,6 +69,8 @@ Use the **dev** Supabase project credentials only.
    (see `003_commissioner_gate.sql` / [ROADMAP.md](ROADMAP.md)).
 6. Local Turnstile: Cloudflare always-pass test keys are documented in
    `web/.env.example`.
+7. Password reset uses the same Resend + Turnstile env. Signed-in account
+   settings live at `/settings` (display name, read-only email, password).
 
 ---
 
